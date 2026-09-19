@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "keys": [
+    {
+      "id": "release-2026-09",
+      "status": "active",
+      "spkiSha256": "f470d5e085bf97f8895cdf01563eda38ac7fc7f2000f5595963d5f230782ee38"
+    }
+  ]
+}

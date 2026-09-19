@@ -1,0 +1,12 @@
+{
+  "name": "@review-studio/design-tokens",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "check": "node -e \"require('node:fs').accessSync('src/styles.css')\""
+  }
+}
