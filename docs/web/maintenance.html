@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>24 · 更新、恢复、回滚与卸载 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html" class="active" aria-current="page">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>设置与维护</div><p class="eyebrow">VISTO USER GUIDE / 24</p><h1>更新、恢复、回滚与卸载</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>本章适用于 macOS 原生 Server。执行的是主机维护操作，普通项目成员无需运行。占位符必须替换成实际路径、版本和摘要；保留所有命令输出用于定位失败。</p>
+<figure class="figure"><a href="assets/backup.svg" aria-label="放大查看：更新、验证与失败保护的流程示意"><img src="assets/backup.svg" alt="更新、验证与失败保护的流程示意" loading="lazy" decoding="async"></a><figcaption>原创示意图 · 更新、验证与失败保护的流程示意<span class="hint">点击放大查看</span></figcaption></figure>
+<h3 id="maintenance-section-1">更新：安装包、摘要和版本清单要匹配</h3>
+<p>免费 Server 提示新版本后，由维护者从官方 Release 手动下载。免费版本提示清单不签名，不自动下载或安装；SHA-256 校验是完整性检查，不能替代下载来源的可信度。</p>
+<p>当前原生更新脚本还要求<strong>版本清单文件</strong>。不能只提供包与摘要；未传 <code>--manifest</code> 时脚本会查找 <code>&lt;安装包路径&gt;.manifest.json</code>。按同一 Release 的说明取得版本清单，确认其 <code>version</code> 与包一致。若 Release 未提供可用清单或安装路径，停止并联系维护者，不随意拼写清单绕过缺失。</p>
+<ol>
+<li>记录当前版本与运行状态。</li>
+<li>创建备份，把归档、元数据和外部媒体副本妥善保存。</li>
+<li>下载同一发布的包、摘要与版本清单。</li>
+<li>校验 SHA-256，执行：</li>
+</ol>
+<pre><code class="language-bash">sudo /Library/Visto/current/scripts/update-visto-server.sh \
+  --package '/实际路径/Visto-Server_&lt;版本&gt;_macos-arm64.tar.gz' \
+  --sha256 '&lt;官方公布的64位SHA-256&gt;' \
+  --manifest '/实际路径/该版本的清单.json'
+</code></pre>
+<p>脚本在校验、停服和备份保护后切换程序，检查健康状态；失败时按工具的恢复流程处理。不要手工改 <code>current</code> 链接。</p>
+<h3 id="maintenance-section-2">更新后检查</h3>
+<pre><code class="language-bash">curl -fsS http://127.0.0.1:8787/health/ready
+sudo /Library/Visto/current/bin/visto-server --json \
+  --address 127.0.0.1:8787 status
+</code></pre>
+<p>再用浏览器确认项目、旧文件、新上传、视频播放和分享。健康接口通过不能代替业务数据检查。</p>
+<h3 id="maintenance-section-3">日常服务启停与日志</h3>
+<p>维护前确认没有在途上传或重要审阅。默认 macOS 实例可以用系统服务管理器停止或启动：</p>
+<pre><code class="language-bash"># 停止
+sudo launchctl bootout system/com.visto.server
+# 启动
+sudo launchctl bootstrap system /Library/LaunchDaemons/com.visto.server.plist
+# 已加载服务的重启
+sudo launchctl kickstart -k system/com.visto.server
+</code></pre>
+<p>启动或重启后再次查 <code>health/ready</code> 并在网页验证。若提示服务不存在或已加载，先确认当前服务状态和实际安装配置，不反复执行。默认日志位于 <code>/Library/Logs/Visto</code>；保留相关时间段的错误即可，发给他人前脱敏。网页全局设置通常保存后立即生效，主机环境配置的修改则按要求重启。</p>
+<h3 id="maintenance-section-4">恢复：先只读检查，再执行替换</h3>
+<p>恢复会替换<strong>当前实例的数据目录</strong>，会影响备份之后的业务变化。先保存当前实例的备份；确认目标主机、数据目录、归档和同名元数据。</p>
+<pre><code class="language-bash">sudo /Library/Visto/current/scripts/restore-visto-server.sh \
+  --backup-file '/实际路径/备份.tar.gz' \
+  --check-only
+</code></pre>
+<p>只读检查通过且你已确认覆盖影响后执行：</p>
+<pre><code class="language-bash">sudo /Library/Visto/current/scripts/restore-visto-server.sh \
+  --backup-file '/实际路径/备份.tar.gz' \
+  --confirm-restore
+</code></pre>
+<p>两种模式不能同时使用。当前恢复保护要求原数据目录一致；跨目录恢复可能被拒绝。拒绝时保留错误，不手工解压覆盖数据库，也不修改元数据去伪装路径。</p>
+<p>恢复后确认服务就绪、项目和版本符合备份时间，原文件可读，外部存储仍可访问；数据目录外原片需要独立恢复与核对。</p>
+<h3 id="maintenance-section-5">回滚到保留的程序版本</h3>
+<pre><code class="language-bash">sudo /Library/Visto/current/scripts/rollback-visto-server.sh \
+  --to-version '&lt;已保留的版本&gt;' \
+  --confirm-rollback
+</code></pre>
+<p>程序回滚与数据恢复目的不同；不能假定旧程序一定兼容当前数据库。让工具执行对应保护，按具体失败说明处理。不要删除恢复点、备份或失败日志。</p>
+<h3 id="maintenance-section-6">卸载</h3>
+<p>默认卸载保留用户数据和备份：</p>
+<pre><code class="language-bash">sudo /Library/Visto/current/scripts/uninstall-visto-server.sh --yes
+</code></pre>
+<p>如果提示 <code>could not be stopped</code>，卸载会中止并保留服务配置、程序和数据。先检查服务或进程，解决原因后再试，不手工删除服务配置。</p>
+<p>卸载程序不会自动抹掉外接盘或远程存储上的文件。<code>--purge-data</code> 会扩大删除影响，只在确认不需要数据并有可用备份时按该版本说明使用。</p><nav class="pager" aria-label="章节翻页"><a href="backup.html"><small>上一章</small>← 23 · 备份：保护数据库与媒体</a><a href="troubleshooting.html"><small>下一章</small>25 · 按现象排查问题 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#maintenance-section-1">更新：安装包、摘要和版本清单要匹配</a><a href="#maintenance-section-2">更新后检查</a><a href="#maintenance-section-3">日常服务启停与日志</a><a href="#maintenance-section-4">恢复：先只读检查，再执行替换</a><a href="#maintenance-section-5">回滚到保留的程序版本</a><a href="#maintenance-section-6">卸载</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

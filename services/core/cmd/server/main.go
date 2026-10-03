@@ -15,6 +15,7 @@ import (
 	"review-studio.local/core/internal/audit"
 	"review-studio.local/core/internal/authorization"
 	"review-studio.local/core/internal/catalog"
+	"review-studio.local/core/internal/encoderselection"
 	"review-studio.local/core/internal/identity"
 	"review-studio.local/core/internal/invitation"
 	"review-studio.local/core/internal/job"
@@ -50,6 +51,13 @@ func main() {
 		os.Exit(1)
 	}
 	trustedProxyCIDRs := splitCommaSeparated(os.Getenv("REVIEW_STUDIO_TRUSTED_PROXIES"))
+	// D2, docs/FREE_TIER_BOUNDARY_DESIGN.md: an explicit deployment value pins the
+	// wizard's host access choice; unset leaves the recorded answer in force.
+	allowWebHostPaths, allowWebHostPathsErr := httpapi.AllowWebHostPathsFromEnvironment()
+	if allowWebHostPathsErr != nil {
+		logger.Error("invalid host access override", "error", allowWebHostPathsErr)
+		os.Exit(1)
+	}
 
 	db, err := database.Open(context.Background(), database.Config{
 		Path: filepath.Join(dataDir, "review-studio.db"),
@@ -179,6 +187,12 @@ func main() {
 	if runtimeEncoder != "" {
 		videoProcessor.SetSoftwareEncoder(runtimeEncoder)
 	}
+	encoderSelection, applyMediaEncoder := setupMediaEncoderSelection(
+		systemSettingsService, videoProcessor, runtimeEncoder,
+		func(ctx context.Context) (mediaruntime.EncoderProbeResult, error) {
+			return mediaruntime.ProbeH264Encoders(ctx, ffmpegCommand)
+		}, logger,
+	)
 	renditionService := media.NewRenditionService(
 		media.NewSQLiteRenditionRepository(db),
 		mediaRepository,
@@ -205,6 +219,11 @@ func main() {
 		secretStore,
 		notification.NewDefaultSender(),
 	)
+	renditionService.SetEncoderEventRecorder(encoderEventRecorder{
+		notifications: notificationService,
+		audit:         auditService,
+		logger:        logger,
+	})
 	worker := job.NewWorker(jobService, job.WorkerConfig{
 		NodeID:            "embedded-core",
 		NodeName:          "Embedded Core",
@@ -260,22 +279,36 @@ func main() {
 	notificationWorker.Start(shutdownContext)
 
 	handler := httpapi.NewHandler(httpapi.Config{
-		FFmpegCommand:       ffmpegCommand,
-		FFprobeCommand:      ffprobeCommand,
-		Version:             version,
-		Logger:              logger,
-		Identity:            identityService,
-		Catalog:             catalogService,
-		Storage:             storageService,
-		Media:               mediaService,
-		Library:             libraryService,
-		Renditions:          renditionService,
-		Jobs:                jobService,
-		Reviews:             reviewService,
-		ReviewTemplates:     reviewTemplateService,
-		Shares:              shareService,
-		Audit:               auditService,
-		Notifications:       notificationService,
+		FFmpegCommand:   ffmpegCommand,
+		FFprobeCommand:  ffprobeCommand,
+		Version:         version,
+		Logger:          logger,
+		Identity:        identityService,
+		Catalog:         catalogService,
+		Storage:         storageService,
+		Media:           mediaService,
+		Library:         libraryService,
+		Renditions:      renditionService,
+		Jobs:            jobService,
+		Reviews:         reviewService,
+		ReviewTemplates: reviewTemplateService,
+		Shares:          shareService,
+		Audit:           auditService,
+		Notifications:   notificationService,
+		// The page promises the encoder choice takes effect immediately, so an
+		// Owner save is pushed into the running processor and recorded as the
+		// runtime choice. Clearing the choice goes back to whatever this
+		// deployment configured.
+		ApplyMediaEncoder: func(preferredEncoder string) bool {
+			return applyMediaEncoder(context.Background(), preferredEncoder)
+		},
+		// The re-probe runs inside Core against the FFmpeg this deployment
+		// actually selected, so the answer describes this install rather than a
+		// generic candidate list.
+		RunMediaEncodingProbe: func(ctx context.Context, actorID string) error {
+			_, err := encoderSelection.Sweep(ctx, actorID)
+			return err
+		},
 		Authorization:       authorizationService,
 		ProjectAccess:       projectAccessService,
 		ProjectMembers:      projectMemberService,
@@ -287,11 +320,10 @@ func main() {
 		RequireRemoteHTTPS:  requireRemoteHTTPS,
 		VideoAcceleration:   videoProcessor.AccelerationSettings(),
 		HostManagementToken: hostManagementToken,
+		AllowWebHostPaths:   allowWebHostPaths,
 		TrustedProxyCIDRs:   trustedProxyCIDRs,
 		RateLimits:          rateLimitService,
 		UpdateSources:       splitSemicolonSeparated(os.Getenv("VISTO_SERVER_UPDATE_SOURCES")),
-		UpdatePublicKey:     os.Getenv("VISTO_SERVER_UPDATE_PUBLIC_KEY"),
-		UpdateRootPublicKey: os.Getenv("VISTO_SERVER_UPDATE_ROOT_PUBLIC_KEY"),
 		DeploymentKind:      os.Getenv("VISTO_SERVER_DEPLOYMENT_KIND"),
 	})
 	if webDir := os.Getenv("REVIEW_STUDIO_WEB_DIR"); webDir != "" {
@@ -331,6 +363,19 @@ func main() {
 	}()
 
 	logger.Info("review studio core started", "address", address, "version", version)
+
+	// docs/MEDIA_ENCODING_SELECTION_DESIGN.md 3.1: a fresh install has no sweep
+	// yet, and the default encoder has to come from what this machine can really
+	// run. The sweep starts real FFmpeg processes, so it runs beside startup
+	// rather than in front of it.
+	go func() {
+		probeContext, cancel := context.WithTimeout(
+			context.Background(), encoderselection.ProbeTimeout)
+		defer cancel()
+		if _, err := encoderSelection.Sweep(probeContext, encoderselection.SystemActor); err != nil {
+			logger.Warn("the startup media encoder probe did not finish", "error", err)
+		}
+	}()
 
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Error("server stopped unexpectedly", "error", err)

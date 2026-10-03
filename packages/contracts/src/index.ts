@@ -70,22 +70,20 @@ export interface SystemUpdateStatus {
   securityNotes: string[];
 }
 
+/**
+ * The free tier version announcement. It carries no artifact list and no
+ * download location: the channel is unsigned, so a location taken from it could
+ * be rewritten by anyone who can rewrite the source.
+ */
 export interface SystemUpdateRelease {
   version: string;
   publishedAt: string;
-  minimumSupportedVersion: string;
-  releaseNotes: string[];
-  signingKeyId?: string;
   source: string;
-  upToDate: boolean;
-  artifacts: {
-    kind: string;
-    platform: string;
-    url?: string;
-    image?: string;
-    sha256: string;
-    sizeBytes: number;
-  }[];
+  /**
+   * Version guard verdict. Deliberately a three-way state rather than a
+   * boolean, so "cannot compare" is never rendered as "已是最新".
+   */
+  state: "update_available" | "up_to_date" | "unknown";
 }
 
 export interface SystemUpdateCommand {
@@ -108,6 +106,13 @@ export interface SetupInput {
   password: string;
   locale: string;
   timezone: string;
+  /**
+   * The first-run answer to "may an Owner add host directories from the web?".
+   * Optional: an omitted field keeps the documented default (enabled), so it is
+   * never read as a refusal. The answer is recorded once and cannot be changed
+   * from the web afterwards — see SystemHostAccess.
+   */
+  allowWebHostPaths?: boolean;
 }
 
 export interface SessionInfo {
@@ -423,6 +428,72 @@ export interface SystemNetworkSettings {
 export interface SystemNetworkSettingsInput {
   requireRemoteHTTPS: boolean;
   revision: number;
+}
+
+/**
+ * The host access switch, read-only from the web on purpose. It decides whether
+ * an Owner web session may reach the host management surface — which includes
+ * adding any local directory as a storage location. A setting that grants
+ * host-level reach must not be flippable by the session that benefits from it,
+ * so there is no update counterpart and no PUT/PATCH route. It can be changed in
+ * exactly two places: the first-run wizard, which requires the host management
+ * token, and the deployment configuration (`VISTO_ALLOW_WEB_HOST_PATHS`).
+ */
+export interface SystemHostAccess {
+  /** What the first-run wizard recorded. */
+  allowWebHostPaths: boolean;
+  /** What the host management guard consults right now, override included. */
+  effectiveAllowWebHostPaths: boolean;
+  /** `VISTO_ALLOW_WEB_HOST_PATHS` pins the value; the wizard's answer is inert. */
+  environmentForced: boolean;
+  revision: number;
+  updatedBy: string | null;
+  updatedAt: string;
+}
+
+/**
+ * H.264 encoder selection for the managed media runtime, Owner-editable. Core
+ * probes which encoders this host can actually run — a compiled-in encoder is not
+ * an available one — and the Owner may override the choice or return to automatic.
+ *
+ * `preferredEncoder` is `""` for "follow the probe". `effectiveEncoder` is what
+ * the next job will use, resolved server-side so the page never re-derives the
+ * order: the breaker's current choice, then the Owner's, then Core's configuration.
+ */
+export interface SystemMediaEncodingSettings {
+  /** The stored Owner decision; `""` means automatic. */
+  preferredEncoder: string;
+  /** What the next job will actually use. */
+  effectiveEncoder: string;
+  /** What the breaker moved the instance to; `""` when it has no opinion. */
+  activeEncoder: string;
+  /** The last probe sweep, most preferred first. */
+  detectedEncoders: string[];
+  detectedAt: string | null;
+  /** Consecutive failures of the current encoder; resets on any success. */
+  failureCount: number;
+  /** Set while the breaker has moved the instance off an encoder. */
+  trippedEncoder: string | null;
+  trippedReason: string | null;
+  trippedAt: string | null;
+  revision: number;
+  updatedBy: string | null;
+  updatedAt: string;
+}
+
+export interface SystemMediaEncodingSettingsInput {
+  /** `""` returns to automatic selection. */
+  preferredEncoder: string;
+  revision: number;
+}
+
+/**
+ * What a manual re-probe answers with. The sweep itself runs in the background,
+ * so this only confirms it started; the outcome is read back from
+ * SystemMediaEncodingSettings.detectedEncoders / detectedAt.
+ */
+export interface SystemMediaEncodingReprobeResult {
+  started: boolean;
 }
 
 export interface PublicRegistrationInfo {

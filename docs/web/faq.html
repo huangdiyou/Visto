@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>26 · 常见问题 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html" class="active" aria-current="page">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>帮助与参考</div><p class="eyebrow">VISTO USER GUIDE / 26</p><h1>常见问题</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><h3 id="faq-section-1">我需要安装 Desktop 才能用吗？</h3>
+<p>本手册的免费 Server 浏览器工作流不以 Desktop 为前置依赖。团队已经部署 Server 时，你只需要地址、账号或分享入口。</p>
+<h3 id="faq-section-2">数据会自动上传到云端吗？</h3>
+<p>媒体按 Owner 配置的保存位置存储。本机部署和远程存储是不同选择；启用 WebDAV / S3、外部通知或远程分享时，相应数据会经过所配置服务与网络。</p>
+<h3 id="faq-section-3">同一个文件名会自动合并成版本吗？</h3>
+<p>不要依赖文件名相同自动合并。需要修订原作品时，打开原资产并使用“上传新版本”，再核对版本历史。</p>
+<h3 id="faq-section-4">上传新版后，旧分享会显示新版吗？</h3>
+<p>不要这样假定。审阅引用固定版本；用新版创建下一轮审阅并发送正确入口，旧审阅继续保留旧版本的上下文。</p>
+<h3 id="faq-section-5">注册后为什么看不到项目？</h3>
+<p>账号存在不代表已加入项目。请 Owner 或项目主管添加项目成员关系并核对状态、期限和权限。</p>
+<h3 id="faq-section-6">为什么网页不能再改本机目录权限？</h3>
+<p>这个开关只在首次设置时询问一次。后续由主机配置修改并重启，避免 Owner 网页会话自行改变主机访问边界。</p>
+<h3 id="faq-section-7">归档后文件已经复制到归档盘了吗？</h3>
+<p>没有这个保证。项目归档是生命周期操作，物理存储复制和备份是独立操作，必须分别确认完成结果。</p>
+<h3 id="faq-section-8">拷贝数据库就算备份全部媒体吗？</h3>
+<p>不算。需要一致性数据库和加密秘密，也要清点系统托管媒体、外部目录及远程文件。参见“备份”。</p>
+<h3 id="faq-section-9">安全扫描没有结果，是不是安全？</h3>
+<p>“未扫描”“等待”或“引擎不可用”不能等同安全通过。结合策略、实际引擎和检查结果处理。</p>
+<h3 id="faq-section-10">网页显示有更新会自动安装吗？</h3>
+<p>免费 Server 只提示版本，主机维护者手动从官方发布页下载校验并更新。媒体运行时的签名安装流程另行处理。</p>
+<h3 id="faq-section-11">能把本机分享地址发给客户吗？</h3>
+<p><code>127.0.0.1</code> 只对当前设备有效。客户需要一个可达的团队地址和符合策略的 HTTPS 入口。</p>
+<h3 id="faq-section-12">手机上能打开代表移动端已验收吗？</h3>
+<p>不代表。本手册网页做响应式阅读适配，产品在不同手机、浏览器和文件格式上的兼容性仍以对应版本验收为准。</p><nav class="pager" aria-label="章节翻页"><a href="troubleshooting.html"><small>上一章</small>← 25 · 按现象排查问题</a><a href="checklist.html"><small>下一章</small>27 · 交付检查单与求助模板 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#faq-section-1">我需要安装 Desktop 才能用吗？</a><a href="#faq-section-2">数据会自动上传到云端吗？</a><a href="#faq-section-3">同一个文件名会自动合并成版本吗？</a><a href="#faq-section-4">上传新版后，旧分享会显示新版吗？</a><a href="#faq-section-5">注册后为什么看不到项目？</a><a href="#faq-section-6">为什么网页不能再改本机目录权限？</a><a href="#faq-section-7">归档后文件已经复制到归档盘了吗？</a><a href="#faq-section-8">拷贝数据库就算备份全部媒体吗？</a><a href="#faq-section-9">安全扫描没有结果，是不是安全？</a><a href="#faq-section-10">网页显示有更新会自动安装吗？</a><a href="#faq-section-11">能把本机分享地址发给客户吗？</a><a href="#faq-section-12">手机上能打开代表移动端已验收吗？</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>17 · 创建一轮审阅 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html" class="active" aria-current="page">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>审阅与交付</div><p class="eyebrow">VISTO USER GUIDE / 17</p><h1>创建一轮审阅</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p><strong>谁来操作：</strong> 有创建审阅权限的项目成员。审阅是一轮明确的确认任务，围绕指定版本组织参与者、截止时间和判断规则。</p>
+<figure class="figure"><a href="assets/06-review.png" aria-label="放大查看：真实界面：审阅清单、参与者、通过条件和访问权限"><img src="assets/06-review.png" alt="真实界面：审阅清单、参与者、通过条件和访问权限" loading="lazy" decoding="async"></a><figcaption>真实界面 · 演示数据 · 审阅清单、参与者、通过条件和访问权限<span class="hint">点击放大查看</span></figcaption></figure>
+<h3 id="reviews-section-1">创建步骤</h3>
+<ol>
+<li>从素材详情选定版本后点“创建审阅”；也可在项目“审阅”里选择媒体加入清单。</li>
+<li>核对每份作品和 V 编号，移除无关内容。</li>
+<li>输入审阅名称，例如“主片 V2 · 客户文案确认”。</li>
+<li>设置截止时间；长期有效不代表永远开放写入，仍受审阅状态与分享策略影响。</li>
+<li>选择审阅成员和需要的负责人。</li>
+<li>选择通过条件。</li>
+<li>需要外部分享时设置访问密码、下载和评论权限，提交后核对创建反馈。</li>
+</ol>
+<h3 id="reviews-section-2">选择通过条件</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>条件</th>
+<th>适用情景</th>
+<th>需要确认</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任一审阅者</td>
+<td>任何一个指定审阅者即可完成确认</td>
+<td>不适合要求所有部门签字的流程</td>
+</tr>
+<tr>
+<td>所有审阅者</td>
+<td>每个被要求的审阅者都要确认</td>
+<td>确保参与者正确，否则可能一直等待</td>
+</tr>
+<tr>
+<td>仅负责人</td>
+<td>明确由一个负责人做最终判断</td>
+<td>必须选定负责人，其他评论不替代其结论</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="reviews-section-3">草稿与开启</h3>
+<p>没有分享权限时，创建结果可能保存为草稿。草稿不等于已经对外发送；先检查审阅状态，按页面开启后再创建分享。创建成功但复制链接失败时，审阅可能已经存在，在详情里继续创建或复制分享，不重新发起相同审阅。</p>
+<h3 id="reviews-section-4">看板与详情</h3>
+<p>项目审阅看板展示不同状态的审阅。打开详情查看固定版本、参与者、评论线程和审核结论。记录每轮的目标，避免把素材级反馈、审阅状态和项目归档混在一起。</p>
+<p><strong>完成检查：</strong> 清单版本正确、参与人正确、判断规则符合要求、所需分享成功创建且复制。</p><nav class="pager" aria-label="章节翻页"><a href="versions.html"><small>上一章</small>← 16 · 版本管理与新一轮修订</a><a href="comments.html"><small>下一章</small>18 · 提交精确反馈与审核结论 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#reviews-section-1">创建步骤</a><a href="#reviews-section-2">选择通过条件</a><a href="#reviews-section-3">草稿与开启</a><a href="#reviews-section-4">看板与详情</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

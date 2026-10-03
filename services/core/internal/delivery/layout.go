@@ -66,7 +66,7 @@ func LayoutForPrefix(platform Platform, prefix string) Layout {
 			BackupDir:   "/var/backups/visto",
 			RecoveryDir: prefix + "/recovery",
 			LogDir:      "/var/log/visto",
-			RuntimeDir:  "/var/lib/visto/runtime",
+			RuntimeDir:  "/var/lib/visto-runtime",
 			CacheDir:    "/var/lib/visto/cache",
 		}
 	case "macos":

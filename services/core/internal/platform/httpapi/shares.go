@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -755,9 +756,24 @@ func (h *handler) handleOpenShareEntry(
 	response http.ResponseWriter,
 	request *http.Request,
 ) {
+	entryToken := request.PathValue("token")
+	entryRateKey := shareEntryRateLimitKey(
+		entryToken,
+		h.requestRateLimitClientIdentity(request),
+	)
+	if !h.consumeRateLimit(
+		response,
+		request,
+		"share-entry",
+		entryRateKey,
+		20,
+		5*time.Minute,
+	) {
+		return
+	}
 	result, err := h.shares.Open(
 		request.Context(),
-		request.PathValue("token"),
+		entryToken,
 	)
 	if err != nil {
 		h.handlePublicShareError(response, request, err)
@@ -781,6 +797,11 @@ func (h *handler) handleOpenShareEntry(
 		Status: "ready",
 		Share:  &item,
 	})
+}
+
+func shareEntryRateLimitKey(entryToken string, clientIdentity string) string {
+	entryDigest := sha256.Sum256([]byte(entryToken))
+	return fmt.Sprintf("share:%x|client:%s", entryDigest, clientIdentity)
 }
 
 func (h *handler) handleVerifySharePassword(
@@ -1165,7 +1186,7 @@ func (h *handler) handlePublicShareError(
 	case errors.Is(err, sharedomain.ErrRateLimited):
 		response.Header().Set("Retry-After", "300")
 		writeError(response, http.StatusTooManyRequests, requestID(response),
-			"share.rate_limited", "密码尝试次数过多，请稍后再试")
+			"share.rate_limited", "分享访问或密码尝试次数过多，请稍后再试")
 	case errors.Is(err, sharedomain.ErrDownloadDenied):
 		writeError(response, http.StatusForbidden, requestID(response),
 			"share.download_denied", "这个分享不允许下载源文件")

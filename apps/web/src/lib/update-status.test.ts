@@ -53,16 +53,12 @@ describe("update status view", () => {
         latest: {
           version: "1.0.0",
           publishedAt: "2026-09-02T00:00:00Z",
-          minimumSupportedVersion: "1.0.0",
-          releaseNotes: ["no change"],
           source: "https://updates.test/server/stable",
-          upToDate: true,
-          artifacts: [],
+          state: "up_to_date",
         },
       }),
     );
     expect(view.latestTone).toBe("ready");
-    expect(view.releaseNotes).toEqual(["no change"]);
     expect(view.showsRelease).toBe(true);
   });
 
@@ -73,16 +69,32 @@ describe("update status view", () => {
         latest: {
           version: "1.0.1",
           publishedAt: "2026-09-02T00:00:00Z",
-          minimumSupportedVersion: "1.0.0",
-          releaseNotes: [],
           source: "https://updates.test/server/stable",
-          upToDate: false,
-          artifacts: [],
+          state: "update_available",
         },
       }),
     );
     expect(view.latestTone).toBe("attention");
     expect(view.latestHint).toContain("1.0.1");
+  });
+
+  // An unreadable version must not be presented as "已是最新": the free tier
+  // channel is unsigned, so a comparison failure has to stay visibly unknown.
+  it("does not claim the instance is current when versions cannot be compared", () => {
+    const view = updateStatusView(
+      status({
+        currentVersion: "development",
+        latest: {
+          version: "1.0.1",
+          publishedAt: "2026-09-02T00:00:00Z",
+          source: "https://updates.test/server/stable",
+          state: "unknown",
+        },
+      }),
+    );
+    expect(view.latestTone).toBe("neutral");
+    expect(view.latestHint).toContain("无法判断");
+    expect(view.latestHint).not.toContain("已是最新");
   });
 
   it("explains an unavailable source without showing a version", () => {

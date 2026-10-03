@@ -4,9 +4,40 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"review-studio.local/core/internal/delivery"
 	"testing"
 )
+
+// A digest mismatch must still be reported as a verification failure with the
+// documented exit code, even though the free tier no longer verifies signatures.
+func TestUpdateVerifyPackageReportsAVerificationFailure(t *testing.T) {
+	directory := t.TempDir()
+	path := filepath.Join(directory, "Visto-Server_1.0.0_linux-amd64.tar.gz")
+	if err := os.WriteFile(path, []byte("package bytes"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var out, errOut bytes.Buffer
+	if got := run([]string{
+		"--json", "update", "verify-package",
+		"--artifact", path,
+		"--kind", "linux-server",
+		"--platform", "linux-amd64",
+		"--sha256", strings.Repeat("a", 64),
+	}, &out, &errOut); got != 8 {
+		t.Fatalf("exit=%d want=8: %s", got, errOut.String())
+	}
+	var envelope delivery.ErrorEnvelope
+	if err := json.NewDecoder(&out).Decode(&envelope); err != nil {
+		t.Fatal(err)
+	}
+	if envelope.OK || envelope.Error == nil || envelope.Error.Code != "verification_failed" {
+		t.Fatalf("unexpected envelope: %#v", envelope)
+	}
+}
 
 func TestJSONFailures(t *testing.T) {
 	cases := []struct {
@@ -22,7 +53,9 @@ func TestJSONFailures(t *testing.T) {
 		{"diagnostic flag", []string{"--json", "diagnostics", "export", "--bogus"}, 2, "invalid_arguments"},
 		{"config report", []string{"--json", "--address", "bad-address", "config", "validate"}, 3, "config_or_health"},
 		{"platform", []string{"--json", "update", "verify-package", "--kind", "linux-server", "--platform", "macos-arm64"}, 5, "unsupported_platform"},
-		{"public key", []string{"--json", "--update-source", "https://example.test", "--update-public-key", "invalid", "update", "check"}, 8, "verification_failed"},
+		// The free tier has no release public key flag any more; a malformed
+		// expected digest is the remaining argument-level failure on this path.
+		{"package digest", []string{"--json", "update", "verify-package", "--artifact", "/absent/package.tar.gz", "--kind", "linux-server", "--platform", "linux-amd64", "--sha256", "short"}, 2, "invalid_arguments"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

@@ -3,6 +3,7 @@ export type OwnerSection =
   | "accounts"
   | "network"
   | "storage"
+  | "encoding"
   | "notifications"
   | "activity"
   | "diagnostics";
@@ -29,6 +30,7 @@ const ownerSections = new Set<OwnerSection>([
   "accounts",
   "network",
   "storage",
+  "encoding",
   "notifications",
   "activity",
   "diagnostics",

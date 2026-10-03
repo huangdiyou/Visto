@@ -1,0 +1,70 @@
+name: visto
+
+services:
+  core:
+    image: "${VISTO_CORE_IMAGE:-visto-core:local}"
+    build:
+      context: .
+      target: core
+      args:
+        VISTO_VERSION: "${VISTO_VERSION:-1.0.0-dev}"
+    restart: unless-stopped
+    environment:
+      REVIEW_STUDIO_ADDR: 0.0.0.0:8787
+      REVIEW_STUDIO_DATA_DIR: /var/lib/visto
+      # Set to 1 when a TLS gateway terminates HTTPS but does not forward the
+      # scheme. Only affects the Cookie Secure attribute, never transport policy.
+      REVIEW_STUDIO_SECURE_COOKIES: "${REVIEW_STUDIO_SECURE_COOKIES:-0}"
+      # Set to 1 to pin "remote access requires HTTPS" on at the deployment layer.
+      # The Owner page then shows it as forced and cannot turn it off. Leave at 0
+      # to let the Owner decide in Owner settings -> Network and security.
+      REVIEW_STUDIO_REQUIRE_HTTPS: "${REVIEW_STUDIO_REQUIRE_HTTPS:-0}"
+      # The Core port is private to this Compose network; nginx overwrites X-Real-IP.
+      REVIEW_STUDIO_TRUST_PROXY_HEADERS: "1"
+      # Honor X-Real-IP only from these allowlisted proxies (Docker bridge subnets).
+      REVIEW_STUDIO_TRUSTED_PROXIES: "${REVIEW_STUDIO_TRUSTED_PROXIES:-172.16.0.0/12}"
+      VISTO_HOST_MANAGEMENT_TOKEN: "${VISTO_HOST_MANAGEMENT_TOKEN:?Set VISTO_HOST_MANAGEMENT_TOKEN to a random initialization token}"
+      # D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2.4: the first-run wizard asks once
+      # whether an Owner web session may add host directories as storage locations
+      # (default: allowed), and the answer cannot be changed from the web afterwards.
+      # Set this to 0 or 1 to pin the answer on this host; leave it unset to let the
+      # wizard decide. Changing it requires host access, which is the point.
+      # VISTO_ALLOW_WEB_HOST_PATHS: "0"
+    volumes:
+      - visto-data:/var/lib/visto
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/visto-server", "--address", "127.0.0.1:8787", "status"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+
+  web:
+    image: "${VISTO_WEB_IMAGE:-visto-web:local}"
+    build:
+      context: .
+      target: web
+    restart: unless-stopped
+    depends_on:
+      core:
+        condition: service_healthy
+    ports:
+      # Keep plaintext HTTP local unless the deployer deliberately opts into LAN access.
+      - "${VISTO_HOST_BIND:-127.0.0.1}:${VISTO_HOST_PORT:-8080}:8080"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+
+volumes:
+  visto-data:

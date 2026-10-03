@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>22 · 网络与远程访问 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html" class="active" aria-current="page">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>设置与维护</div><p class="eyebrow">VISTO USER GUIDE / 22</p><h1>网络与远程访问</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>默认原生 Server 只监听本机；默认 Compose Web 也绑定本机。把分享链接交给异地客户以前，先由部署维护者配置可达地址和 HTTPS 入口。</p>
+<figure class="figure"><a href="assets/network.svg" aria-label="放大查看：浏览器、HTTPS 入口、Visto 与存储的部署示意"><img src="assets/network.svg" alt="浏览器、HTTPS 入口、Visto 与存储的部署示意" loading="lazy" decoding="async"></a><figcaption>原创示意图 · 浏览器、HTTPS 入口、Visto 与存储的部署示意<span class="hint">点击放大查看</span></figcaption></figure>
+<h3 id="network-section-1">四个容易混淆的设置</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>设置</th>
+<th>决定什么</th>
+<th>不会替你完成什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>服务监听 / 网关入口</td>
+<td>哪些设备可以连接</td>
+<td>不自动生成公网域名</td>
+</tr>
+<tr>
+<td>HTTPS 网关</td>
+<td>对外链路加密和入口路由</td>
+<td>不自动授予项目权限</td>
+</tr>
+<tr>
+<td>远程访问必须使用 HTTPS</td>
+<td>拒绝非本机明文 API 请求</td>
+<td>不负责安装证书或配置代理</td>
+</tr>
+<tr>
+<td>网页端添加本机目录权限</td>
+<td>Owner 网页能否添加主机存储</td>
+<td>不授予普通成员任意目录访问</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="network-section-2">正确的开启顺序</h3>
+<ol>
+<li>维护者配置 HTTPS 域名、证书及反向代理，确保 Visto 正常工作。</li>
+<li>用远程设备访问 HTTPS 地址并验证登录和分享。</li>
+<li>在 <strong>Owner 设置 → 网络与安全</strong> 打开“远程访问必须使用 HTTPS”。</li>
+<li>保存后立即生效，再检查团队和分享入口。</li>
+<li>防火墙和代理应使 HTTPS 网关成为唯一公开入口。</li>
+</ol>
+<p>该开关默认关闭。开启后，非回环明文 API 请求可能返回 <code>426 security.https_required</code>。本机 <code>127.0.0.1</code> 仍可使用 HTTP。正在通过远程 HTTP 操作时，系统会阻止会导致自锁的开启请求；请先切换到 HTTPS 或到部署主机操作。</p>
+<h3 id="network-section-3">由部署配置强制</h3>
+<p><code>REVIEW_STUDIO_REQUIRE_HTTPS=1</code> 会强制 HTTPS 策略，网页不能关闭，需要维护者改主机配置并重启。代理信任和 Cookie 的安全标记由部署配置及真实请求协议决定，不能只打开网页开关就认为代理已正确配置。</p>
+<h3 id="network-section-4">推荐交付给成员的信息</h3>
+<p>团队的 HTTPS 地址、登录方式、项目邀请、能访问的网络范围及支持联系人。不要把主机配置、初始化令牌或底层存储密钥一并发送。</p><nav class="pager" aria-label="章节翻页"><a href="notifications.html"><small>上一章</small>← 21 · 通知、个人资料与活动</a><a href="backup.html"><small>下一章</small>23 · 备份：保护数据库与媒体 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#network-section-1">四个容易混淆的设置</a><a href="#network-section-2">正确的开启顺序</a><a href="#network-section-3">由部署配置强制</a><a href="#network-section-4">推荐交付给成员的信息</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

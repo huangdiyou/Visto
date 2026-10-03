@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>23 · 备份：保护数据库与媒体 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html" class="active" aria-current="page">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>设置与维护</div><p class="eyebrow">VISTO USER GUIDE / 23</p><h1>备份：保护数据库与媒体</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>本章命令适用于 macOS 原生 Server，由部署维护者在主机执行。备份会短暂影响服务，选择没有上传和重要审阅的时间窗口。</p>
+<h3 id="backup-section-1">先分清备份覆盖范围</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>数据</th>
+<th>原生数据目录备份是否自动覆盖</th>
+<th>应如何安排</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据目录内的数据库、加密秘密、系统托管源文件和预览</td>
+<td>随数据目录归档</td>
+<td>保留归档与同名元数据</td>
+</tr>
+<tr>
+<td>配在数据目录外的本机 / 外接盘媒体</td>
+<td>不会因数据库记录存在就自动打包</td>
+<td>单独复制或快照，并保持引用路径可用</td>
+</tr>
+<tr>
+<td>WebDAV / S3 上的实际媒体文件</td>
+<td>不会自动下载全部对象到原生备份</td>
+<td>使用对应存储的版本、快照或独立备份</td>
+</tr>
+<tr>
+<td>主机配置、证书、部署说明</td>
+<td>不应假定都在业务数据归档里</td>
+<td>由维护者另做安全备份，妥善保护秘密</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>最常见误区：</strong> 数据库里有文件记录，不代表这份备份已经包含全部原片。先清点每个存储的物理落点，再决定备份范围。</p>
+<h3 id="backup-section-2">创建备份</h3>
+<pre><code class="language-bash">sudo /Library/Visto/current/scripts/backup-visto-server.sh
+</code></pre>
+<p>脚本会证明服务已经停止，再归档数据，随后按流程启动并检查就绪。停服证明失败时会中止；不要手动伪造成功记录或直接打包正在变化的数据库。</p>
+<h3 id="backup-section-3">确认完成</h3>
+<ol>
+<li>命令成功退出并打印实际备份路径。</li>
+<li>归档和 <code>&lt;归档文件&gt;.json</code> 元数据均存在。元数据记录摘要和恢复所需信息。</li>
+<li>服务重新就绪，浏览器能读取项目。</li>
+<li>把这两个文件一起复制到另一块磁盘或可信备份位置。</li>
+<li>把数据目录外媒体和部署配置的独立备份与此次备份关联记录。</li>
+</ol>
+<h3 id="backup-section-4">建议的备份时机</h3>
+<p>首次完成配置后、重要交付后、每次更新前、每次恢复或大规模存储调整前。按项目价值安排日常周期，并定期在隔离环境检查可恢复性；“文件存在”不等于“恢复已验收”。</p><nav class="pager" aria-label="章节翻页"><a href="network.html"><small>上一章</small>← 22 · 网络与远程访问</a><a href="maintenance.html"><small>下一章</small>24 · 更新、恢复、回滚与卸载 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#backup-section-1">先分清备份覆盖范围</a><a href="#backup-section-2">创建备份</a><a href="#backup-section-3">确认完成</a><a href="#backup-section-4">建议的备份时机</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

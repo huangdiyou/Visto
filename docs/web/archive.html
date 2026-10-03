@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>15 · 回收站、归档与删除 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html" class="active" aria-current="page">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>项目与素材</div><p class="eyebrow">VISTO USER GUIDE / 15</p><h1>回收站、归档与删除</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>这些操作的影响不同。执行前先确认你要解决的是“从当前项目移除素材”“停止协作”还是“彻底删除项目”。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>操作</th>
+<th>作用</th>
+<th>能否代替备份</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>从当前项目移除媒体</td>
+<td>从当前项目关系中移除，可在项目回收站恢复</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>恢复回收站媒体</td>
+<td>把被移除的媒体重新加入当前项目</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>归档项目</td>
+<td>保留项目数据，暂停项目内写入和存储调整</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>恢复项目</td>
+<td>把已归档项目恢复为进行中</td>
+<td>不能</td>
+</tr>
+<tr>
+<td>删除项目</td>
+<td>按确认说明处理项目，可能不可恢复</td>
+<td>必须先有独立备份</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="archive-section-1">恢复误移除媒体</h3>
+<p>进入项目“媒体 → 回收站”，找到相应媒体，使用恢复操作并查看提示。回到项目媒体确认文件和版本可读。若底层原文件已经被外部删除，恢复项目关系不会凭空恢复文件。</p>
+<h3 id="archive-section-2">项目交付后的归档</h3>
+<figure class="figure"><a href="assets/09-archive.png" aria-label="放大查看：真实界面：项目设置中的归档与删除说明"><img src="assets/09-archive.png" alt="真实界面：项目设置中的归档与删除说明" loading="lazy" decoding="async"></a><figcaption>真实界面 · 演示数据 · 项目设置中的归档与删除说明<span class="hint">点击放大查看</span></figcaption></figure>
+<ol>
+<li>确认最终版本、正式结论和交付内容。</li>
+<li>检查未解决反馈，记录保留原因。</li>
+<li>检查外部分享，需要停止访问的先撤销。</li>
+<li>确认实际备份和必要的媒体异盘副本。</li>
+<li>进入 <strong>项目设置 → 危险操作</strong>，选择归档并确认。</li>
+</ol>
+<p>归档不会自动把素材复制到归档存储，不会自动做异地备份，也不应假定已经撤销所有分享。需要再次修改时先恢复项目，再重新审阅新版本。</p>
+<h3 id="archive-section-3">删除前必须确认的内容</h3>
+<p>读清页面对删除范围和可恢复性的提示，核对项目名、版本、分享及备份。不能用项目回收站替代整库恢复。备份恢复通常会影响整个实例，不只是一个项目，请让维护者评估后处理。</p><nav class="pager" aria-label="章节翻页"><a href="upload.html"><small>上一章</small>← 14 · 上传、搜索与整理素材</a><a href="versions.html"><small>下一章</small>16 · 版本管理与新一轮修订 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#archive-section-1">恢复误移除媒体</a><a href="#archive-section-2">项目交付后的归档</a><a href="#archive-section-3">删除前必须确认的内容</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

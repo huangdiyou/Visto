@@ -50,39 +50,58 @@ const (
 )
 
 type Config struct {
-	Version             string
-	Logger              *slog.Logger
-	Identity            *identity.Service
-	Catalog             *catalog.Service
-	Storage             *storage.Service
-	Media               *media.Service
-	Library             *media.LibraryService
-	Renditions          *media.RenditionService
-	Jobs                *job.Service
-	Reviews             *reviewdomain.Service
-	ReviewTemplates     *reviewtemplate.Service
-	Shares              *sharedomain.Service
-	Audit               *audit.Service
-	Notifications       *notification.Service
-	Authorization       *authorization.Service
-	ProjectAccess       *projectaccess.Service
-	ProjectMembers      *projectmember.Service
-	ProjectStorage      *projectstorage.Service
-	Members             *workspace.Service
-	Invitations         *invitation.Service
-	WorkspaceSettings   *workspacesettings.Service
-	SystemSettings      *systemsettings.Service
-	RequireRemoteHTTPS  bool
-	VideoAcceleration   media.VideoAccelerationSettings
-	HostManagementToken string
-	TrustedProxyCIDRs   []string
-	RateLimits          *ratelimit.Service
-	// UpdateSources, UpdatePublicKey, and UpdateRootPublicKey come from the
-	// deployment environment. Without sources the Owner update page never
-	// contacts a public platform and only offers offline guidance.
-	UpdateSources       []string
-	UpdatePublicKey     string
-	UpdateRootPublicKey string
+	Version            string
+	Logger             *slog.Logger
+	Identity           *identity.Service
+	Catalog            *catalog.Service
+	Storage            *storage.Service
+	Media              *media.Service
+	Library            *media.LibraryService
+	Renditions         *media.RenditionService
+	Jobs               *job.Service
+	Reviews            *reviewdomain.Service
+	ReviewTemplates    *reviewtemplate.Service
+	Shares             *sharedomain.Service
+	Audit              *audit.Service
+	Notifications      *notification.Service
+	Authorization      *authorization.Service
+	ProjectAccess      *projectaccess.Service
+	ProjectMembers     *projectmember.Service
+	ProjectStorage     *projectstorage.Service
+	Members            *workspace.Service
+	Invitations        *invitation.Service
+	WorkspaceSettings  *workspacesettings.Service
+	SystemSettings     *systemsettings.Service
+	RequireRemoteHTTPS bool
+	VideoAcceleration  media.VideoAccelerationSettings
+	// ApplyMediaEncoder points the running video processor at the Owner's choice.
+	// The page promises the change takes effect immediately
+	// (docs/MEDIA_ENCODING_SELECTION_DESIGN.md 3.5) and the processor is the only
+	// thing that can do that. An empty value means "back to automatic", which the
+	// implementation restores from its configured encoder. Nil means the stored
+	// choice is still accepted, but only applies at the next start.
+	ApplyMediaEncoder func(preferredEncoder string) bool
+	// RunMediaEncodingProbe runs one encoder availability sweep and settles what
+	// it found. Nil disables the manual re-probe route rather than offering an
+	// action that cannot work.
+	RunMediaEncodingProbe func(ctx context.Context, actorID string) error
+	HostManagementToken   string
+	// AllowWebHostPaths is the operator override for the first-run wizard's host
+	// access choice (D2, docs/FREE_TIER_BOUNDARY_DESIGN.md). Nil means "use the
+	// value the wizard recorded".
+	AllowWebHostPaths *bool
+	TrustedProxyCIDRs []string
+	RateLimits        *ratelimit.Service
+	// UpdateSources comes from the deployment environment. Without sources the
+	// Owner update page never contacts a public platform and only offers offline
+	// guidance.
+	//
+	// VISTO_SERVER_UPDATE_PUBLIC_KEY and VISTO_SERVER_UPDATE_ROOT_PUBLIC_KEY are
+	// deliberately not read (D1, docs/FREE_TIER_BOUNDARY_DESIGN.md §1.9): the free
+	// channel is unsigned, so there is nothing for a key to verify. An instance
+	// upgraded from before that change still sets both in its plist or visto.env,
+	// and an unknown extra variable must never stop Core from starting.
+	UpdateSources []string
 	// DeploymentKind selects which update commands the Owner page shows.
 	// Empty means auto-detect (docker, windows-server, or source).
 	DeploymentKind string
@@ -118,15 +137,21 @@ type handler struct {
 	ffmpegAvailable     bool
 	ffprobeAvailable    bool
 	videoAcceleration   media.VideoAccelerationSettings
+	applyMediaEncoder   func(preferredEncoder string) bool
+	runEncoderProbe     func(ctx context.Context, actorID string) error
+	mediaEncodingProbe  mediaEncodingProbeGuard
 	hostManagementToken string
-	trustedProxyCIDRs   []*net.IPNet
-	rateLimits          *ratelimit.Service
-	requireRemoteHTTPS  atomic.Bool
-	updateSources       []string
-	updatePublicKey     string
-	updateRootPublicKey string
-	deploymentKind      string
-	updateCheckCache    updateCheckCache
+	// allowWebHostPathsOverride is set when the deployment pins the host access
+	// choice; allowWebHostPaths carries the value the wizard recorded. An
+	// instance that recorded neither stays restrictive.
+	allowWebHostPathsOverride *bool
+	allowWebHostPaths         atomic.Bool
+	trustedProxyCIDRs         []*net.IPNet
+	rateLimits                *ratelimit.Service
+	requireRemoteHTTPS        atomic.Bool
+	updateSources             []string
+	deploymentKind            string
+	updateCheckCache          updateCheckCache
 	// attachmentUploadSlots bounds concurrent comment-attachment uploads, which
 	// buffer and decode entire images in memory before storage.
 	attachmentUploadSlots chan struct{}
@@ -178,6 +203,11 @@ type setupRequest struct {
 	Password      string `json:"password"`
 	Locale        string `json:"locale"`
 	Timezone      string `json:"timezone"`
+	// AllowWebHostPaths is the first-run answer to "may an Owner add host
+	// directories from the web?" (D2, docs/FREE_TIER_BOUNDARY_DESIGN.md). It is a
+	// pointer so an omitted field keeps the documented default (enabled) instead
+	// of being read as a refusal.
+	AllowWebHostPaths *bool `json:"allowWebHostPaths"`
 }
 
 type loginRequest struct {
@@ -315,6 +345,8 @@ func NewHandler(config Config) http.Handler {
 		ffmpegAvailable:     executableAvailable(ffmpegCommand),
 		ffprobeAvailable:    executableAvailable(ffprobeCommand),
 		videoAcceleration:   videoAcceleration,
+		applyMediaEncoder:   config.ApplyMediaEncoder,
+		runEncoderProbe:     config.RunMediaEncodingProbe,
 		hostManagementToken: strings.TrimSpace(config.HostManagementToken),
 		trustedProxyCIDRs:   parseTrustedProxyCIDRs(config.TrustedProxyCIDRs),
 		rateLimits:          config.RateLimits,
@@ -325,8 +357,19 @@ func NewHandler(config Config) http.Handler {
 	}
 	h.requireRemoteHTTPS.Store(config.RequireRemoteHTTPS)
 	h.updateSources = config.UpdateSources
-	h.updatePublicKey = strings.TrimSpace(config.UpdatePublicKey)
-	h.updateRootPublicKey = strings.TrimSpace(config.UpdateRootPublicKey)
+	h.allowWebHostPathsOverride = config.AllowWebHostPaths
+	h.allowWebHostPaths.Store(hostAccessDefault)
+	if config.AllowWebHostPaths != nil {
+		h.allowWebHostPaths.Store(*config.AllowWebHostPaths)
+	}
+	h.loadHostAccessSetting()
+	if h.logger != nil {
+		h.logger.Info(
+			"host access for owner web sessions",
+			"allow_web_host_paths", h.webHostPathsAllowed(),
+			"environment_forced", h.allowWebHostPathsOverride != nil,
+		)
+	}
 	h.deploymentKind = config.DeploymentKind
 	if h.deploymentKind == "" {
 		h.deploymentKind = serverupdate.DetectDeploymentKind("")
@@ -362,6 +405,29 @@ func NewHandler(config Config) http.Handler {
 	mux.HandleFunc(
 		"GET /api/v1/system/update-status",
 		h.handleSystemUpdateStatus,
+	)
+	// D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2.3: read-only by design. The switch
+	// that lets an Owner web session reach host management must not be writable
+	// from the web, so no PUT or PATCH route exists for it.
+	mux.HandleFunc(
+		"GET /api/v1/system/host-access",
+		h.handleGetSystemHostAccess,
+	)
+	// Encoder selection is Owner-editable, so unlike the host access switch it has
+	// a PUT. The re-probe is Owner-triggerable too: the probe runs inside Core with
+	// the installed FFmpeg, and an Owner who just installed or switched the runtime
+	// must not have to restart the server to learn what it supports.
+	mux.HandleFunc(
+		"GET /api/v1/system/media-encoding",
+		h.handleGetSystemMediaEncodingSettings,
+	)
+	mux.HandleFunc(
+		"PUT /api/v1/system/media-encoding",
+		h.handleUpdateSystemMediaEncodingSettings,
+	)
+	mux.HandleFunc(
+		"POST /api/v1/system/media-encoding/reprobe",
+		h.handleReprobeSystemMediaEncoding,
 	)
 	mux.HandleFunc(
 		"GET /join-api/v1/registration",
@@ -1017,7 +1083,76 @@ func (h *handler) handleSetup(response http.ResponseWriter, request *http.Reques
 		ResourceType: "workspace",
 		ResourceID:   result.Session.Workspace.ID,
 	})
+	h.recordHostAccessChoice(
+		request,
+		result.Session.Workspace.ID,
+		result.Session.User.ID,
+		body.AllowWebHostPaths,
+	)
 	writeJSON(response, http.StatusCreated, toSessionResponse(result.Session))
+}
+
+// recordHostAccessChoice persists the first-run answer to "may an Owner add host
+// directories from the web?".
+//
+// D2, docs/FREE_TIER_BOUNDARY_DESIGN.md: this is the only web-side write. The
+// value is never editable from the web afterwards, because a setting that grants
+// host-level access must not be flippable by the session that benefits from it.
+// An omitted field keeps the documented default (enabled). A failed write is
+// logged and leaves the runtime value restrictive: the workspace is already
+// created, so failing setup here would strand an Owner with no way to finish.
+func (h *handler) recordHostAccessChoice(
+	request *http.Request,
+	workspaceID string,
+	ownerID string,
+	choice *bool,
+) {
+	allowed := true
+	if choice != nil {
+		allowed = *choice
+	}
+	if h.allowWebHostPathsOverride != nil {
+		// The deployment pinned the value. Record the answer for the audit trail
+		// but keep the pinned behaviour.
+		allowed = *h.allowWebHostPathsOverride
+	}
+	h.allowWebHostPaths.Store(allowed)
+	if h.systemSettings == nil {
+		return
+	}
+	update, err := h.systemSettings.SetHostAccess(request.Context(), systemsettings.SetHostAccessInput{
+		AllowWebHostPaths: allowed,
+		UpdatedBy:         ownerID,
+	})
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Warn("system host access settings were not recorded", "error", err)
+		}
+		return
+	}
+	h.recordAudit(request, audit.RecordLogInput{
+		WorkspaceID:  workspaceID,
+		ActorType:    "user",
+		ActorID:      ownerID,
+		Action:       "system.host_access_recorded",
+		ResourceType: "system_host_access_settings",
+		ResourceID:   "1",
+		Before: map[string]any{
+			"allowWebHostPaths": update.Previous.AllowWebHostPaths,
+		},
+		After: map[string]any{
+			"allowWebHostPaths": update.Current.AllowWebHostPaths,
+		},
+	})
+	if h.logger != nil {
+		h.logger.Info(
+			"host access for owner web sessions recorded",
+			"request_id", requestContextID(request),
+			"actor_id", ownerID,
+			"allow_web_host_paths", update.Current.AllowWebHostPaths,
+			"environment_forced", h.allowWebHostPathsOverride != nil,
+		)
+	}
 }
 
 func (h *handler) handleCurrentSession(

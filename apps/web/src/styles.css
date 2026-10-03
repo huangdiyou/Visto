@@ -11627,6 +11627,41 @@ body:has(.public-review-room)::-webkit-scrollbar-button,
   line-height: 1.6;
 }
 
+.owner-encoding-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.owner-encoding-actions button {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.owner-encoding-field {
+  display: grid;
+  gap: 8px;
+}
+
+.owner-encoding-field > label {
+  color: #1d2028;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.owner-encoding-field select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d9d9d3;
+  border-radius: 6px;
+  background: #fff;
+  color: #1d2028;
+  font-size: 13px;
+}
+
 .owner-network-notice.is-danger {
   border-color: #e6c7c4;
   color: #9d4038;

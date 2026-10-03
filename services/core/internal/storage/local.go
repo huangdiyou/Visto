@@ -168,8 +168,11 @@ func (root *LocalRoot) List(
 	}
 	defer directory.Close()
 
-	entries, err := directory.ReadDir(-1)
-	if err != nil {
+	// Read at most one entry beyond the public limit. ReadDir(-1) materialises
+	// the entire directory before the limit check and therefore does not bound
+	// memory for a hostile or accidentally enormous authorized directory.
+	entries, err := directory.ReadDir(maxDirectoryListingEntries + 1)
+	if err != nil && !errors.Is(err, io.EOF) {
 		return nil, fmt.Errorf("list local directory: %w", err)
 	}
 	if len(entries) > maxDirectoryListingEntries {

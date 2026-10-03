@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>09 · Docker 部署说明 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html" class="active" aria-current="page">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>安装与初始化</div><p class="eyebrow">VISTO USER GUIDE / 09</p><h1>Docker 部署说明</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>本章供已有 Docker 经验的维护者使用。公共源码交付包含 <code>Dockerfile</code>、<code>.dockerignore</code>、<code>compose.yaml</code>、<code>infra/docker/nginx.conf</code>、固定视频组件索引及 <code>scripts/docker/</code> 维护工具。下载同一次交付的完整源码目录，在该目录运行命令；平台验收范围以发布清单为准。首次源码构建需要联网下载固定基础镜像、程序依赖与验过摘要的视频组件。</p>
+<h3 id="docker-section-1">前置条件与结构</h3>
+<p>需要 Docker Engine 26+、Docker Compose v2、至少 4 GB 可用内存、足够持久卷空间和可用的本机端口。官方 Compose 分为 <code>core</code> 与 <code>web</code>：浏览器连接 Web，Web 代理 Core；Core 的 8787 端口不应直接暴露给宿主机。</p>
+<p>在提供 <code>compose.yaml</code> 的部署目录里生成并保存首次初始化令牌。以下 Bash 命令在 macOS/Linux 终端或 Windows WSL 中运行；Windows 原生 PowerShell 请使用后面的专用命令。已有 <code>.env</code> 时停止，不覆盖原配置：</p>
+<pre><code class="language-bash"># 使用交付说明给出的实际程序版本；示例为当前正式版本。
+(
+set -eu
+# noclobber 阻止覆盖已有文件；umask 限制令牌文件读取权限。
+umask 077
+set -C
+printf 'VISTO_VERSION=1.0.3\nVISTO_HOST_MANAGEMENT_TOKEN=%s\n' &quot;$(openssl rand -base64 32)&quot; &gt; .env
+docker compose up -d --build
+docker compose ps
+)
+</code></pre>
+<p>本机浏览器打开 <code>http://127.0.0.1:8080/</code>，从本机 <code>.env</code> 读取令牌并完成首次设置。Compose 后续会自动读取同目录 <code>.env</code>，不要重新生成令牌；不要提交该文件到仓库或发给成员。Bash 维护脚本在新终端运行前，先在部署目录执行 <code>set -a; . ./.env; set +a</code>，只载入你自己维护的可信配置。记录当前部署目录、Compose 配置、固定镜像与数据卷信息，以便维护时使用。</p>
+<p>Windows 原生 PowerShell 首次启动示例（在仅维护者可读的部署目录执行；已有 <code>.env</code> 不覆盖）：</p>
+<pre><code class="language-powershell">$ErrorActionPreference = 'Stop'
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try {
+  $bytes = New-Object byte[] 32
+  $rng.GetBytes($bytes)
+  $token = [Convert]::ToBase64String($bytes)
+  $stream = [System.IO.File]::Open((Join-Path $PWD '.env'), [System.IO.FileMode]::CreateNew)
+  try {
+    $content = [System.Text.Encoding]::ASCII.GetBytes(&quot;VISTO_VERSION=1.0.3`nVISTO_HOST_MANAGEMENT_TOKEN=$token`n&quot;)
+    $stream.Write($content, 0, $content.Length)
+  } finally { $stream.Dispose() }
+} finally { $rng.Dispose() }
+docker compose up -d --build
+if ($LASTEXITCODE -ne 0) { throw 'Docker 构建或启动失败，请先处理报错' }
+docker compose ps
+</code></pre>
+<p>PowerShell 维护脚本从环境变量取得令牌；新终端在同一部署目录执行下面的命令。仅读取自己保存的可信 <code>.env</code>，不要把令牌贴入聊天或公开日志：</p>
+<pre><code class="language-powershell">$tokenLines = @(Get-Content -LiteralPath .env | Where-Object { $_ -match '^VISTO_HOST_MANAGEMENT_TOKEN=' })
+if ($tokenLines.Count -ne 1) { throw '.env 必须包含唯一的初始化令牌，请检查配置' }
+$env:VISTO_HOST_MANAGEMENT_TOKEN = $tokenLines[0].Substring('VISTO_HOST_MANAGEMENT_TOKEN='.Length)
+</code></pre>
+<h3 id="docker-section-2">使用随交付提供的视频组件归档构建</h3>
+<p>若交付包含视频组件归档，可在源码目录旁建立 <code>runtime-input</code> 目录，放入本机架构对应的原文件：</p>
+<ul>
+<li>x86_64：<code>Visto-Media-Runtime_ffmpeg-8.1.2-linux-amd64-lgpl.2_linux-amd64.tar.xz</code></li>
+<li>ARM64：<code>Visto-Media-Runtime_ffmpeg-8.1.2-linux-arm64-lgpl.2_linux-arm64.tar.xz</code></li>
+</ul>
+<p>使用支持命名构建上下文的 Docker Buildx，在完整源码目录执行：</p>
+<pre><code class="language-bash">(
+set -eu
+# 先载入当前部署版本；以下步骤在 Bash / WSL 执行。
+set -a; . ./.env; set +a
+case &quot;$(uname -m)&quot; in
+  arm64|aarch64) PLATFORM=linux/arm64 ;;
+  x86_64) PLATFORM=linux/amd64 ;;
+  *) echo '不支持的架构'; exit 1 ;;
+esac
+docker buildx build --load --platform &quot;$PLATFORM&quot; \
+  --build-context runtime-input=../runtime-input \
+  --build-arg VISTO_VERSION=&quot;$VISTO_VERSION&quot; \
+  --target core -t visto-core:local .
+docker buildx build --load --platform &quot;$PLATFORM&quot; \
+  --build-arg VISTO_VERSION=&quot;$VISTO_VERSION&quot; \
+  --target web -t visto-web:local .
+docker compose up -d --no-build
+)
+</code></pre>
+<p>此示例使用 Compose 默认的 <code>visto-core:local</code> 与 <code>visto-web:local</code> 名称；仅对初次部署使用，不覆盖正在运行的已有版本镜像来代替受保护更新。若 <code>.env</code> 已指定其他镜像，先核对配置，不套用默认名称。构建结束后记录实际镜像 ID 和源码版本。</p>
+<p>这只避免重新下载视频归档；基础镜像和程序依赖仍需联网或已在本机缓存。构建器始终按源码内固定的 SHA-256 校验组件，摘要不符立即失败。归档文件缺失时仍走原 HTTPS 下载流程。交付同时提供组件对应源码、第三方声明和许可证；镜像保留组件及静态 GCC 运行时的许可证与来源记录。发布清单尚未确认可取得的文件，不算已完成公开交付。</p>
+<h3 id="docker-section-3">日常命令</h3>
+<pre><code class="language-bash">docker compose ps
+docker compose logs --tail 100 core
+docker compose exec core visto-server doctor
+docker compose down
+</code></pre>
+<p><code>down</code> 用于停止这套部署。<strong>不要添加 <code>-v</code></strong>，否则可能删除持久业务数据卷。项目数据、加密秘密和默认托管媒体位于数据卷；额外挂载和远程存储还要独立备份。</p>
+<h3 id="docker-section-4">备份与恢复</h3>
+<p>在同一部署目录，由维护者运行交付中的脚本：</p>
+<pre><code class="language-bash">./scripts/docker/backup-visto-docker.sh --backup-dir ./backups
+</code></pre>
+<p>恢复会替换当前卷，先核对备份与同名 JSON 元数据、SHA-256、目标部署及异盘副本，再执行：</p>
+<pre><code class="language-bash">./scripts/docker/restore-visto-docker.sh \
+  --backup-file './backups/&lt;实际备份文件&gt;.tar.gz' \
+  --confirm-restore
+</code></pre>
+<p>这些 Docker 脚本的选项与 macOS 原生脚本不同，不混用原生安装路径。Docker 恢复也支持 <code>--check-only</code> 做预检；执行前先用脚本的 <code>--help</code> 核对参数。当前公开交付提供源码构建配方，没有可供拉取的公开预构建镜像摘要，因此不能直接用更新脚本完成在线镜像升级。以后更新时只使用该版本发布说明公布且可实际拉取的固定 <code>image@sha256:</code> 引用，不猜测镜像仓库或可变 <code>latest</code> 标签。更新失败、断网、磁盘不足等最终容器实机回归仍须在目标环境验收；本文不把静态脚本检查记成实机通过。</p><nav class="pager" aria-label="章节翻页"><a href="runtime.html"><small>上一章</small>← 08 · 安装视频处理运行时</a><a href="setup.html"><small>下一章</small>10 · 首次设置与登录 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#docker-section-1">前置条件与结构</a><a href="#docker-section-2">使用随交付提供的视频组件归档构建</a><a href="#docker-section-3">日常命令</a><a href="#docker-section-4">备份与恢复</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>14 · 上传、搜索与整理素材 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html" class="active" aria-current="page">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>项目与素材</div><p class="eyebrow">VISTO USER GUIDE / 14</p><h1>上传、搜索与整理素材</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p><strong>谁来操作：</strong> 有相应项目上传权限的成员。<strong>入口：</strong> 进入具体项目 → 媒体。</p>
+<figure class="figure"><a href="assets/04-media.png" aria-label="放大查看：真实界面：项目媒体列表、搜索筛选和预览状态"><img src="assets/04-media.png" alt="真实界面：项目媒体列表、搜索筛选和预览状态" loading="lazy" decoding="async"></a><figcaption>真实界面 · 演示数据 · 项目媒体列表、搜索筛选和预览状态<span class="hint">点击放大查看</span></figcaption></figure>
+<h3 id="upload-section-1">上传一个或多个文件</h3>
+<ol>
+<li>确认顶部项目名。</li>
+<li>选择“上传本地文件”，从自己电脑选图片或视频。</li>
+<li>在上传任务面板查看等待、传输进度、完成或失败。</li>
+<li>失败时先看原因，按需要重新上传；未完成前不要关闭浏览器。</li>
+<li>传输完成后等待后台媒体识别与预览处理，再打开素材验证。</li>
+</ol>
+<p>浏览器上传把选中的文件复制到项目授权的存储。已存在于服务器的文件不会仅因打开页面而被扫描导入；日常上传应始终在项目内完成。</p>
+<h3 id="upload-section-2">分清三类状态</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>状态层</th>
+<th>表示什么</th>
+<th>你应该做什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>上传进度</td>
+<td>文件是否传完</td>
+<td>等待完成或修复传输问题</td>
+</tr>
+<tr>
+<td>上传安全检查</td>
+<td>文件是否可继续参与协作</td>
+<td>处理隔离、拒绝或扫描提示</td>
+</tr>
+<tr>
+<td>媒体处理</td>
+<td>预览、识别及增强任务是否完成</td>
+<td>等处理结束，失败时查看任务详情</td>
+</tr>
+</tbody>
+</table></div>
+<p>“上传完成”与“可预览”是不同阶段。源文件在库中但预览失败时，不要先删除重传，先检查运行时和具体任务。</p>
+<h3 id="upload-section-3">搜索和筛选</h3>
+<p>按文件名搜索，再用类型、处理状态、开始 / 结束日期和排序缩小范围。找不到刚上传文件时，先点“重置”，确认当前项目、页码和筛选条件，再检查上传结果。</p>
+<p>网格适合看画面，列表适合看文件信息。打开素材详情可以重命名、查看预览、元信息和版本历史。</p>
+<h3 id="upload-section-4">加入已有媒体、复制和剪切</h3>
+<p>“添加已有媒体”只展示你有权使用的已有媒体，不是任意主机扫描入口。将资产加入另一个项目前，检查目标项目权限和存储要求。</p>
+<p>详情中的“复制 / 剪切”是跨项目操作；不要把它等同于已经在另一个物理磁盘复制了完整文件。按页面结果检查目标项目可见性和媒体可读性。“从当前项目移除”进入项目回收站，恢复步骤见“归档与删除”。</p>
+<h3 id="upload-section-5">命名约定建议</h3>
+<p>同一作品使用一个资产名称，如“品牌短片主片”；版本保留 V1、V2 的编号。横版、竖版或语言版本若分别交付，可以用不同资产，避免仅靠“最终版 / 最终版2 / 真最终版”区分。</p><nav class="pager" aria-label="章节翻页"><a href="members.html"><small>上一章</small>← 13 · 成员、邀请与权限</a><a href="archive.html"><small>下一章</small>15 · 回收站、归档与删除 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#upload-section-1">上传一个或多个文件</a><a href="#upload-section-2">分清三类状态</a><a href="#upload-section-3">搜索和筛选</a><a href="#upload-section-4">加入已有媒体、复制和剪切</a><a href="#upload-section-5">命名约定建议</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

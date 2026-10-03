@@ -82,8 +82,7 @@ func TestDialContextEnforcesIPv6PrivateAndMetadataPolicyAtConnectionTime(t *test
 		t.Fatalf("accept IPv6 connection: %v", err)
 	}
 
-	if _, err := DialContext(true, time.Second)(ctx, "tcp", "[fd00:ec2::254]:80");
-		!errors.Is(err, ErrForbiddenHost) {
+	if _, err := DialContext(true, time.Second)(ctx, "tcp", "[fd00:ec2::254]:80"); !errors.Is(err, ErrForbiddenHost) {
 		t.Fatalf("expected IPv6 metadata endpoint rejection at final dial, got %v", err)
 	}
 }

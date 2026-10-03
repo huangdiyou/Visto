@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>05 · Apple Silicon macOS 安装 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html" class="active" aria-current="page">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>安装与初始化</div><p class="eyebrow">VISTO USER GUIDE / 05</p><h1>Apple Silicon macOS 安装</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>本章适用于已经取得对应 macOS ARM64 安装包的维护者。命令中的 <code>&lt;版本&gt;</code> 是占位符，必须替换成你下载的版本；尖括号也要去掉。所有操作都在部署 Visto 的 Mac 上完成。</p>
+<h3 id="install-macos-section-1">1. 下载并核对 SHA-256</h3>
+<p>保存 <code>Visto-Server_&lt;版本&gt;_macos-arm64.tar.gz</code> 与同一次交付的 <code>.sha256</code> 文件。打开终端，进入下载目录后执行：</p>
+<pre><code class="language-bash">cd &quot;$HOME/Downloads&quot;
+shasum -a 256 'Visto-Server_&lt;版本&gt;_macos-arm64.tar.gz'
+</code></pre>
+<p>把输出的 64 位摘要与官方发布页或 <code>.sha256</code> 内容逐字对照。不同则停止，不要安装。摘要相同证明下载内容一致，仍需要确认下载来源。</p>
+<h3 id="install-macos-section-2">2. 解压到独立目录</h3>
+<p>新版本使用一个新目录，避免把旧包的脚本与新包混在一起：</p>
+<pre><code class="language-bash">mkdir -p &quot;$HOME/Downloads/visto-server-&lt;版本&gt;&quot;
+tar -xzf &quot;$HOME/Downloads/Visto-Server_&lt;版本&gt;_macos-arm64.tar.gz&quot; \
+  -C &quot;$HOME/Downloads/visto-server-&lt;版本&gt;&quot;
+cd &quot;$HOME/Downloads/visto-server-&lt;版本&gt;&quot;
+</code></pre>
+<p>确认当前目录里有 <code>scripts/install-visto-server.sh</code>，再执行安装：</p>
+<pre><code class="language-bash">sudo bash scripts/install-visto-server.sh \
+  --version '&lt;版本&gt;' \
+  --source-dir &quot;$PWD&quot;
+</code></pre>
+<p>终端输入系统管理员密码时不会显示字符，这是系统的正常行为。</p>
+<h3 id="install-macos-section-3">3. 处理 macOS 首次运行提示</h3>
+<p>当前交付方案没有 Apple Developer ID 签名和公证。macOS 可能分别拦截 <code>visto-core</code> 和 <code>visto-server</code>。核对来源和摘要之后，在“系统设置 → 隐私与安全性”找到被阻止的程序，按系统提示“仍要打开”。如果第二个程序随后被拦截，对它单独操作。</p>
+<figure class="figure"><a href="assets/install.svg" aria-label="放大查看：macOS 安装与两次独立放行的步骤示意"><img src="assets/install.svg" alt="macOS 安装与两次独立放行的步骤示意" loading="lazy" decoding="async"></a><figcaption>原创示意图 · macOS 安装与两次独立放行的步骤示意<span class="hint">点击放大查看</span></figcaption></figure>
+<p><strong>这是流程示意，不是 macOS 截图。</strong> 手动放行不代表 Apple 已验证开发者。不要全局关闭 Gatekeeper。安装器如果报服务未就绪，先处理拦截再检查服务，不要把退出失败当成安装成功。</p>
+<pre><code class="language-bash">sudo launchctl kickstart -k system/com.visto.server
+curl -fsS http://127.0.0.1:8787/health/ready
+</code></pre>
+<p>看到 <code>"status":"ready"</code> 后，打开 <code>http://127.0.0.1:8787/</code>。如果使用了自定义端口，命令和浏览器地址都替换成对应端口。</p>
+<h3 id="install-macos-section-4">4. 确认安装后的目录</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>内容</th>
+<th>默认位置</th>
+<th>日常用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>程序与保留版本</td>
+<td><code>/Library/Visto</code></td>
+<td>使用 <code>current</code> 中的正式工具，不手工改链接</td>
+</tr>
+<tr>
+<td>主机配置</td>
+<td><code>/Library/Visto/config/visto.env</code></td>
+<td>部署维护者修改，修改后按要求重启</td>
+</tr>
+<tr>
+<td>业务数据</td>
+<td><code>/Library/Application Support/Visto/data</code></td>
+<td>包含数据库和系统托管数据，不能直接删除</td>
+</tr>
+<tr>
+<td>默认备份</td>
+<td><code>/Library/Application Support/Visto/backups</code></td>
+<td>保存归档及其元数据，另做异盘副本</td>
+</tr>
+<tr>
+<td>日志</td>
+<td><code>/Library/Logs/Visto</code></td>
+<td>故障定位，分享前脱敏</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>完成检查：</strong> 服务就绪、浏览器能打开向导、未忽略安装失败信息。视频预览还需要下一章的媒体运行时。</p><nav class="pager" aria-label="章节翻页"><a href="prepare.html"><small>上一章</small>← 04 · 安装前的准备</a><a href="windows-install.html"><small>下一章</small>06 · Windows x64 安装与维护 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#install-macos-section-1">1. 下载并核对 SHA-256</a><a href="#install-macos-section-2">2. 解压到独立目录</a><a href="#install-macos-section-3">3. 处理 macOS 首次运行提示</a><a href="#install-macos-section-4">4. 确认安装后的目录</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

@@ -33,7 +33,6 @@ THIRD_PARTY_NOTICES.md
 FFMPEG_DISTRIBUTION.md
 THIRD_PARTY_DISTRIBUTION_INVENTORY.md
 THIRD_PARTY.spdx.json
-UPDATE_ROOT_PUBLIC_KEY.txt
 "
 
 visto_unix_error() { printf 'ERROR: %s\n' "$*" >&2; }
@@ -117,6 +116,37 @@ visto_unix_detect_platform() {
   VISTO_UNIX_PLATFORM="${VISTO_UNIX_OS}-${VISTO_UNIX_ARCH}"
   # Manifest artifact selectors shared with signed update metadata.
   VISTO_UNIX_ARTIFACT_KIND="${VISTO_UNIX_OS}-server"
+  # The privileged group differs per platform: macOS uses wheel, Linux uses root
+  # (or a wheel alias when one exists). Resolving it once keeps every chown in the
+  # install path correct on both.
+  if [ "$VISTO_UNIX_OS" = macos ]; then
+    VISTO_ADMIN_GROUP=wheel
+  elif getent group wheel >/dev/null 2>&1; then
+    VISTO_ADMIN_GROUP=wheel
+  else
+    VISTO_ADMIN_GROUP=root
+  fi
+}
+
+# A single random token per install, used for the local host-management
+# capability. uuidgen exists on macOS; Linux gets the same 128 bits from the
+# kernel rather than depending on a package.
+visto_unix_generate_token() {
+  if command -v uuidgen >/dev/null 2>&1; then
+    uuidgen
+    return 0
+  fi
+  if [ -r /proc/sys/kernel/random/uuid ]; then
+    tr -d '\n' < /proc/sys/kernel/random/uuid
+    printf '\n'
+    return 0
+  fi
+  if command -v od >/dev/null 2>&1 && [ -r /dev/urandom ]; then
+    od -An -tx1 -N16 /dev/urandom | tr -d ' \n'
+    printf '\n'
+    return 0
+  fi
+  visto_unix_die "no source of randomness is available for the host management token"
 }
 
 # ---------------------------------------------------------------------------
@@ -142,6 +172,9 @@ visto_unix_resolve_paths() {
       VISTO_LOG_DIR=${VISTO_LOG_DIR:-/var/log/visto}
       VISTO_SERVICE_NAME=${VISTO_SERVICE_NAME:-visto.service}
       VISTO_LAUNCHD_PLIST=""
+      # The unit file lives with the rest of the unit files so systemd finds it,
+      # which is also where uninstall has to remove it from.
+      VISTO_SYSTEMD_UNIT=${VISTO_SYSTEMD_UNIT:-/etc/systemd/system/$VISTO_SERVICE_NAME}
       ;;
     macos)
       VISTO_RELEASES_DIR="$VISTO_PREFIX/releases"
@@ -155,6 +188,7 @@ visto_unix_resolve_paths() {
       VISTO_LOG_DIR=${VISTO_LOG_DIR:-/Library/Logs/Visto}
       VISTO_SERVICE_NAME=${VISTO_SERVICE_NAME:-com.visto.server}
       VISTO_LAUNCHD_PLIST=${VISTO_LAUNCHD_PLIST:-/Library/LaunchDaemons/com.visto.server.plist}
+      VISTO_SYSTEMD_UNIT=""
       ;;
   esac
   VISTO_RECOVERY_DIR="$VISTO_PREFIX/recovery"
@@ -180,6 +214,23 @@ visto_unix_env_value() {
   local key=$1
   sed -n "s/^[[:space:]]*${key}[[:space:]]*=[[:space:]]*[\"']\{0,1\}\([^\"']*\)[\"']\{0,1\}[[:space:]]*$/\1/p" \
     "$VISTO_ENV_FILE" | awk 'NF { print; exit }'
+}
+
+# Administrator-only ownership migration for an already validated data tree.
+# Used for first installation and private restored staging, never host media roots.
+visto_unix_assign_service_data() {
+  local data_root=$1 service_user=$2 service_group=$3 linked_file
+  for account in "$service_user" "$service_group"; do
+    printf '%s' "$account" | grep -Eq '^[a-z_][a-z0-9_-]{0,31}$' \
+      || visto_unix_die "invalid service account name"
+  done
+  [ "$(id -u "$service_user")" != 0 ] || visto_unix_die "the Core service account must not be root"
+  [ ! -L "$data_root" ] || visto_unix_die "data directory must not be a symbolic link"
+  linked_file=$(find "$data_root" -path "$data_root/runtime" -prune -o -type f -links +1 -print -quit)
+  [ -z "$linked_file" ] || visto_unix_die "data directory contains hard-linked files; ownership migration refused"
+  find "$data_root" -path "$data_root/runtime" -prune -o \
+    -exec chown -h "$service_user:$service_group" {} +
+  chmod 0750 "$data_root"
 }
 
 visto_unix_current_release() {
@@ -465,7 +516,7 @@ visto_unix_wait_ready() {
   deadline=$(( $(date +%s) + timeout ))
   while true; do
     if (exec 3<>"/dev/tcp/$host/$port") 2>/dev/null; then
-      exec 3>&- 2>/dev/null || true
+      exec 3>&- || true
       return 0
     fi
     if [ "$(date +%s)" -ge "$deadline" ]; then

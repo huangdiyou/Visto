@@ -32,8 +32,6 @@ func run(arguments []string, stdout, stderr io.Writer) (exitCode int) {
 	address := global.String("address", "", "Core listen address")
 	dataDir := global.String("data-dir", "", "Core data directory")
 	updateSource := global.String("update-source", "", "stable update manifest source")
-	updatePublicKey := global.String("update-public-key", "", "base64 Ed25519 update public key")
-	updateRootPublicKey := global.String("update-root-public-key", "", "base64 Ed25519 update root public key")
 	jsonOutput := global.Bool("json", false, "print JSON")
 	defer func() {
 		if *jsonOutput && exitCode != 0 {
@@ -149,38 +147,26 @@ func run(arguments []string, stdout, stderr io.Writer) (exitCode int) {
 		if len(remaining) >= 2 && remaining[1] == "verify-package" {
 			verifyFlags := flag.NewFlagSet("visto-server update verify-package", flag.ContinueOnError)
 			verifyFlags.SetOutput(stderr)
-			manifestPath := verifyFlags.String("manifest", "", "signed manifest JSON path")
-			signaturePath := verifyFlags.String("signature", "", "manifest signature path")
-			artifactPath := verifyFlags.String("artifact", "", "artifact path")
+			artifactPath := verifyFlags.String("artifact", "", "downloaded package path")
 			kind := verifyFlags.String("kind", "", "artifact kind")
 			platform := verifyFlags.String("platform", "", "artifact platform")
-			publicKeyFlag := verifyFlags.String("public-key", "", "base64 Ed25519 release public key")
+			expectedSHA256 := verifyFlags.String("sha256", "", "expected SHA-256 from the published .sha256 sidecar")
+			expectedSize := verifyFlags.Int64("size", 0, "optional expected size in bytes")
 			if err := verifyFlags.Parse(remaining[2:]); err != nil {
 				return 2
 			}
-			if err := delivery.ValidateKindPlatform(*kind, *platform); err != nil {
-				return fail(stdout, stderr, *jsonOutput, "update verify-package", err)
-			}
-			manifestBytes, manifestErr := os.ReadFile(*manifestPath)
-			signatureBytes, signatureErr := os.ReadFile(*signaturePath)
-			publicKey := strings.TrimSpace(*publicKeyFlag)
-			if publicKey == "" {
-				publicKey = strings.TrimSpace(os.Getenv("VISTO_SERVER_UPDATE_PUBLIC_KEY"))
-			}
-			if manifestErr != nil || signatureErr != nil {
-				return fail(stdout, stderr, *jsonOutput, "update verify-package",
-					delivery.NewError(delivery.CodeInvalidArguments, "manifest or signature is unavailable"))
-			}
-			artifact, err := serverupdate.VerifyArtifact(serverupdate.VerifyArtifactConfig{
-				ManifestBytes: manifestBytes, SignatureBytes: signatureBytes,
-				PublicKey: publicKey, ArtifactPath: *artifactPath,
-				Kind: *kind, Platform: *platform,
+			verified, err := serverupdate.VerifyPackage(serverupdate.VerifyPackageConfig{
+				ArtifactPath:   *artifactPath,
+				Kind:           *kind,
+				Platform:       *platform,
+				ExpectedSHA256: *expectedSHA256,
+				ExpectedSize:   *expectedSize,
 			})
 			if err != nil {
 				return fail(stdout, stderr, *jsonOutput, "update verify-package",
 					classify(err, delivery.CodeVerificationFailed))
 			}
-			return writeResult(stdout, *jsonOutput, artifact, 0)
+			return writeResult(stdout, *jsonOutput, verified, 0)
 		}
 		if len(remaining) != 2 || remaining[1] != "check" {
 			printUsage(stderr)
@@ -191,16 +177,8 @@ func run(arguments []string, stdout, stderr io.Writer) (exitCode int) {
 			return fail(stdout, stderr, *jsonOutput, "update check",
 				delivery.NewError(delivery.CodeInvalidArguments, "no HTTPS update source was configured"))
 		}
-		publicKey := strings.TrimSpace(*updatePublicKey)
-		if publicKey == "" {
-			publicKey = strings.TrimSpace(os.Getenv("VISTO_SERVER_UPDATE_PUBLIC_KEY"))
-		}
-		rootPublicKey := strings.TrimSpace(*updateRootPublicKey)
-		if rootPublicKey == "" {
-			rootPublicKey = strings.TrimSpace(os.Getenv("VISTO_SERVER_UPDATE_ROOT_PUBLIC_KEY"))
-		}
 		result, err := serverupdate.Check(context.Background(), serverupdate.CheckConfig{
-			Sources: sources, PublicKey: publicKey, RootPublicKey: rootPublicKey,
+			Sources: sources,
 		})
 		if err != nil {
 			return fail(stdout, stderr, *jsonOutput, "update check",
@@ -316,8 +294,8 @@ Usage:
   visto-server [--address ADDRESS] [--data-dir PATH] [--json] status
   visto-server [--address ADDRESS] [--data-dir PATH] [--json] doctor
   visto-server [--address ADDRESS] [--data-dir PATH] [--json] diagnostics export [--output PATH]
-  visto-server [--update-source HTTPS_URL] [--update-public-key BASE64] [--update-root-public-key BASE64] [--json] update check
-  visto-server [--json] update verify-package --manifest PATH --signature PATH --artifact PATH --kind KIND --platform PLATFORM [--public-key BASE64]
+  visto-server [--update-source HTTPS_URL] [--json] update check
+  visto-server [--json] update verify-package --artifact PATH --kind KIND --platform PLATFORM --sha256 HEX [--size BYTES]
   visto-server [--json] backup metadata --data-dir PATH --archive NAME --sha256 HEX [--output PATH] [--archive-root NAME | --no-archive-root] [--compose-project NAME] [--data-volume NAME]
   visto-server [--json] backup precheck --metadata PATH --staged-data-dir PATH --target-data-dir PATH
 

@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -65,7 +66,12 @@ type VideoArtifact struct {
 	Primary  VideoArtifactFile
 	Files    []VideoArtifactFile
 	Encoding VideoEncodingReport
-	Cleanup  func()
+	// EncoderEvent carries the breaker news for this one encode, when there is
+	// any. It lives on the per-call artifact rather than in the encoding report
+	// so it stays out of the persisted rendition metadata. The caller fills in
+	// the workspace and asset identity before reporting it.
+	EncoderEvent *EncoderEvent
+	Cleanup      func()
 }
 
 type VideoEncodingReport struct {
@@ -127,7 +133,31 @@ func (processor *FFmpegVideoProcessor) encodingPlans(
 	if profile.Kind != RenditionProxy && profile.Kind != RenditionHLS {
 		return []videoEncodingPlan{processor.softwareVideoEncodingPlan()}
 	}
-	settings := processor.AccelerationSettings()
+	config := processor.encoderConfig()
+	settings := videoAccelerationSettingsForMode(config.mode, config.softwareEncoder)
+	// The breaker only intervenes when its choice differs from what is
+	// configured. When it has no opinion (never tripped) the plans below are
+	// exactly what they were before, which keeps an upgraded instance unchanged.
+	if config.breaker != nil {
+		if active := config.breaker.ActiveEncoder(settings.Encoder); active != settings.Encoder {
+			plan, ok := processor.planForEncoder(active)
+			if !ok {
+				return []videoEncodingPlan{processor.softwareVideoEncodingPlan()}
+			}
+			if plan.mode == VideoAccelerationSoftware {
+				return []videoEncodingPlan{plan}
+			}
+			// Keep the software encoder behind the breaker's choice, so a second
+			// failure still lands somewhere that works.
+			return []videoEncodingPlan{plan, {
+				mode:             VideoAccelerationSoftware,
+				encoder:          config.softwareEncoder,
+				requestedMode:    plan.mode,
+				requestedEncoder: plan.encoder,
+				fallback:         true,
+			}}
+		}
+	}
 	if !settings.Hardware {
 		return []videoEncodingPlan{processor.softwareVideoEncodingPlan()}
 	}
@@ -137,14 +167,14 @@ func (processor *FFmpegVideoProcessor) encodingPlans(
 		requestedMode:    settings.Mode,
 		requestedEncoder: settings.Encoder,
 	}
-	if settings.Encoder == processor.softwareEncoder {
+	if settings.Encoder == config.softwareEncoder {
 		return []videoEncodingPlan{primary}
 	}
 	return []videoEncodingPlan{
 		primary,
 		{
 			mode:             VideoAccelerationSoftware,
-			encoder:          processor.softwareEncoder,
+			encoder:          config.softwareEncoder,
 			requestedMode:    settings.Mode,
 			requestedEncoder: settings.Encoder,
 			fallback:         true,
@@ -153,11 +183,12 @@ func (processor *FFmpegVideoProcessor) encodingPlans(
 }
 
 func (processor *FFmpegVideoProcessor) softwareVideoEncodingPlan() videoEncodingPlan {
+	softwareEncoder := processor.encoderConfig().softwareEncoder
 	return videoEncodingPlan{
 		mode:             VideoAccelerationSoftware,
-		encoder:          processor.softwareEncoder,
+		encoder:          softwareEncoder,
 		requestedMode:    VideoAccelerationSoftware,
-		requestedEncoder: processor.softwareEncoder,
+		requestedEncoder: softwareEncoder,
 	}
 }
 
@@ -197,6 +228,29 @@ type FFmpegVideoProcessor struct {
 	tempDir          string
 	accelerationMode string
 	softwareEncoder  string
+	breaker          *EncoderBreaker
+	// mu guards the encoder configuration below. The Owner changes it from an
+	// HTTP handler while job workers are encoding, so it is read as one snapshot
+	// rather than a field at a time: reading the fields directly raced with
+	// ApplyEncoderChoice on exactly the path the setting is meant to control.
+	mu sync.RWMutex
+}
+
+// encoderConfig is one consistent view of the encoder configuration.
+type encoderConfig struct {
+	mode            string
+	softwareEncoder string
+	breaker         *EncoderBreaker
+}
+
+func (processor *FFmpegVideoProcessor) encoderConfig() encoderConfig {
+	processor.mu.RLock()
+	defer processor.mu.RUnlock()
+	return encoderConfig{
+		mode:            processor.accelerationMode,
+		softwareEncoder: processor.softwareEncoder,
+		breaker:         processor.breaker,
+	}
 }
 
 func NewFFmpegVideoProcessor(command string, tempDir string) *FFmpegVideoProcessor {
@@ -213,10 +267,14 @@ func NewFFmpegVideoProcessor(command string, tempDir string) *FFmpegVideoProcess
 }
 
 func (processor *FFmpegVideoProcessor) SetAccelerationMode(value string) {
+	processor.mu.Lock()
+	defer processor.mu.Unlock()
 	processor.accelerationMode = NormalizeVideoAccelerationMode(value)
 }
 
 func (processor *FFmpegVideoProcessor) SetSoftwareEncoder(value string) {
+	processor.mu.Lock()
+	defer processor.mu.Unlock()
 	processor.softwareEncoder = normalizeSoftwareVideoEncoder(value)
 	if processor.softwareEncoder == "h264_videotoolbox" {
 		processor.accelerationMode = VideoAccelerationVideoToolbox
@@ -234,8 +292,141 @@ func normalizeSoftwareVideoEncoder(value string) string {
 	}
 }
 
+// SetEncoderBreaker lets the processor consult and update the encoder circuit
+// breaker. Without one the processor behaves exactly as before, which is what
+// keeps an upgraded instance's encoding path unchanged until it has actually
+// failed enough times to trip.
+func (processor *FFmpegVideoProcessor) SetEncoderBreaker(breaker *EncoderBreaker) {
+	processor.mu.Lock()
+	defer processor.mu.Unlock()
+	processor.breaker = breaker
+}
+
+// ApplyEncoderChoice points the processor at one concrete encoder. It is how the
+// Owner's stored choice reaches the encode path. An unknown name is refused so a
+// typo cannot silently rewrite the configured encoder, and the caller can say so
+// instead of quietly encoding with something else.
+func (processor *FFmpegVideoProcessor) ApplyEncoderChoice(encoder string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(encoder))
+	mode, ok := accelerationModeForEncoder(normalized)
+	if !ok {
+		return false
+	}
+	processor.mu.Lock()
+	defer processor.mu.Unlock()
+	if mode == VideoAccelerationSoftware {
+		if normalizeSoftwareVideoEncoder(normalized) != normalized {
+			return false
+		}
+		processor.softwareEncoder = normalized
+		processor.accelerationMode = VideoAccelerationSoftware
+		return true
+	}
+	processor.accelerationMode = mode
+	return true
+}
+
+// accelerationModeForEncoder maps a concrete encoder name back to the
+// acceleration mode that produces it. The breaker speaks encoder names because
+// that is what the probe reports; the processor speaks modes, so the two have to
+// meet somewhere. An unknown name reports false so the caller can fall back
+// instead of building a plan around an encoder nobody validated.
+func accelerationModeForEncoder(encoder string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(encoder)) {
+	case "h264_nvenc":
+		return VideoAccelerationNVENC, true
+	case "h264_qsv":
+		return VideoAccelerationQSV, true
+	case "h264_amf":
+		return VideoAccelerationAMF, true
+	case "h264_videotoolbox":
+		return VideoAccelerationVideoToolbox, true
+	case "libopenh264", "libx264":
+		return VideoAccelerationSoftware, true
+	default:
+		return "", false
+	}
+}
+
+// planForEncoder turns the breaker's choice back into an encoding plan.
+func (processor *FFmpegVideoProcessor) planForEncoder(encoder string) (videoEncodingPlan, bool) {
+	mode, ok := accelerationModeForEncoder(encoder)
+	if !ok {
+		return videoEncodingPlan{}, false
+	}
+	if mode == VideoAccelerationSoftware {
+		plan := processor.softwareVideoEncodingPlan()
+		// The probe list can name a software encoder other than the configured
+		// one; the plan has to encode with the name the Owner was shown.
+		plan.encoder = strings.ToLower(strings.TrimSpace(encoder))
+		plan.requestedEncoder = plan.encoder
+		return plan, true
+	}
+	return videoEncodingPlan{
+		mode:             mode,
+		encoder:          encoder,
+		requestedMode:    mode,
+		requestedEncoder: encoder,
+	}, true
+}
+
+// encoderCandidates is the fallback order the breaker walks. Only two steps
+// exist today: the configured encoder and the software encoder behind it.
+func (processor *FFmpegVideoProcessor) encoderCandidates() []string {
+	config := processor.encoderConfig()
+	configured := videoAccelerationSettingsForMode(config.mode, config.softwareEncoder).Encoder
+	if configured == config.softwareEncoder {
+		return []string{configured}
+	}
+	return []string{configured, config.softwareEncoder}
+}
+
+// recordEncoderFailure is best effort on purpose: the encode has already failed,
+// so a breaker that cannot be persisted must not replace the real cause with a
+// storage error. The outcome is returned anyway, because it is what tells the
+// caller whether the Owner needs to hear about this failure.
+func (processor *FFmpegVideoProcessor) recordEncoderFailure(
+	ctx context.Context,
+	encoder string,
+	cause error,
+) EncoderBreakerOutcome {
+	breaker := processor.encoderConfig().breaker
+	if breaker == nil || strings.TrimSpace(encoder) == "" {
+		return EncoderBreakerOutcome{}
+	}
+	outcome, _ := breaker.RecordFailure(
+		ctx, encoder, breakerReason(cause), processor.encoderCandidates())
+	return outcome
+}
+
+// recordEncoderSuccess clears the streak for the encoder that produced output.
+func (processor *FFmpegVideoProcessor) recordEncoderSuccess(ctx context.Context, encoder string) {
+	breaker := processor.encoderConfig().breaker
+	if breaker == nil || strings.TrimSpace(encoder) == "" {
+		return
+	}
+	_ = breaker.RecordSuccess(ctx, encoder)
+}
+
+// breakerReason turns an encode error into the short, single-line explanation the
+// Owner reads. runVideoCommand already sanitised the diagnostics; this only
+// bounds the length, and it cuts on runes so the stored value stays valid UTF-8.
+func breakerReason(cause error) string {
+	if cause == nil {
+		return ""
+	}
+	message := strings.Join(strings.Fields(cause.Error()), " ")
+	const limit = 200
+	runes := []rune(message)
+	if len(runes) > limit {
+		return string(runes[:limit])
+	}
+	return message
+}
+
 func (processor *FFmpegVideoProcessor) AccelerationSettings() VideoAccelerationSettings {
-	return videoAccelerationSettingsForMode(processor.accelerationMode, processor.softwareEncoder)
+	config := processor.encoderConfig()
+	return videoAccelerationSettingsForMode(config.mode, config.softwareEncoder)
 }
 
 func (processor *FFmpegVideoProcessor) Process(
@@ -286,6 +477,7 @@ func (processor *FFmpegVideoProcessor) process(
 	}
 	plans := processor.encodingPlans(profile)
 	var lastErr error
+	var encoderEvent *EncoderEvent
 	for _, plan := range plans {
 		if err := cleanupVideoOutputs(workDir); err != nil {
 			return VideoArtifact{}, err
@@ -295,21 +487,30 @@ func (processor *FFmpegVideoProcessor) process(
 			if errors.Is(processContext.Err(), context.DeadlineExceeded) {
 				return VideoArtifact{}, fmt.Errorf("%w: timeout", ErrVideoProcessingFailed)
 			}
+			// Count the failure against the encoder that actually failed, not
+			// against the plan that asked for it: a fallback plan is exactly the
+			// case where those differ.
+			outcome := processor.recordEncoderFailure(processContext, plan.encoder, err)
+			if event := encoderEventFor(outcome, plan.canFallback()); event != nil {
+				encoderEvent = event
+			}
 			lastErr = err
 			if plan.canFallback() {
 				continue
 			}
 			return VideoArtifact{}, err
 		}
+		processor.recordEncoderSuccess(processContext, plan.encoder)
 
 		files, err := collectVideoArtifacts(workDir, primaryName, profile)
 		if err != nil {
 			return VideoArtifact{}, err
 		}
 		return VideoArtifact{
-			Primary:  files[0],
-			Files:    files,
-			Encoding: plan.report(),
+			Primary:      files[0],
+			Files:        files,
+			Encoding:     plan.report(),
+			EncoderEvent: encoderEvent,
 		}, nil
 	}
 	if lastErr != nil {

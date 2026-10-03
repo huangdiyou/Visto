@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>10 · 首次设置与登录 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html" class="active" aria-current="page">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>安装与初始化</div><p class="eyebrow">VISTO USER GUIDE / 10</p><h1>首次设置与登录</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>首次打开一个尚未初始化的实例，会看到“先建立你的本地工作空间”。这个过程创建数据库中的工作空间和 Owner，不会替你移动已有媒体。</p>
+<figure class="figure"><a href="assets/01-setup.png" aria-label="放大查看：真实界面：首次设置中的工作空间、名字、密码及主机目录权限"><img src="assets/01-setup.png" alt="真实界面：首次设置中的工作空间、名字、密码及主机目录权限" loading="lazy" decoding="async"></a><figcaption>真实界面 · 演示数据 · 首次设置中的工作空间、名字、密码及主机目录权限<span class="hint">点击放大查看</span></figcaption></figure>
+<p><strong>看图操作：</strong> 先核对初始化令牌，再填写身份信息；最下方的主机目录权限影响后续存储配置，提交前决定好。</p>
+<h3 id="setup-section-1">填写首次设置</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>如何填写</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始化令牌</td>
+<td>由部署维护者在主机取得</td>
+<td>原生 macOS 从配置目录读取；Docker 使用启动时生成的值</td>
+</tr>
+<tr>
+<td>工作空间名称</td>
+<td>如“视频制作团队”</td>
+<td>会出现在工作台，名称应让成员容易辨认</td>
+</tr>
+<tr>
+<td>你的名字</td>
+<td>如“项目负责人”或真实姓名</td>
+<td>用于评论和审阅记录，不是共享身份</td>
+</tr>
+<tr>
+<td>本地访问密码</td>
+<td>至少 10 个字符的强密码</td>
+<td>不与其他网站复用</td>
+</tr>
+<tr>
+<td>再次输入密码</td>
+<td>与上面完全一致</td>
+<td>输入不一致时不能提交</td>
+</tr>
+</tbody>
+</table></div>
+<p>macOS 读取初始化令牌：</p>
+<pre><code class="language-bash">sudo cat /Library/Visto/config/host-management-token
+</code></pre>
+<p>令牌用于首次领取初始化权限，和日常登录密码不同。不要把该输出贴到聊天、截图或公开 Issue。</p>
+<h3 id="setup-section-2">一次性的主机目录权限</h3>
+<p>“允许 Owner 在网页端添加本机目录作为存储位置”默认开启。开启后，Owner 网页会话能配置主机目录，适合由你独占管理的机器；不信任所有 Owner 登录环境或部署在共享主机时，应由维护者评估后选择关闭。</p>
+<p>该选项<strong>首次设置后不能在网页上更改</strong>。需要调整时由主机维护者编辑 <code>visto.env</code> 的 <code>VISTO_ALLOW_WEB_HOST_PATHS</code>：<code>0</code> 关闭，<code>1</code> 强制开启，然后重启服务。当前生效状态可在 <strong>Owner 设置 → 网络与安全</strong> 查看。</p>
+<p>关闭后普通网页不能添加本机路径。项目成员仍可使用已经授权给项目的存储；如果必须添加新的主机目录，请联系部署维护者，不要求成员知道服务器真实路径，也不把 Desktop 当作免费版前置条件。</p>
+<h3 id="setup-section-3">日常登录</h3>
+<p>初始化完成后，日常使用成员邮箱和密码进入。旧工作空间 / 首次 Owner 可能尚未设置登录邮箱，登录页提示允许邮箱留空时可使用原访问密码。登录后在“我的账户”确认个人身份与可用资料；新增成员使用独立邀请或注册流程。</p>
+<h3 id="setup-section-4">完成检查与问题处理</h3>
+<ul>
+<li>成功后进入项目列表，而不是仍停留在创建表单。</li>
+<li>密码错误、令牌错误和创建失败会显示提示，先按提示修正，不重复初始化。</li>
+<li>已有实例突然出现首次设置页时，先核对浏览器地址和数据目录是否指向原实例。不要立即创建一个新工作空间覆盖问题。</li>
+<li>忘记 Owner 密码时联系主机维护者，通过当前版本支持的账号恢复方式处理，不删除数据库重新初始化。</li>
+</ul><nav class="pager" aria-label="章节翻页"><a href="docker.html"><small>上一章</small>← 09 · Docker 部署说明</a><a href="storage.html"><small>下一章</small>11 · 配置文件保存位置 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#setup-section-1">填写首次设置</a><a href="#setup-section-2">一次性的主机目录权限</a><a href="#setup-section-3">日常登录</a><a href="#setup-section-4">完成检查与问题处理</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

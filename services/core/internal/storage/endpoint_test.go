@@ -12,8 +12,7 @@ import (
 func TestValidateRemoteEndpointRejectsPublicPlaintextTransport(t *testing.T) {
 	t.Parallel()
 
-	if _, err := validateRemoteEndpoint(context.Background(), "http://1.1.1.1/dav", false);
-		err == nil || !errors.Is(err, ErrEndpointForbidden) {
+	if _, err := validateRemoteEndpoint(context.Background(), "http://1.1.1.1/dav", false); err == nil || !errors.Is(err, ErrEndpointForbidden) {
 		t.Fatalf("expected public plaintext endpoint rejection, got %v", err)
 	}
 

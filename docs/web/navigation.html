@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>03 · 熟悉工作台 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html" class="active" aria-current="page">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>开始使用</div><p class="eyebrow">VISTO USER GUIDE / 03</p><h1>熟悉工作台</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>工作台围绕项目组织日常任务。进入项目后，首先确认顶部项目名，避免把文件或反馈提交到另一个项目。</p>
+<h3 id="navigation-section-1">全局入口与项目入口</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>入口</th>
+<th>用途</th>
+<th>谁能使用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>项目</td>
+<td>查看自己可见的项目、切换项目</td>
+<td>已登录用户，结果由权限决定</td>
+</tr>
+<tr>
+<td>Owner 设置</td>
+<td>账号、网络、存储、通知、系统活动与诊断</td>
+<td>Owner</td>
+</tr>
+<tr>
+<td>通知</td>
+<td>查阅站内通知和相关活动</td>
+<td>按用户及项目权限</td>
+</tr>
+<tr>
+<td>我的账户</td>
+<td>个人资料、语言、接收偏好与退出</td>
+<td>当前用户</td>
+</tr>
+<tr>
+<td>项目概览</td>
+<td>汇总审阅、未解决反馈、最近版本和失败任务</td>
+<td>项目可见成员</td>
+</tr>
+<tr>
+<td>项目媒体</td>
+<td>上传、搜索、预览、版本与回收站</td>
+<td>按项目权限</td>
+</tr>
+<tr>
+<td>项目审阅</td>
+<td>创建审阅、看板、详情、结论及分享</td>
+<td>按项目权限</td>
+</tr>
+<tr>
+<td>项目设置</td>
+<td>基本资料、成员、存储、活动和生命周期</td>
+<td>按具体管理权限</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="navigation-section-2">用项目概览判断下一步</h3>
+<p>“项目脉搏”把当前最值得处理的任务汇总出来。先看失败任务是否影响预览，再看未解决反馈和待处理审阅，最后确认最近版本。计数可能受权限和数据加载影响；读取失败时重新加载，不把空白当作“全部处理完”。</p>
+<h3 id="navigation-section-3">页面保存的判断方法</h3>
+<p>点击保存、上传、复制或测试后，要看页面的完成提示。按钮显示“处理中”表示还没结束；错误信息应在当前操作区域处理。复制失败时，查看可见文本再手动复制，不连续点按钮造成重复审阅或分享。</p><nav class="pager" aria-label="章节翻页"><a href="quick-start.html"><small>上一章</small>← 02 · 做完你的第一个项目</a><a href="prepare.html"><small>下一章</small>04 · 安装前的准备 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#navigation-section-1">全局入口与项目入口</a><a href="#navigation-section-2">用项目概览判断下一步</a><a href="#navigation-section-3">页面保存的判断方法</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

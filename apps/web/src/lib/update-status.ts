@@ -17,7 +17,6 @@ export interface UpdateStatusView {
   latestHint: string;
   checkSummary: string;
   commandGroups: UpdateCommandGroup[];
-  releaseNotes: string[];
   showsRelease: boolean;
 }
 
@@ -71,7 +70,6 @@ export function updateStatusView(
       latestHint: "正在读取更新状态。",
       checkSummary: "",
       commandGroups: [],
-      releaseNotes: [],
       showsRelease: false,
     };
   }
@@ -79,13 +77,26 @@ export function updateStatusView(
   const latest = status.latest;
   let latestTone: UpdateTone = "neutral";
   let latestVersion = "未检查";
-  let latestHint = "点按“检查更新”读取官方签名清单，或直接使用离线更新包。";
+  let latestHint = "点按“检查更新”读取官方版本清单，或直接使用离线更新包。";
   if (latest) {
     latestVersion = latest.version;
-    latestTone = latest.upToDate ? "ready" : "attention";
-    latestHint = latest.upToDate
-      ? `当前版本 ${status.currentVersion} 已是最新。`
-      : `当前版本 ${status.currentVersion}，可在部署主机更新到 ${latest.version}。`;
+    switch (latest.state) {
+      case "up_to_date":
+        latestTone = "ready";
+        latestHint = `当前版本 ${status.currentVersion} 已是最新。`;
+        break;
+      case "update_available":
+        latestTone = "attention";
+        latestHint = `当前版本 ${status.currentVersion}，可在部署主机更新到 ${latest.version}。`;
+        break;
+      default:
+        // The published or running version could not be compared. The page must
+        // not claim the instance is current, and must not prompt an update it
+        // cannot justify.
+        latestTone = "neutral";
+        latestHint = `无法判断是否有新版本（当前版本 ${status.currentVersion}，更新源报告 ${latest.version}）。请对照官方发布页确认。`;
+        break;
+    }
   } else if (status.check.status === "unavailable") {
     latestHint = "更新源暂时不可用，可改用官方发布页或离线更新包。";
   } else if (status.check.status === "not_configured") {
@@ -98,7 +109,6 @@ export function updateStatusView(
     latestHint,
     checkSummary: status.check.message,
     commandGroups: groupUpdateCommands(status.commands),
-    releaseNotes: latest ? latest.releaseNotes : [],
     showsRelease: latest !== null,
   };
 }

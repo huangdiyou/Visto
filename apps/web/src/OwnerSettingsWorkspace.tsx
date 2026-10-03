@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type {
   AuthorizedRoot,
+  SystemHostAccess,
   SystemNetworkSettings,
   Job,
   LocalManagedBucket,
@@ -24,6 +25,7 @@ import {
   BellRing,
   CheckCircle2,
   Copy,
+  Cpu,
   Database,
   HardDrive,
   Info,
@@ -43,6 +45,7 @@ import {
   updateStatusView,
 } from "./lib/update-status";
 import {
+  getHostAccess,
   getNetworkSettings,
   getSystemUpdateStatus,
   updateNetworkSettings,
@@ -68,6 +71,7 @@ import {
   updateStorageProvider,
 } from "./api/storage";
 import type { OwnerSection } from "./lib/studio-route";
+import { MediaEncodingSettingsCard } from "./MediaEncodingSettingsCard";
 import { NotificationWorkspace } from "./NotificationWorkspace";
 import { TeamWorkspace } from "./TeamWorkspace";
 import { useI18n } from "./lib/i18n-react";
@@ -97,6 +101,10 @@ const ownerSections: Array<{
   {
     id: "storage",
     icon: <HardDrive size={17} />,
+  },
+  {
+    id: "encoding",
+    icon: <Cpu size={17} />,
   },
   {
     id: "notifications",
@@ -199,6 +207,8 @@ export function OwnerSettingsWorkspace({
             />
           ) : section === "network" ? (
             <OwnerNetworkSettings />
+          ) : section === "encoding" ? (
+            <MediaEncodingSettingsCard />
           ) : section === "notifications" ? (
             <NotificationWorkspace showAudit surface="owner-notifications" />
           ) : section === "activity" ? (
@@ -216,11 +226,23 @@ function OwnerNetworkSettings() {
   const { t } = useI18n();
   const [settings, setSettings] = useState<SystemNetworkSettings | null>(null);
   const [requireRemoteHTTPS, setRequireRemoteHTTPS] = useState(false);
+  const [hostAccess, setHostAccess] = useState<SystemHostAccess | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<InlineFeedbackState | null>(null);
 
   function load(signal?: AbortSignal) {
+    // D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2.5: the Owner page shows the
+    // persistent host access state. It is read-only here by design — the switch
+    // grants host-level reach, so the session that benefits from it must not be
+    // able to change it.
+    void getHostAccess(signal)
+      .then(setHostAccess)
+      .catch(() => {
+        // A missing marker must not blank the security card; the network half of
+        // the page still has to render.
+        if (!signal?.aborted) setHostAccess(null);
+      });
     return getNetworkSettings(signal)
       .then((loaded) => {
         setSettings(loaded);
@@ -369,6 +391,24 @@ function OwnerNetworkSettings() {
             <p className="owner-network-hint">
               {t("owner.networkNoRestartHint")}
             </p>
+
+            {hostAccess ? (
+              <div className="owner-host-access">
+                <div className="owner-network-status">
+                  <span>{t("owner.hostAccessStatus")}</span>
+                  <strong>
+                    {hostAccess.effectiveAllowWebHostPaths
+                      ? t("owner.hostAccessOn")
+                      : t("owner.hostAccessOff")}
+                  </strong>
+                </div>
+                <p className="owner-network-hint">
+                  {hostAccess.environmentForced
+                    ? t("owner.hostAccessEnvironmentForced")
+                    : t("owner.hostAccessSetOnce")}
+                </p>
+              </div>
+            ) : null}
           </>
         ) : null}
 
@@ -2972,25 +3012,17 @@ function OwnerUpdatePanel() {
               <div className="owner-update-release-head">
                 <strong>{status.latest.version}</strong>
                 <span className={`owner-update-badge is-${view.latestTone}`}>
-                  {status.latest.upToDate ? "已是最新" : "可更新"}
+                  {status.latest.state === "up_to_date"
+                    ? "已是最新"
+                    : status.latest.state === "update_available"
+                      ? "可更新"
+                      : "无法判断"}
                 </span>
-                {status.latest.minimumSupportedVersion ? (
-                  <small>
-                    最低支持版本 {status.latest.minimumSupportedVersion}
-                  </small>
-                ) : null}
               </div>
               {status.latest.publishedAt ? (
                 <small>
                   发布于 {formatReleaseDate(status.latest.publishedAt)}
                 </small>
-              ) : null}
-              {view.releaseNotes.length > 0 ? (
-                <ul>
-                  {view.releaseNotes.map((note) => (
-                    <li key={note}>{note}</li>
-                  ))}
-                </ul>
               ) : null}
             </div>
           ) : null}
@@ -3064,6 +3096,8 @@ function ownerSectionNavLabel(section: OwnerSection, t: Translator) {
       return t("owner.network");
     case "storage":
       return t("owner.storage");
+    case "encoding":
+      return t("owner.encoding");
     case "notifications":
       return t("owner.notifications");
     case "activity":
@@ -3081,6 +3115,8 @@ function ownerSectionNavDescription(section: OwnerSection, t: Translator) {
       return t("owner.networkDescription");
     case "storage":
       return t("owner.storageDescription");
+    case "encoding":
+      return t("owner.encodingDescription");
     case "notifications":
       return t("owner.notificationsDescription");
     case "activity":
@@ -3098,6 +3134,8 @@ function ownerSectionTitle(section: OwnerSection, t: Translator) {
       return t("owner.networkTitle");
     case "storage":
       return t("owner.storageTitle");
+    case "encoding":
+      return t("owner.encodingTitle");
     case "notifications":
       return t("owner.notificationsTitle");
     case "activity":
@@ -3115,6 +3153,8 @@ function ownerSectionDescription(section: OwnerSection, t: Translator) {
       return t("owner.networkDetail");
     case "storage":
       return t("owner.storageDetail");
+    case "encoding":
+      return t("owner.encodingDetail");
     case "notifications":
       return t("owner.notificationsDetail");
     case "activity":

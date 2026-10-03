@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
-# Update a native Linux or macOS Visto Server from a signed package.
+# Update a native Linux or macOS Visto Server from a release package.
 #
 # The script never downloads anything. The administrator obtains the package,
-# latest.json and latest.json.sig from the same release (online or by removable
-# media) and hands all three to this script.
+# its .sha256 sidecar and latest.json from the same release (online or by
+# removable media) and hands them to this script.
 #
-# Order: stage inputs -> verify signature -> validate layout -> extract into a
+# The free tier update channel is unsigned (docs/FREE_TIER_BOUNDARY_DESIGN.md),
+# so the package is checked for integrity only: it must match the published
+# SHA-256. That proves the download is intact and is the intended file; it does
+# not prove provenance.
+#
+# Order: stage inputs -> verify integrity -> validate layout -> extract into a
 # new release directory -> back up data -> stop service -> switch the current
 # symlink -> start service -> wait for health. Anything after the backup fails
 # rolls back to the previous release and, if the new version had already
@@ -21,8 +26,7 @@ visto_unix_detect_platform
 
 package_archive=""
 manifest_file=""
-signature_file=""
-public_key=${VISTO_SERVER_UPDATE_PUBLIC_KEY:-}
+expected_sha256=""
 keep_releases=$VISTO_UNIX_KEEP_RELEASES_DEFAULT
 health_timeout=$VISTO_UNIX_HEALTH_TIMEOUT_DEFAULT
 max_expanded_bytes=$VISTO_UNIX_MAX_EXPANDED_BYTES_DEFAULT
@@ -32,10 +36,9 @@ usage() {
   cat <<'USAGE'
 Usage: update-visto-server.sh --package <archive.tar.gz> [options]
 
-  --package <path>              Signed Server package for this platform
-  --manifest <path>             latest.json (default: <package>.manifest.json)
-  --signature <path>            latest.json.sig (default: <manifest>.sig)
-  --public-key <base64>         Trusted Ed25519 release public key (or VISTO_SERVER_UPDATE_PUBLIC_KEY)
+  --package <path>              Server package for this platform
+  --sha256 <hex>                Expected SHA-256 from the published .sha256 sidecar
+  --manifest <path>             latest.json, read for the version (default: <package>.manifest.json)
   --prefix <path>               Visto program prefix
   --config-dir <path>           Directory holding visto.env
   --keep-releases <count>       Releases to keep after a successful update (default: 3)
@@ -44,8 +47,9 @@ Usage: update-visto-server.sh --package <archive.tar.gz> [options]
   --max-entries <count>         Archive member count limit (default: 100000)
   -h, --help                    Show this help
 
-All three release files must come from the same release. Offline updates use
-exactly the same command with files copied from removable media.
+The package and its .sha256 must come from the same release. The free tier
+channel is unsigned, so this check proves integrity, not provenance. Offline
+updates use exactly the same command with files copied from removable media.
 USAGE
 }
 
@@ -53,8 +57,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --package) package_archive=${2:?--package needs a value}; shift 2 ;;
     --manifest) manifest_file=${2:?--manifest needs a value}; shift 2 ;;
-    --signature) signature_file=${2:?--signature needs a value}; shift 2 ;;
-    --public-key) public_key=${2:?--public-key needs a value}; shift 2 ;;
+    --sha256) expected_sha256=${2:?--sha256 needs a value}; shift 2 ;;
     --prefix) VISTO_PREFIX=${2:?--prefix needs a value}; shift 2 ;;
     --config-dir) VISTO_CONFIG_DIR=${2:?--config-dir needs a value}; shift 2 ;;
     --keep-releases) keep_releases=${2:?--keep-releases needs a value}; shift 2 ;;
@@ -80,17 +83,15 @@ fi
 if [ ! -f "$package_archive" ]; then
   visto_unix_die "Server package was not found: $package_archive"
 fi
-if [ -z "$public_key" ]; then
-  visto_unix_die "A trusted Ed25519 update public key is required (--public-key or VISTO_SERVER_UPDATE_PUBLIC_KEY)."
+if ! printf '%s' "$expected_sha256" | grep -Eiq '^[0-9a-f]{64}$'; then
+  visto_unix_die "--sha256 must be the 64-character digest published next to the package."
 fi
+expected_sha256=$(printf '%s' "$expected_sha256" | tr 'A-Z' 'a-z')
 package_archive=$(cd "$(dirname "$package_archive")" && printf '%s/%s' "$(pwd)" "$(basename "$package_archive")")
 [ -n "$manifest_file" ] || manifest_file="$package_archive.manifest.json"
-[ -n "$signature_file" ] || signature_file="$manifest_file.sig"
-for required_file in "$manifest_file" "$signature_file"; do
-  if [ ! -f "$required_file" ]; then
-    visto_unix_die "Required release file was not found: $required_file"
-  fi
-done
+if [ ! -f "$manifest_file" ]; then
+  visto_unix_die "Required release file was not found: $manifest_file"
+fi
 
 visto_unix_resolve_paths
 visto_unix_require_root
@@ -101,34 +102,30 @@ mkdir -p "$VISTO_RELEASES_DIR" "$VISTO_LOG_DIR" "$VISTO_RECOVERY_DIR"
 chmod 755 "$VISTO_RELEASES_DIR"
 chmod 700 "$VISTO_RECOVERY_DIR"
 
-# Bind the caller-supplied package, manifest and signature to one immutable
-# private copy before verification, so the archive cannot be swapped between
-# signature verification, layout validation and extraction.
+# Bind the caller-supplied package and manifest to one immutable private copy
+# before verification, so the archive cannot be swapped between the integrity
+# check, layout validation and extraction.
 input_staging="$VISTO_RECOVERY_DIR/update-input-$(visto_unix_timestamp)-$$"
 mkdir -p "$input_staging"
 chmod 700 "$input_staging"
 staged_package="$input_staging/$(basename "$package_archive")"
 staged_manifest="$input_staging/$(basename "$manifest_file")"
-staged_signature="$input_staging/$(basename "$signature_file")"
 cp "$package_archive" "$staged_package"
 cp "$manifest_file" "$staged_manifest"
-cp "$signature_file" "$staged_signature"
-chmod 700 "$staged_package" "$staged_manifest" "$staged_signature"
+chmod 700 "$staged_package" "$staged_manifest"
 
 verifier="$VISTO_CURRENT_LINK/bin/visto-server"
-visto_unix_info "Verifying the signed manifest against the installed verifier."
+visto_unix_info "Verifying the package against the published SHA-256."
 "$verifier" update verify-package \
-  --manifest "$staged_manifest" \
-  --signature "$staged_signature" \
   --artifact "$staged_package" \
   --kind "$VISTO_UNIX_ARTIFACT_KIND" \
   --platform "$VISTO_UNIX_PLATFORM" \
-  --public-key "$public_key" >/dev/null ||
-  visto_unix_die "The update package did not pass signed manifest verification."
+  --sha256 "$expected_sha256" >/dev/null ||
+  visto_unix_die "The update package did not match the published SHA-256."
 
 new_version=$(visto_unix_json_value "$staged_manifest" version)
 if [ -z "$new_version" ]; then
-  visto_unix_die "The signed manifest does not declare a version."
+  visto_unix_die "The manifest does not declare a version."
 fi
 visto_unix_assert_version "$new_version"
 

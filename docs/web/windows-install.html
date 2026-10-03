@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>06 · Windows x64 安装与维护 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html" class="active" aria-current="page">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>安装与初始化</div><p class="eyebrow">VISTO USER GUIDE / 06</p><h1>Windows x64 安装与维护</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>本章面向在 Windows 主机上部署 <strong>Server</strong> 的维护者。项目成员只需要浏览器，不必安装 Desktop、Node.js 或 Go。以下步骤按当前 Windows 安装及维护脚本编写；正式支持的 Windows 版本、最终包和实机验收以对应 Release 说明为准。安装前确认包与本版本匹配。</p>
+<figure class="figure"><a href="assets/windows-install.svg" aria-label="放大查看：Windows 从下载到日常维护的路线"><img src="assets/windows-install.svg" alt="Windows 从下载到日常维护的路线" loading="lazy" decoding="async"></a><figcaption>原创示意图 · Windows 从下载到日常维护的路线<span class="hint">点击放大查看</span></figcaption></figure>
+<h3 id="windows-install-section-1">1. 准备机器与安装材料</h3>
+<ul>
+<li>使用 x64 Windows；本章不适用于 Windows ARM64，也不适用于 Desktop 安装器。</li>
+<li>准备本机管理员权限。安装器需要注册开机任务并保护程序、数据目录的访问权限。</li>
+<li>准备固定本机程序目录，例如 <code>C:\Program Files\Visto Server</code>。不要在下载临时目录、网络共享目录或云同步目录中直接运行。</li>
+<li>准备原片、预览和备份容量。数据目录默认为 <code>%ProgramData%\Visto\data</code>，备份应另存一块可靠磁盘。</li>
+<li>从本章上方固定候选下载入口或后续官方 Release 获取同版本 ZIP、SHA-256 和说明。更新时还需要对应版本清单；不存在的下载入口不能用未知镜像替代。</li>
+</ul>
+<p>Windows 的主机目录指 <strong>Server 所在电脑</strong> 的目录，成员电脑上的 <code>D:\素材</code> 不会自动出现在服务器上。映射网络盘也可能只属于你的登录会话，而开机任务使用 <code>SYSTEM</code> 账号；不要用资源管理器能打开网络盘来判断服务一定能读到它。</p>
+<h3 id="windows-install-section-2">2. 核对文件并解压</h3>
+<p>示例版本 <code>1.0.3</code> 只是命令格式示例，请替换为你实际获得的版本。先在下载目录检查摘要：</p>
+<pre><code class="language-powershell">Get-FileHash .\Visto-Server_1.0.3_windows-x64.zip -Algorithm SHA256
+</code></pre>
+<p>把完整的 64 位结果与可信发布页或同名 <code>.sha256</code> 对照；不一致时停止安装，重新下载。SHA-256 验证完整性，下载来源仍须核对。</p>
+<p>在管理员 PowerShell 中解压到一个尚未使用的固定目录：</p>
+<pre><code class="language-powershell">Expand-Archive -LiteralPath &quot;$env:USERPROFILE\Downloads\Visto-Server_1.0.3_windows-x64.zip&quot; `
+  -DestinationPath 'C:\Program Files\Visto Server'
+Set-Location 'C:\Program Files\Visto Server'
+Get-ChildItem
+</code></pre>
+<p>目录应包含 <code>bin</code>、<code>web</code>、<code>visto-server.json</code>、<code>VistoServer.Security.psm1</code> 和安装/启动/备份/恢复/更新/卸载脚本。当前启动脚本还要求 <code>runtime\ffmpeg\ffmpeg.exe</code> 与 <code>ffprobe.exe</code>；缺失时不能从网上随便补二进制。已有安装不能用解压覆盖来升级。</p>
+<h3 id="windows-install-section-3">3. 安装开机任务</h3>
+<p>在管理员 PowerShell 的程序目录执行：</p>
+<pre><code class="language-powershell">Set-ExecutionPolicy -Scope Process Bypass -Force
+.\Install-VistoServer.ps1
+</code></pre>
+<p>该执行策略只对当前 PowerShell 进程有效。若组织策略禁止运行脚本，交给系统管理员处理，不调整整机策略来绕过组织限制。</p>
+<p>安装器注册名为 <code>Visto Server</code> 的计划任务，使用 <code>SYSTEM</code> 账号在开机时运行，异常退出时尝试重启。程序、数据与备份目录会限制普通用户写入；不要安装后再给“所有人”开放写权限，也不要将这些目录替换成目录联接或符号链接。</p>
+<h3 id="windows-install-section-4">4. 确认就绪并完成首次设置</h3>
+<pre><code class="language-powershell">Get-ScheduledTask -TaskName 'Visto Server'
+Get-ScheduledTaskInfo -TaskName 'Visto Server'
+Invoke-WebRequest -Uri 'http://127.0.0.1:8787/health/ready' -UseBasicParsing
+.\bin\visto-server.exe --address 127.0.0.1:8787 status
+</code></pre>
+<p>计划任务存在、显示运行中只是进程层证据；健康接口返回成功、浏览器能打开页面才继续首次设置。默认入口为 <code>http://127.0.0.1:8787/</code>。若改过 <code>visto-server.json</code> 的 <code>address</code>，用实际端口检查。</p>
+<p>初始化令牌在 <code>%ProgramData%\Visto\data\host-management-token.txt</code>，安装器只显示位置和短指纹。需要时由本机管理员私下读取并填入首次设置页；不要截图、发给成员或打包进求助材料。随后按“首次设置与登录”建立工作空间、Owner 账户及一次性的目录权限选择。</p>
+<h3 id="windows-install-section-5">5. 程序、配置、数据分别在哪里</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>内容</th>
+<th>默认位置或入口</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>程序与网页</td>
+<td><code>C:\Program Files\Visto Server</code>（示例）</td>
+<td>固定程序目录，更新由脚本替换</td>
+</tr>
+<tr>
+<td>配置</td>
+<td>程序目录下 <code>visto-server.json</code></td>
+<td>监听地址、数据目录及部署选项</td>
+</tr>
+<tr>
+<td>实例数据</td>
+<td><code>%ProgramData%\Visto\data</code></td>
+<td>数据库、秘密、数据目录内上传及预览</td>
+</tr>
+<tr>
+<td>默认备份</td>
+<td><code>%ProgramData%\Visto\backups</code></td>
+<td>数据归档和同名元数据</td>
+</tr>
+<tr>
+<td>启停</td>
+<td>计划任务 <code>Visto Server</code></td>
+<td>默认开机自启、使用 SYSTEM</td>
+</tr>
+<tr>
+<td>当前视频依赖</td>
+<td>程序目录 <code>runtime\ffmpeg</code></td>
+<td>当前包内运行时；以后以包说明为准</td>
+</tr>
+</tbody>
+</table></div>
+<p>修改配置前保留受保护的原配置副本，修改后重启任务。配置与令牌包含敏感信息，不作为公开求助附件。</p>
+<h3 id="windows-install-section-6">6. 日常启动、停止和诊断</h3>
+<pre><code class="language-powershell">Stop-ScheduledTask -TaskName 'Visto Server'
+Start-ScheduledTask -TaskName 'Visto Server'
+.\bin\visto-server.exe --data-dir &quot;$env:ProgramData\Visto\data&quot; doctor
+.\bin\visto-server.exe --data-dir &quot;$env:ProgramData\Visto\data&quot; diagnostics export `
+  --output &quot;$env:USERPROFILE\Desktop\visto-diagnostics.zip&quot;
+</code></pre>
+<p>停止命令发出后需确认任务和相关进程确实停止。备份、恢复和更新脚本会进行自己的停服确认，不要删掉检查来强制执行。如果文件锁导致备份失败，任务可能保持停止；解除占用后先检查备份结果，再显式启动任务并验证健康和媒体，不假定自动恢复。诊断包先自行检查敏感内容，再按受控方式交给维护者。</p>
+<h3 id="windows-install-section-7">7. 备份与恢复</h3>
+<p>先通知成员暂停写入，再运行：</p>
+<pre><code class="language-powershell">.\Backup-VistoServer.ps1 -BackupDirectory 'D:\Visto-backups'
+</code></pre>
+<p>成功结果必须同时有 ZIP 与同名 <code>.zip.json</code> 元数据，保留二者并复制到独立位置。该备份覆盖实例数据目录；配置在程序目录、外部本机媒体目录、WebDAV 和 S3 原片需另行保护。不能把一个 ZIP 当成全部项目原片的备份。</p>
+<p>恢复分为两步。以下文件名为示例，替换为真实备份：</p>
+<pre><code class="language-powershell">.\Restore-VistoServer.ps1 -BackupFile 'D:\Visto-backups\visto-server-data-20260930-120000.zip' -CheckOnly
+.\Restore-VistoServer.ps1 -BackupFile 'D:\Visto-backups\visto-server-data-20260930-120000.zip' -ConfirmRestore
+</code></pre>
+<p>只读检查通过后，先确认当前数据也有独立备份，再执行替换。不要同时传 <code>-CheckOnly</code> 与 <code>-ConfirmRestore</code>。摘要、归档路径或来源数据目录不符时停止；不编辑元数据骗过检查，也不用恢复命令做跨目录迁移。恢复后检查项目、旧媒体、新上传与分享。</p>
+<h3 id="windows-install-section-8">8. 更新与失败恢复</h3>
+<p>下载同一版本 ZIP、发布摘要和版本清单，保留程序目录配置并准备更新前备份。将路径和摘要替换为真实值：</p>
+<pre><code class="language-powershell">.\Update-VistoServer.ps1 `
+  -PackageArchive 'D:\Downloads\Visto-Server_1.0.3_windows-x64.zip' `
+  -ExpectedSha256 '&lt;发布页公布的64位SHA-256&gt;' `
+  -ManifestFile 'D:\Downloads\该版本的清单.json' `
+  -BackupDirectory 'D:\Visto-backups'
+</code></pre>
+<p>不传 <code>-ManifestFile</code> 时脚本寻找 <code>&lt;安装包完整路径&gt;.manifest.json</code>；只有 ZIP 和摘要并不足够。清单必须与包版本匹配，发布者没提供时联系维护者，不自行拼写。</p>
+<p>更新只接受完整交付 ZIP，包括固定视频二进制、许可证、构建记录和视频审计材料；不要裁剪文件或向运行时目录随意添加 DLL。</p>
+<p>脚本校验并暂存输入，备份数据、停止任务、替换程序并等待恢复。失败时会尝试还原旧程序及更新前数据。即使脚本报告成功，也要核对健康接口与实际业务；端口能连不代表媒体和数据库已正常。当前 Windows 脚本没有独立的 <code>Rollback-VistoServer.ps1</code>，不要照搬 Unix 回滚命令。自动恢复失败时保留原程序、备份与错误输出，交给维护者处理。</p>
+<h3 id="windows-install-section-9">9. 常见问题按现象处理</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>先检查</th>
+<th>下一步</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>提示需要管理员权限</td>
+<td>PowerShell 是否“以管理员身份运行”</td>
+<td>重新打开管理员窗口，进入程序目录</td>
+</tr>
+<tr>
+<td>脚本被系统拦截</td>
+<td>文件来源、摘要与组织策略</td>
+<td>按安全软件/管理员提示处理，不全局关闭保护</td>
+</tr>
+<tr>
+<td>缺少 FFmpeg、网页或安全模块</td>
+<td>是否解压完整、是否拿错包</td>
+<td>重取同版本完整包，保留错误信息</td>
+</tr>
+<tr>
+<td>任务存在但页面打不开</td>
+<td>任务结果、健康接口、配置端口</td>
+<td>执行 doctor；不要把任务存在当成功</td>
+</tr>
+<tr>
+<td>端口被占用</td>
+<td><code>Get-NetTCPConnection -LocalPort 8787 -ErrorAction SilentlyContinue</code></td>
+<td>安装会先拒绝占用，尚不创建新数据或任务；找到占用程序后决定是否改配置，不盲目结束进程</td>
+</tr>
+<tr>
+<td>服务读不到映射盘</td>
+<td>SYSTEM 与登录用户的访问差异</td>
+<td>用受维护存储连接或明确服务可访问的存储方案</td>
+</tr>
+<tr>
+<td>更新提示文件锁或停服失败</td>
+<td>是否还有服务/媒体进程</td>
+<td>保留现场，解决占用后再试，不手工覆盖</td>
+</tr>
+<tr>
+<td>ACL 或重解析点检查失败</td>
+<td>目录权限、联接/符号链接</td>
+<td>修复受信目录布局，不删保护检查</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="windows-install-section-10">10. 卸载与交付检查</h3>
+<pre><code class="language-powershell">.\Uninstall-VistoServer.ps1
+</code></pre>
+<p>默认停止并删除开机任务，保留实例数据；不等于程序目录和外部原片已删除。只有独立备份可读、确定永久清除实例数据后，才使用 <code>-RemoveData</code>。不要将清除命令当成排障方法。</p>
+<p>交付前逐项确认：重启电脑后服务就绪；Owner 可登录；成员仅看授权项目；旧媒体能打开；新上传能生成预览；HTTPS 分享可访问；备份 ZIP 与元数据已独立保存。当前候选已在干净 Windows 11 客体执行安装、浏览器播放、更新回退、恢复、整机重启及卸载保留检查。文件锁失败仍须按上面的人工处置步骤处理；有 NVIDIA 显卡不代表此组件支持 NVENC。</p><nav class="pager" aria-label="章节翻页"><a href="install-macos.html"><small>上一章</small>← 05 · Apple Silicon macOS 安装</a><a href="linux-install.html"><small>下一章</small>07 · Linux amd64 / ARM64 安装与维护 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#windows-install-section-1">1. 准备机器与安装材料</a><a href="#windows-install-section-2">2. 核对文件并解压</a><a href="#windows-install-section-3">3. 安装开机任务</a><a href="#windows-install-section-4">4. 确认就绪并完成首次设置</a><a href="#windows-install-section-5">5. 程序、配置、数据分别在哪里</a><a href="#windows-install-section-6">6. 日常启动、停止和诊断</a><a href="#windows-install-section-7">7. 备份与恢复</a><a href="#windows-install-section-8">8. 更新与失败恢复</a><a href="#windows-install-section-9">9. 常见问题按现象处理</a><a href="#windows-install-section-10">10. 卸载与交付检查</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

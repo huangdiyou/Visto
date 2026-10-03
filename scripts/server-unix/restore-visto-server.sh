@@ -187,6 +187,18 @@ case "$precheck_status" in
     ;;
 esac
 
+# Old root-owned backups are readable by the dedicated account only after
+# ownership is prepared in the private, validated stage. The running directory
+# and rollback copy remain untouched until all checks below have passed.
+if [ "$VISTO_UNIX_OS" = linux ]; then
+  restore_service_user=$(visto_unix_env_value VISTO_SERVICE_USER)
+  restore_service_group=$(visto_unix_env_value VISTO_SERVICE_GROUP)
+  if [ -n "$restore_service_user" ] || [ -n "$restore_service_group" ]; then
+    visto_unix_assign_service_data "$extract_dir/$(basename "$VISTO_DATA_DIR")" \
+      "$restore_service_user" "$restore_service_group"
+  fi
+fi
+
 if [ "$check_only" = "1" ]; then
   visto_unix_info "Check-only precheck passed: this backup can be restored into ${VISTO_DATA_DIR}."
   visto_unix_info "No service was stopped and no data was changed."

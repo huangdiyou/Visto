@@ -26,6 +26,37 @@ const zhCN = {
   "owner.accountsDescription": "账号状态、邀请与注册策略",
   "owner.accountsTitle": "控制谁能进入系统",
   "owner.description": "管理全局账号、可用基础设施和系统级记录。",
+  "owner.encoding": "媒体编码",
+  "owner.encodingDescription": "选择编码路径并查看熔断状态",
+  "owner.encodingTitle": "控制媒体编码路径",
+  "owner.encodingDetail": "探测结果、熔断状态与手动重新探测。",
+  "owner.encodingEyebrow": "媒体编码",
+  "owner.encodingCardTitle": "编码方式",
+  "owner.encodingCardDescription":
+    "按本机实际可用的编码器排序。探测逐个试跑候选编码器，列表里有不代表本机可用。",
+  "owner.encodingAutomatic": "自动（跟随探测推荐）",
+  "owner.encodingEffective": "当前生效",
+  "owner.encodingNotProbed": "尚未探测",
+  "owner.encodingProbeTime": "上次探测",
+  "owner.encodingSelectLabel": "默认编码方式",
+  "owner.encodingFailureCount": "连续失败 {count} 次，达到 3 次即自动切换",
+  "owner.encodingTripped": "已自动切换",
+  "owner.encodingTrippedDetail": "{encoder} 连续失败，现使用 {effective}",
+  "owner.encodingHint": "保存后立即生效，不需要重启系统。",
+  "owner.encodingSave": "保存设置",
+  "owner.encodingSaving": "保存中…",
+  "owner.encodingSaved": "编码方式已保存，已立即生效",
+  "owner.encodingSaveFailed": "无法保存编码方式",
+  "owner.encodingRevisionConflict":
+    "设置已被其他会话修改，已刷新为最新值，请重试。",
+  "owner.encodingLoading": "正在读取编码设置",
+  "owner.encodingLoadFailed": "无法读取编码设置",
+  "owner.encodingReprobe": "重新探测",
+  "owner.encodingReprobing": "探测中…",
+  "owner.encodingReprobeStarted": "已开始探测，完成后会自动刷新。",
+  "owner.encodingReprobeConflict": "已有一次探测正在进行，请稍候。",
+  "owner.encodingReprobeUnavailable": "此构建不支持运行时探测。",
+  "owner.encodingReprobeFailed": "无法开始探测",
   "owner.network": "网络与安全",
   "owner.networkDescription": "远程访问的传输安全与部署边界",
   "owner.networkTitle": "控制远程访问的传输方式",
@@ -53,6 +84,13 @@ const zhCN = {
   "owner.networkLoopbackHint":
     "本机 127.0.0.1 访问始终允许 HTTP，不受此开关影响。",
   "owner.networkNoRestartHint": "保存后立即生效，不需要重启系统。",
+  "owner.hostAccessStatus": "网页端添加本机目录",
+  "owner.hostAccessOn": "允许（Owner 网页会话）",
+  "owner.hostAccessOff": "不允许",
+  "owner.hostAccessSetOnce":
+    "该开关只在首次设置时询问一次，不能在网页上修改；如需变更，请在主机上编辑配置文件 VISTO_ALLOW_WEB_HOST_PATHS。",
+  "owner.hostAccessEnvironmentForced":
+    "部署配置中的 VISTO_ALLOW_WEB_HOST_PATHS 已固定该开关，首次设置时的选择不再生效。",
   "owner.networkSave": "保存设置",
   "owner.networkSaving": "保存中…",
   "owner.networkSaved": "访问安全设置已保存，已立即生效",
@@ -312,6 +350,42 @@ const enUS: Record<MessageKey, string> = {
   "owner.accountsTitle": "Control who can enter the system",
   "owner.description":
     "Manage global accounts, infrastructure, and system records.",
+  "owner.encoding": "Media encoding",
+  "owner.encodingDescription":
+    "Pick the encoding path and read the breaker state",
+  "owner.encodingTitle": "Control how media is encoded",
+  "owner.encodingDetail":
+    "Probe results, breaker state, and manual re-probing.",
+  "owner.encodingEyebrow": "MEDIA ENCODING",
+  "owner.encodingCardTitle": "Encoding path",
+  "owner.encodingCardDescription":
+    "Ordered by what this machine can actually run. The probe test-encodes each candidate: appearing in the encoder list does not mean it works here.",
+  "owner.encodingAutomatic": "Automatic (follow the probe)",
+  "owner.encodingEffective": "In effect",
+  "owner.encodingNotProbed": "Not probed yet",
+  "owner.encodingProbeTime": "Last probe",
+  "owner.encodingSelectLabel": "Default encoder",
+  "owner.encodingFailureCount":
+    "{count} consecutive failures; three switch the instance automatically",
+  "owner.encodingTripped": "Switched automatically",
+  "owner.encodingTrippedDetail":
+    "{encoder} failed repeatedly, so {effective} is in use now",
+  "owner.encodingHint": "Saving takes effect immediately; no restart needed.",
+  "owner.encodingSave": "Save settings",
+  "owner.encodingSaving": "Saving…",
+  "owner.encodingSaved": "Encoding path saved and applied immediately",
+  "owner.encodingSaveFailed": "Could not save the encoding path",
+  "owner.encodingRevisionConflict":
+    "Another session changed these settings. The latest values are loaded, please retry.",
+  "owner.encodingLoading": "Loading encoding settings",
+  "owner.encodingLoadFailed": "Could not load the encoding settings",
+  "owner.encodingReprobe": "Probe again",
+  "owner.encodingReprobing": "Probing…",
+  "owner.encodingReprobeStarted":
+    "Probe started; this page refreshes when it finishes.",
+  "owner.encodingReprobeConflict": "A probe is already running. Please wait.",
+  "owner.encodingReprobeUnavailable": "This build cannot probe the runtime.",
+  "owner.encodingReprobeFailed": "Could not start the probe",
   "owner.network": "Network and security",
   "owner.networkDescription": "Transport security and deployment boundary",
   "owner.networkTitle": "Control how remote access reaches this system",
@@ -341,6 +415,13 @@ const enUS: Record<MessageKey, string> = {
     "Local 127.0.0.1 access always allows HTTP and is not affected by this setting.",
   "owner.networkNoRestartHint":
     "Saving applies immediately; no restart is needed.",
+  "owner.hostAccessStatus": "Adding host directories from the web",
+  "owner.hostAccessOn": "Allowed (Owner web session)",
+  "owner.hostAccessOff": "Not allowed",
+  "owner.hostAccessSetOnce":
+    "This switch is asked once during first run and cannot be changed from the web. To change it, edit VISTO_ALLOW_WEB_HOST_PATHS on the host.",
+  "owner.hostAccessEnvironmentForced":
+    "VISTO_ALLOW_WEB_HOST_PATHS in the deployment configuration pins this switch, so the first-run answer no longer applies.",
   "owner.networkSave": "Save settings",
   "owner.networkSaving": "Saving…",
   "owner.networkSaved":

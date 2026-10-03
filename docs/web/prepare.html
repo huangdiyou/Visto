@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>04 · 安装前的准备 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html" class="active" aria-current="page">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>安装与初始化</div><p class="eyebrow">VISTO USER GUIDE / 04</p><h1>安装前的准备</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>如果你只是受邀参与项目，无需安装 Server，使用团队给你的工作空间地址即可。只有负责部署的人员需要本章。</p>
+<h3 id="prepare-section-1">选择部署方式</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>方式</th>
+<th>适合谁</th>
+<th>浏览器入口</th>
+<th>需要注意</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS Apple Silicon 原生 Server</td>
+<td>使用 M 系列 Mac 的安装维护者</td>
+<td>默认 <code>http://127.0.0.1:8787/</code></td>
+<td>安装需要系统管理员权限；FFmpeg 运行时独立安装</td>
+</tr>
+<tr>
+<td>Docker Compose</td>
+<td>已经熟悉容器和持久数据卷的维护者</td>
+<td>默认 <code>http://127.0.0.1:8080/</code></td>
+<td>以本次发布支持范围为准；保留数据卷和配置</td>
+</tr>
+<tr>
+<td>Windows x64 原生 Server</td>
+<td>Windows 主机维护者</td>
+<td>默认 <code>http://127.0.0.1:8787/</code></td>
+<td>见“Windows x64 安装与维护”，使用开机计划任务</td>
+</tr>
+<tr>
+<td>Linux amd64 / ARM64 原生 Server</td>
+<td>systemd Linux 主机维护者</td>
+<td>默认 <code>http://127.0.0.1:8787/</code></td>
+<td>见“Linux amd64 / ARM64 安装与维护”，需核对架构、glibc 和媒体运行时</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="prepare-section-2">在开始之前准备好</h3>
+<ol>
+<li>确认设备架构和安装包匹配。M 系列 Mac 使用 <code>macos-arm64</code> 包。</li>
+<li>从 <a href="https://github.com/huangdiyou/Visto/releases">官方 Release 页面</a> 获取同一版本的安装包、SHA-256 和发布说明。页面未开放或没有正式包时，不要换用不明镜像。</li>
+<li>准备系统管理员密码、一个强 Owner 密码，以及足够存放原片、预览和备份的磁盘空间。</li>
+<li>为素材安排独立目录。不要把整个用户主目录或系统目录当作媒体上传位置。</li>
+<li>首次设置在部署主机完成；首次初始化令牌只给这台主机的维护者使用。</li>
+<li>已有实例升级时，先读“更新、恢复与回滚”，不要按全新安装覆盖现有数据。</li>
+</ol>
+<h3 id="prepare-section-3">本机地址是什么意思</h3>
+<p><code>127.0.0.1</code> 指向<strong>当前打开浏览器的设备</strong>。在你的 Mac 上，它指向这台 Mac；在同事电脑上，它指向同事电脑。因此同事无法使用你的 <code>127.0.0.1</code> 分享地址访问部署在你 Mac 上的服务。</p>
+<p>跨设备协作需要一个接收者能访问到的团队地址，并配置对应网络入口。参见“网络与远程访问”。</p><nav class="pager" aria-label="章节翻页"><a href="navigation.html"><small>上一章</small>← 03 · 熟悉工作台</a><a href="install-macos.html"><small>下一章</small>05 · Apple Silicon macOS 安装 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#prepare-section-1">选择部署方式</a><a href="#prepare-section-2">在开始之前准备好</a><a href="#prepare-section-3">本机地址是什么意思</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

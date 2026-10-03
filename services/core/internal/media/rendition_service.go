@@ -23,14 +23,41 @@ const (
 )
 
 type RenditionService struct {
-	repository RenditionRepository
-	metadata   Repository
-	storage    Storage
-	store      *ManagedStore
-	processor  ImageProcessor
-	video      VideoProcessor
-	prober     Prober
-	clock      func() time.Time
+	repository    RenditionRepository
+	metadata      Repository
+	storage       Storage
+	store         *ManagedStore
+	processor     ImageProcessor
+	video         VideoProcessor
+	prober        Prober
+	encoderEvents EncoderEventRecorder
+	clock         func() time.Time
+}
+
+// SetEncoderEventRecorder lets the service tell the Owner when an encoder failed
+// and the job fell back, or when the breaker moved the instance off it. Without
+// one, encoding behaves exactly as before.
+func (service *RenditionService) SetEncoderEventRecorder(recorder EncoderEventRecorder) {
+	service.encoderEvents = recorder
+}
+
+// reportEncoderEvent attaches the workspace and asset identity, which only the
+// caller knows, and delivers the event. It is best effort: the encode already
+// produced output, so a notification that cannot be delivered must never fail it.
+func (service *RenditionService) reportEncoderEvent(
+	ctx context.Context,
+	event *EncoderEvent,
+	workspaceID string,
+	assetID string,
+	renditionID string,
+) {
+	if service.encoderEvents == nil || event == nil {
+		return
+	}
+	event.WorkspaceID = workspaceID
+	event.AssetID = assetID
+	event.RenditionID = renditionID
+	_ = service.encoderEvents.RecordEncoderEvent(context.WithoutCancel(ctx), *event)
 }
 
 func NewRenditionService(
@@ -397,6 +424,10 @@ func (service *RenditionService) generateVideoProfile(
 		return processErr
 	}
 	defer artifact.Cleanup()
+	// The workspace and the asset are only known here, so this is where an encoder
+	// failure becomes something the Owner can be told about.
+	service.reportEncoderEvent(
+		ctx, artifact.EncoderEvent, object.WorkspaceID, object.ID, item.ID)
 	if closeErr != nil {
 		service.fail(ctx, item.ID, "rendition.close_failed", closeErr)
 		return closeErr

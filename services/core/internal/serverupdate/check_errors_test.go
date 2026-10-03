@@ -2,9 +2,6 @@ package serverupdate
 
 import (
 	"context"
-	"crypto/ed25519"
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -13,50 +10,80 @@ import (
 	"review-studio.local/core/internal/delivery"
 )
 
+// A usable manifest is now only a version announcement, so classification still
+// has to separate "the source is unreachable" from "the source answered with
+// something unusable" — the Owner page reports those differently.
 func TestCheckFailureClassification(t *testing.T) {
-	public, private, _ := ed25519.GenerateKey(rand.Reader)
-	key := base64.StdEncoding.EncodeToString(public)
-	for _, tc := range []struct {
-		name, body, code string
-		status           int
-		sign, root       bool
+	valid := `{"schemaVersion":1,"channel":"stable","version":"1.0.1","publishedAt":"2026-09-02T00:00:00Z"}`
+	for _, testCase := range []struct {
+		name   string
+		body   string
+		status int
+		code   string
+		usable bool
 	}{
 		{name: "network", status: 503, code: "network_failure"},
-		{name: "signature", status: 200, body: `{}`, code: "verification_failed"},
-		{name: "malformed signed manifest", status: 200, body: `{`, sign: true, code: "verification_failed"},
-		{name: "invalid signed manifest", status: 200, body: `{}`, sign: true, code: "verification_failed"},
-		{name: "key set network", status: 503, root: true, code: "network_failure"},
-		{name: "key set signature", status: 200, root: true, body: `{}`, code: "verification_failed"},
+		{name: "malformed json", status: 200, body: `{`, code: "verification_failed"},
+		{name: "empty object", status: 200, body: `{}`, code: "verification_failed"},
+		{
+			name:   "unsupported schema",
+			status: 200,
+			body:   `{"schemaVersion":2,"channel":"stable","version":"1.0.1","publishedAt":"2026-09-02T00:00:00Z"}`,
+			code:   "verification_failed",
+		},
+		{
+			name:   "non stable channel",
+			status: 200,
+			body:   `{"schemaVersion":1,"channel":"beta","version":"1.0.1","publishedAt":"2026-09-02T00:00:00Z"}`,
+			code:   "verification_failed",
+		},
+		{
+			name:   "missing version",
+			status: 200,
+			body:   `{"schemaVersion":1,"channel":"stable","publishedAt":"2026-09-02T00:00:00Z"}`,
+			code:   "verification_failed",
+		},
+		{
+			name:   "missing publication time",
+			status: 200,
+			body:   `{"schemaVersion":1,"channel":"stable","version":"1.0.1"}`,
+			code:   "verification_failed",
+		},
+		{name: "usable manifest", status: 200, body: valid, usable: true},
 	} {
-		t.Run(tc.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if tc.root && (r.URL.Path == "/latest.json" || r.URL.Path == "/latest.json.sig") {
-					_, _ = w.Write([]byte(`{}`))
-					return
-				}
-				w.WriteHeader(tc.status)
-				if r.URL.Path == "/latest.json.sig" && tc.sign {
-					_, _ = w.Write([]byte(base64.StdEncoding.EncodeToString(ed25519.Sign(private, []byte(tc.body)))))
-					return
-				}
-				_, _ = w.Write([]byte(tc.body))
+		t.Run(testCase.name, func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+				response.WriteHeader(testCase.status)
+				_, _ = response.Write([]byte(testCase.body))
 			}))
 			defer server.Close()
-			config := CheckConfig{Sources: []string{server.URL}, PublicKey: key, AllowInsecure: true}
-			if tc.root {
-				config.RootPublicKey = key
+
+			config := CheckConfig{Sources: []string{server.URL}, AllowInsecure: true}
+			result, err := Check(context.Background(), config)
+			if testCase.usable {
+				if err != nil {
+					t.Fatalf("expected a usable manifest, got %v", err)
+				}
+				if result.Manifest.Version != "1.0.1" {
+					t.Fatalf("unexpected manifest: %#v", result.Manifest)
+				}
+				return
 			}
-			_, err := Check(context.Background(), config)
 			var classified *delivery.Error
-			if !errors.As(err, &classified) || classified.Code != tc.code {
-				t.Fatalf("got %v, want %s", err, tc.code)
+			if !errors.As(err, &classified) || classified.Code != testCase.code {
+				t.Fatalf("got %v, want %s", err, testCase.code)
 			}
-			unavailable := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(503) }))
+			// Ordering must not change the verdict: a failing source first or
+			// last, with an unreachable source beside it, still reports the same
+			// code.
+			unavailable := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+				response.WriteHeader(503)
+			}))
 			defer unavailable.Close()
 			for _, sources := range [][]string{{server.URL, unavailable.URL}, {unavailable.URL, server.URL}} {
 				config.Sources = sources
 				_, err = Check(context.Background(), config)
-				if !errors.As(err, &classified) || classified.Code != tc.code {
+				if !errors.As(err, &classified) || classified.Code != testCase.code {
 					t.Fatalf("mixed source classification: %v", err)
 				}
 			}

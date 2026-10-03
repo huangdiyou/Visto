@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +18,44 @@ const repositoryRoot = path.resolve(
 const packageLock = JSON.parse(
   await readFile(path.join(repositoryRoot, "package-lock.json"), "utf8"),
 );
+const goLicenseInventory = JSON.parse(
+  await readFile(
+    path.join(repositoryRoot, "scripts", "server-go-license-inventory.json"),
+    "utf8",
+  ),
+);
+const goNotices = await readFile(
+  path.join(repositoryRoot, "release", "server", "THIRD_PARTY_NOTICES.md"),
+  "utf8",
+);
+
+const auditedGoLicenses = new Map();
+for (const item of goLicenseInventory) {
+  const key = `${item.module}@${item.version}`;
+  if (
+    auditedGoLicenses.has(key) ||
+    !["Apache-2.0", "BSD-3-Clause", "MIT", "MPL-2.0"].includes(item.license) ||
+    !/^[a-f0-9]{64}$/.test(item.licenseSha256)
+  ) {
+    throw new Error(`invalid Go license inventory entry: ${key}`);
+  }
+  const noticeHeader =
+    `## ${item.module} ${item.version}\n\n` +
+    `License: ${item.license}. Upstream LICENSE SHA-256: ` +
+    `\`${item.licenseSha256}\`.\n\n\`\`\`text\n`;
+  const start = goNotices.indexOf(noticeHeader);
+  if (start < 0) throw new Error(`Go license notice is missing: ${key}`);
+  const contentStart = start + noticeHeader.length;
+  const contentEnd = goNotices.indexOf("```", contentStart);
+  if (contentEnd < 0)
+    throw new Error(`Go license notice is incomplete: ${key}`);
+  const noticeLicense = goNotices.slice(contentStart, contentEnd);
+  const actualHash = createHash("sha256").update(noticeLicense).digest("hex");
+  if (actualHash !== item.licenseSha256) {
+    throw new Error(`Go license notice checksum differs: ${key}`);
+  }
+  auditedGoLicenses.set(key, item);
+}
 
 function spdxId(prefix, name) {
   return `SPDXRef-${prefix}-${name.replaceAll(/[^A-Za-z0-9.-]/g, "-")}`;
@@ -73,23 +112,32 @@ async function goModules() {
     modules.set(`${name}@${version}`, { name, version });
   }
 
-  return [...modules.values()].map((module) => ({
-    SPDXID: spdxId("go", module.name),
-    name: module.name,
-    versionInfo: module.version,
-    downloadLocation: module.name.startsWith("golang.org/")
-      ? `https://${module.name}`
-      : `https://pkg.go.dev/${module.name}`,
-    licenseConcluded: "NOASSERTION",
-    licenseDeclared: "NOASSERTION",
-    externalRefs: [
-      {
-        referenceCategory: "PACKAGE-MANAGER",
-        referenceType: "purl",
-        referenceLocator: `pkg:golang/${module.name}@${module.version}`,
-      },
-    ],
-  }));
+  const items = [...modules.values()].map((module) => {
+    const key = `${module.name}@${module.version}`;
+    const audited = auditedGoLicenses.get(key);
+    if (!audited) throw new Error(`Go license is not audited: ${key}`);
+    return {
+      SPDXID: spdxId("go", module.name),
+      name: module.name,
+      versionInfo: module.version,
+      downloadLocation: module.name.startsWith("golang.org/")
+        ? `https://${module.name}`
+        : `https://pkg.go.dev/${module.name}`,
+      licenseConcluded: "NOASSERTION",
+      licenseDeclared: audited.license,
+      externalRefs: [
+        {
+          referenceCategory: "PACKAGE-MANAGER",
+          referenceType: "purl",
+          referenceLocator: `pkg:golang/${module.name}@${module.version}`,
+        },
+      ],
+    };
+  });
+  if (items.length !== auditedGoLicenses.size) {
+    throw new Error("Go license inventory contains modules outside go.sum");
+  }
+  return items;
 }
 
 const documentNamespace = `https://visto.example/sbom/${new Date().toISOString().replaceAll(/[:.]/g, "-")}`;

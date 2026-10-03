@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>07 · Linux amd64 / ARM64 安装与维护 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html" class="active" aria-current="page">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>安装与初始化</div><p class="eyebrow">VISTO USER GUIDE / 07</p><h1>Linux amd64 / ARM64 安装与维护</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p>本章面向使用 <strong>systemd 的 glibc Linux 主机</strong> 的维护者，按当前 Linux 打包与 Unix 运维脚本编写。amd64 与 ARM64 共用步骤，安装包不能混用。正式包、发行版支持和媒体运行时供应以对应 Release 为准；源码里存在安装脚本不代表最终 Linux 包已通过实机验收。</p>
+<figure class="figure"><a href="assets/linux-install.svg" aria-label="放大查看：Linux 从架构检查到服务维护的路线"><img src="assets/linux-install.svg" alt="Linux 从架构检查到服务维护的路线" loading="lazy" decoding="async"></a><figcaption>原创示意图 · Linux 从架构检查到服务维护的路线<span class="hint">点击放大查看</span></figcaption></figure>
+<h3 id="linux-install-section-1">1. 核对系统和架构</h3>
+<pre><code class="language-bash">uname -m
+getconf GNU_LIBC_VERSION
+systemctl --version
+</code></pre>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>检查项</th>
+<th>当前交付契约基线</th>
+<th>如何选择</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uname -m</code> 为 <code>x86_64</code></td>
+<td>Linux amd64</td>
+<td>使用 <code>linux-amd64.tar.gz</code></td>
+</tr>
+<tr>
+<td><code>uname -m</code> 为 <code>aarch64</code></td>
+<td>Linux ARM64</td>
+<td>使用 <code>linux-arm64.tar.gz</code></td>
+</tr>
+<tr>
+<td>C 库</td>
+<td>glibc ≥ 2.28</td>
+<td>musl / Alpine 不在本原生说明范围</td>
+</tr>
+<tr>
+<td>服务管理器</td>
+<td>systemd ≥ 239</td>
+<td>无 systemd 的 NAS、容器或 WSL 不照搬本章</td>
+</tr>
+<tr>
+<td>内核</td>
+<td>≥ 4.18</td>
+<td>最终发行版支持以 Release 为准</td>
+</tr>
+</tbody>
+</table></div>
+<p>上述为项目当前契约要求，不代表每个满足版本号的发行版均已验收。准备 <code>sudo</code> 权限、Bash、GNU tar、常用系统工具，以及 <code>curl</code> 和 SHA-256 工具。不要为安装程序替换系统 C 库；不符合基线时使用受支持主机，或按 Docker 章节和发布支持范围选择容器部署。</p>
+<h3 id="linux-install-section-2">2. 下载并核对摘要</h3>
+<p>获取同版本的安装包、SHA-256 和说明。下列 <code>1.0.3</code> 为格式示例，替换为实际版本；ARM64 把包名中的 <code>amd64</code> 改为 <code>arm64</code>。</p>
+<pre><code class="language-bash">sha256sum Visto-Server_1.0.3_linux-amd64.tar.gz
+</code></pre>
+<p>逐字对照可信发布页的 64 位摘要。不要从另一个包、架构或版本复制摘要。来源或摘要不明时停止。更新时还要准备同版本清单。</p>
+<h3 id="linux-install-section-3">3. 解压并安装</h3>
+<p>在独立、尚未使用的本机目录解压；下面命令不在现有程序目录上覆盖文件：</p>
+<pre><code class="language-bash">mkdir -p &quot;$HOME/visto-install-1.0.3&quot;
+tar -tzf Visto-Server_1.0.3_linux-amd64.tar.gz
+tar -xzf Visto-Server_1.0.3_linux-amd64.tar.gz -C &quot;$HOME/visto-install-1.0.3&quot;
+cd &quot;$HOME/visto-install-1.0.3&quot;
+ls bin web scripts
+sudo bash scripts/install-visto-server.sh \
+  --version 1.0.3 \
+  --source-dir &quot;$PWD&quot;
+</code></pre>
+<p>解压后应有 <code>bin/visto-core</code>、<code>bin/visto-server</code>、<code>web/index.html</code>、完整维护脚本及许可声明。安装器复制程序到版本目录、生成受保护配置、注册并启动 systemd 服务。缺文件、架构错误或版本目录已存在时先排查，不加覆盖参数绕过。</p>
+<p>默认 systemd 服务使用专用非登录账号 <code>visto</code>。组件与配置由管理员持有，服务不能写入；业务数据由服务账号持有。额外本机媒体目录需要管理员明确授予该账号所需读写权限，不能通过把服务改回 root 来解决。</p>
+<p>首次安装默认监听 <code>127.0.0.1:8787</code>。需要不同端口时，安装命令可增加 <code>--address 127.0.0.1:8788</code>；之后所有检查与代理都用实际端口。已经部署的实例不能用再次安装同版本来做更新。</p>
+<h3 id="linux-install-section-4">4. 确认服务与浏览器入口</h3>
+<pre><code class="language-bash">sudo systemctl status visto.service --no-pager
+curl -fsS http://127.0.0.1:8787/health/ready
+sudo /opt/visto/current/bin/visto-server --address 127.0.0.1:8787 status
+</code></pre>
+<p>服务 <code>active</code> 后还需健康检查成功、页面可打开。服务器有浏览器时打开 <code>http://127.0.0.1:8787/</code>。如果是无桌面的远程主机，自己电脑里的 <code>127.0.0.1</code> 指向自己电脑，并不指向服务器。</p>
+<p>有 SSH 权限的维护者可临时把远端回环端口转到本机，用于首次设置和诊断：</p>
+<pre><code class="language-bash">ssh -N -L 18787:127.0.0.1:8787 &quot;&lt;你的SSH用户&gt;@&lt;服务器地址&gt;&quot;
+</code></pre>
+<p>保持连接，在自己电脑浏览器打开 <code>http://127.0.0.1:18787/</code>。尖括号内容必须替换；此通道只供授权维护者使用，日常成员和客户使用正式 HTTPS 工作空间地址。首次设置令牌默认在 <code>/etc/visto/host-management-token</code>，由主机管理员私下读取使用，勿公开配置内容。</p>
+<h3 id="linux-install-section-5">5. 安装后的目录地图</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>内容</th>
+<th>默认位置</th>
+<th>维护方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>程序版本</td>
+<td><code>/opt/visto/releases/&lt;版本&gt;</code></td>
+<td>各版本独立保存</td>
+</tr>
+<tr>
+<td>当前程序</td>
+<td><code>/opt/visto/current</code></td>
+<td>指向当前版本，不手动替换</td>
+</tr>
+<tr>
+<td>配置</td>
+<td><code>/etc/visto/visto.env</code></td>
+<td>系统管理员维护，包含秘密</td>
+</tr>
+<tr>
+<td>数据</td>
+<td><code>/var/lib/visto</code></td>
+<td>数据库、秘密、目录内上传与预览</td>
+</tr>
+<tr>
+<td>备份</td>
+<td><code>/var/backups/visto</code></td>
+<td>归档与同名元数据</td>
+</tr>
+<tr>
+<td>日志</td>
+<td>systemd 239 使用 journal；240 及以上使用 <code>/var/log/visto/server.log</code>、<code>server.err</code></td>
+<td>排查启动与处理错误</td>
+</tr>
+<tr>
+<td>服务定义</td>
+<td><code>/etc/systemd/system/visto.service</code></td>
+<td>安装器生成</td>
+</tr>
+<tr>
+<td>媒体运行时根</td>
+<td><code>/var/lib/visto-runtime</code></td>
+<td>使用当前版本支持的运行时工具管理</td>
+</tr>
+</tbody>
+</table></div>
+<p>如果安装时使用自定义数据目录或部署覆盖变量，记录真实路径，维护命令也要匹配该实例，不能假定所有主机都用默认值。外部媒体根权限与服务沙箱需要一致；系统管理员应按实际存储方案配置，不通过关闭全部服务保护来解决读写问题。</p>
+<h3 id="linux-install-section-6">6. 视频预览与媒体运行时</h3>
+<p>Linux Server 的当前打包脚本生成主程序、网页和维护工具，<strong>不在该脚本内自动打入 FFmpeg</strong>。页面打开后仍需核对视频处理运行时。</p>
+<p>此次交付选择 Linux <code>.2</code> 视频组件，两种架构均按 glibc 2.28 重建并检查依赖闭包。ARM64 已在 Ubuntu 24.04 原生客体及 Rocky 8.10 ARM64 模拟客体执行；x86_64 已在 Rocky Linux 8.10（glibc 2.28、systemd 239、SELinux 启用）执行原生生命周期及正式根签名安装、编码和篡改拒绝检查。具体覆盖范围以发布清单为准，不据此承诺所有 Linux 发行版。旧 Linux 组件分别需要较新的 glibc，不能拿来替代本次固定组合。本次固定 <code>.2</code> 归档、正式签名清单及对应源码已经公开可下载，并已核对摘要与正式根签名。历史使用临时 QA 签名的记录保留；此次正式信任验证另行记录，不把旧 QA 签名结果冒充正式签名通过。</p>
+<p>以下步骤独立下载固定公钥，并核对内容；也可从本次完整公开交付取得同一公钥。无需安装 Node.js、Go 或克隆内部仓库。不能使用下载归档自带的公钥代替可信根。</p>
+<pre><code class="language-bash">(
+set -eu
+case &quot;$(uname -m)&quot; in
+  aarch64) RUNTIME_VERSION=ffmpeg-8.1.2-linux-arm64-lgpl.2 ;;
+  x86_64) RUNTIME_VERSION=ffmpeg-8.1.2-linux-amd64-lgpl.2 ;;
+  *) echo '不支持的架构'; exit 1 ;;
+esac
+RUNTIME_BASE=&quot;https://visto-server-updates.pages.dev/media-runtime/$RUNTIME_VERSION&quot;
+mkdir -p &quot;$HOME/visto-runtime-install&quot;
+curl -fL &quot;$RUNTIME_BASE/media-runtime-manifest.json&quot; \
+  -o &quot;$HOME/visto-runtime-install/manifest.json&quot;
+curl -fL &quot;$RUNTIME_BASE/media-runtime-manifest.json.sig&quot; \
+  -o &quot;$HOME/visto-runtime-install/manifest.json.sig&quot;
+curl -fL 'https://dl.819101.xyz/server/candidates/20261001/media-runtime-root-public-key.txt' \
+  -o &quot;$HOME/visto-runtime-install/public-key.txt&quot;
+test &quot;$(cat &quot;$HOME/visto-runtime-install/public-key.txt&quot;)&quot; = 'lMcaxJOtCeDaiJgeW0S5Gh/m3PYQ4WG7ijIs9yxVZ2M=' || { echo '公钥不符，停止安装'; exit 1; }
+sudo /opt/visto/current/bin/visto-server --json media-runtime install \
+  --media-runtime managed \
+  --manifest &quot;$HOME/visto-runtime-install/manifest.json&quot; \
+  --signature &quot;$HOME/visto-runtime-install/manifest.json.sig&quot; \
+  --public-key &quot;$(cat &quot;$HOME/visto-runtime-install/public-key.txt&quot;)&quot; \
+  --non-interactive --confirm-download
+sudo systemctl restart visto.service
+sudo /opt/visto/current/bin/visto-server --json media-runtime status
+curl -fsS http://127.0.0.1:8787/health/ready
+)
+</code></pre>
+<p>任何下载、签名、摘要或探测失败均停止；不要忽略错误继续重启。成功后确认组件状态和 <code>health/ready</code> 的 <code>ffmpeg</code>、<code>ffprobe</code> 都是 <code>true</code>。自定义实例必须让主机工具与服务使用相同 <code>VISTO_MEDIA_RUNTIME_ROOT</code>；默认实例为 <code>/var/lib/visto-runtime</code>。旧安装若配置仍指向 <code>/opt/visto/media-runtime</code> 或 <code>/var/lib/visto/runtime</code>，先按实际配置指定相同根，不能把两个目录混用。</p>
+<p>运行时安装后重启服务，上传小型测试视频，等待处理完成、播放预览并提交时间点评论；再验证一份图片。只有这些业务步骤成功，才能确认该实例的媒体链路可用。</p>
+<h3 id="linux-install-section-7">7. 启停、日志和诊断</h3>
+<pre><code class="language-bash">sudo systemctl stop visto.service
+sudo systemctl start visto.service
+sudo systemctl restart visto.service
+sudo journalctl -u visto.service -n 100 --no-pager
+sudo tail -n 100 /var/log/visto/server.err
+sudo /opt/visto/current/bin/visto-server --data-dir /var/lib/visto doctor
+</code></pre>
+<p>systemd 239 使用 <code>sudo journalctl -u visto.service -n 100 --no-pager</code> 查看日志，文件日志步骤只用于 systemd 240 及以上。</p>
+<p>服务启动失败时先读日志，再检查配置和依赖；不要反复重装或删除数据。日志可能含路径和用户信息，提供求助材料前脱敏。服务修改配置后需重启；网页中的业务设置按页面反馈判断保存是否完成。</p>
+<h3 id="linux-install-section-8">8. 备份并验证覆盖范围</h3>
+<pre><code class="language-bash">sudo /opt/visto/current/scripts/backup-visto-server.sh
+</code></pre>
+<p>也可在独立备份磁盘上指定保存目录，须确认磁盘已挂载且容量足够：</p>
+<pre><code class="language-bash">sudo /opt/visto/current/scripts/backup-visto-server.sh --backup-dir /mnt/backup/visto
+</code></pre>
+<p>脚本先证明服务停止，再归档数据目录并生成数据库事实元数据，之后启动服务。只有归档和元数据均成功生成才算本次备份完成。备份放另一磁盘或可信远程位置；外部媒体、WebDAV、S3、<code>/etc/visto</code> 的部署配置另行备份。迁移到新主机还涉及恢复路径约束，不能直接承诺跨主机/跨目录恢复。</p>
+<h3 id="linux-install-section-9">9. 更新、恢复与回滚</h3>
+<p><strong>更新</strong>使用实际下载的包、摘要和同版本清单。示例输入需全部替换：</p>
+<pre><code class="language-bash">sudo /opt/visto/current/scripts/update-visto-server.sh \
+  --package '/实际路径/Visto-Server_1.0.3_linux-amd64.tar.gz' \
+  --sha256 '&lt;发布页公布的64位SHA-256&gt;' \
+  --manifest '/实际路径/该版本的清单.json'
+</code></pre>
+<p>上面示例为 x86_64；ARM64 使用同版本的 <code>Visto-Server_1.0.3_linux-arm64.tar.gz</code> 和该文件对应摘要，不能混用架构。</p>
+<p>脚本验证布局，准备新版本、备份数据、停服并切换 <code>current</code>，失败时尝试还原。没有清单时停止，不手工改 <code>current</code> 或覆盖运行中的程序。更新成功后检查旧数据与新上传，不只看进程。</p>
+<p><strong>恢复</strong>先跑只读检查；示例归档名替换为真实备份：</p>
+<pre><code class="language-bash">sudo /opt/visto/current/scripts/restore-visto-server.sh \
+  --backup-file '/var/backups/visto/实际备份.tar.gz' --check-only
+sudo /opt/visto/current/scripts/restore-visto-server.sh \
+  --backup-file '/var/backups/visto/实际备份.tar.gz' --confirm-restore
+</code></pre>
+<p>恢复会替换当前实例数据，先另做当前数据备份。归档与同名元数据必须一起保留，只支持检查认可的原数据目录；旧格式元数据或路径不符被拒绝时，不手改元数据。</p>
+<p><strong>回滚程序版本</strong>先检查保留的版本：</p>
+<pre><code class="language-bash">sudo ls /opt/visto/releases
+sudo /opt/visto/current/scripts/rollback-visto-server.sh \
+  --to-version '&lt;仍保留的版本号&gt;' --confirm-rollback
+</code></pre>
+<p>回滚程序不等于把数据库和媒体恢复到任意历史时刻。数据兼容性与恢复需求要分别判断；目标版本已清理或数据不兼容时联系维护者。成功后重新检查健康、登录、媒体与分享。</p>
+<h3 id="linux-install-section-10">10. 网络与常见问题</h3>
+<p>默认 Core 仅监听回环。日常远程访问用受维护的 HTTPS 反向代理，再在工作空间配置外部访问地址；不要直接把 8787 暴露到公网。防火墙开放的是代理入口，浏览器里的本机地址不能发给客户。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>先检查</th>
+<th>处理方向</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Exec format error</code></td>
+<td><code>uname -m</code> 与安装包架构</td>
+<td>换同架构完整包</td>
+</tr>
+<tr>
+<td>glibc 版本错误</td>
+<td><code>getconf GNU_LIBC_VERSION</code></td>
+<td>换受支持系统，不替换系统 C 库</td>
+</tr>
+<tr>
+<td>找不到 systemctl</td>
+<td>主机是否真正使用 systemd</td>
+<td>选择符合基线主机，或按 Docker 支持范围部署</td>
+</tr>
+<tr>
+<td>安装缺网页/脚本/声明</td>
+<td>解压根目录与包完整性</td>
+<td>用完整包，不分别下载文件拼装</td>
+</tr>
+<tr>
+<td>服务启动失败</td>
+<td><code>journalctl</code>、<code>server.err</code></td>
+<td>查地址占用、配置、目录权限与运行依赖</td>
+</tr>
+<tr>
+<td>端口被占用</td>
+<td><code>sudo ss -ltnp 'sport = :8787'</code></td>
+<td>查明占用者，选择其它端口，不盲目杀进程</td>
+</tr>
+<tr>
+<td>上传不能写或空间不足</td>
+<td>实际存储权限、挂载和 <code>df -h</code></td>
+<td>修复真实存储条件，保留已有数据</td>
+</tr>
+<tr>
+<td>视频无预览</td>
+<td>同架构运行时、处理任务状态</td>
+<td>核对运行时供应和安装结果</td>
+</tr>
+<tr>
+<td>SSH 转发打不开</td>
+<td>SSH 连接、远端健康、本机端口</td>
+<td>分别确认两端，不改为公网裸端口</td>
+</tr>
+<tr>
+<td>停服检查/恢复预检被拒绝</td>
+<td>相关子进程、元数据与来源目录</td>
+<td>保留现场，解决原因后再试，不绕过保护</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="linux-install-section-11">11. 卸载与最终检查</h3>
+<pre><code class="language-bash">sudo bash /opt/visto/current/scripts/uninstall-visto-server.sh
+</code></pre>
+<p>默认停止并注销服务、移除程序发布目录，保留用户数据、备份和日志。停服失败会中止卸载，保留服务配置和程序；看到 <code>could not be stopped</code> 时先检查服务或进程，解决原因后再试，不手工删除服务配置。卸载前另存配置和完整备份；<code>--keep-releases</code> 可保留程序版本。<code>--purge-data</code> 会额外删除数据和备份目录，只有明确永久清除并确认独立备份可恢复时才使用，不能当排障步骤。</p>
+<p>交付清单：安装架构正确；整机重启后健康成功；首次设置与权限正确；图片与视频预览通过；真实存储可读写；外部 HTTPS 分享可达；备份归档与元数据已独立保存；更新和恢复在对应平台受控验证。当前候选已在 x86_64 Rocky 8.10 与 ARM64 Ubuntu 24.04 客体执行安装、媒体、恢复及整机重启检查；ARM64 Rocky 8.10 的兼容补验在完整模拟客体执行。模拟客体结果不代表真实 ARM64 服务器硬件通过。</p><nav class="pager" aria-label="章节翻页"><a href="windows-install.html"><small>上一章</small>← 06 · Windows x64 安装与维护</a><a href="runtime.html"><small>下一章</small>08 · 安装视频处理运行时 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#linux-install-section-1">1. 核对系统和架构</a><a href="#linux-install-section-2">2. 下载并核对摘要</a><a href="#linux-install-section-3">3. 解压并安装</a><a href="#linux-install-section-4">4. 确认服务与浏览器入口</a><a href="#linux-install-section-5">5. 安装后的目录地图</a><a href="#linux-install-section-6">6. 视频预览与媒体运行时</a><a href="#linux-install-section-7">7. 启停、日志和诊断</a><a href="#linux-install-section-8">8. 备份并验证覆盖范围</a><a href="#linux-install-section-9">9. 更新、恢复与回滚</a><a href="#linux-install-section-10">10. 网络与常见问题</a><a href="#linux-install-section-11">11. 卸载与最终检查</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>

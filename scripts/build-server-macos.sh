@@ -90,8 +90,11 @@ GOOS=darwin GOARCH="${ARCH}" CGO_ENABLED=0 \
 if [ "$SKIP_WEB" -eq 0 ]; then
   printf 'Building Studio web assets...\n'
   npm run build --workspace @review-studio/web
-  cp -R "apps/web/dist/." "${PACKAGE_ROOT}/web/"
 fi
+
+# --skip-web reuses the already built SPA, but must still stage it in the package.
+[ -f "apps/web/dist/index.html" ] || { printf 'missing prebuilt apps/web/dist/index.html\n' >&2; exit 1; }
+cp -R "apps/web/dist/." "${PACKAGE_ROOT}/web/"
 
 if [ ! -f "${PACKAGE_ROOT}/web/index.html" ]; then
   printf 'web/index.html is required by the package contract and was not produced\n' >&2
@@ -115,7 +118,6 @@ printf 'Copying the required declaration files from repository material...\n'
 # no generated or placeholder licence anywhere in this path.
 cp release/server/LICENSE.txt "${PACKAGE_ROOT}/LICENSE.txt"
 cp release/server/NOTICE.txt "${PACKAGE_ROOT}/NOTICE.txt"
-cp release/server/update-root-public-key.txt "${PACKAGE_ROOT}/UPDATE_ROOT_PUBLIC_KEY.txt"
 cp release/server/THIRD_PARTY_NOTICES.md "${PACKAGE_ROOT}/THIRD_PARTY_NOTICES.md"
 cp release/server/THIRD_PARTY_DISTRIBUTION_INVENTORY.md \
   "${PACKAGE_ROOT}/THIRD_PARTY_DISTRIBUTION_INVENTORY.md"
@@ -127,7 +129,6 @@ node scripts/generate-server-sbom.mjs "${PACKAGE_ROOT}/THIRD_PARTY.spdx.json"
 chmod 0755 "${PACKAGE_ROOT}/bin/visto-core" "${PACKAGE_ROOT}/bin/visto-server"
 chmod 0755 "${PACKAGE_ROOT}/scripts/"*.sh
 chmod 0644 "${PACKAGE_ROOT}/LICENSE.txt" "${PACKAGE_ROOT}/NOTICE.txt" \
-  "${PACKAGE_ROOT}/UPDATE_ROOT_PUBLIC_KEY.txt" \
   "${PACKAGE_ROOT}/THIRD_PARTY_NOTICES.md" \
   "${PACKAGE_ROOT}/THIRD_PARTY_DISTRIBUTION_INVENTORY.md" \
   "${PACKAGE_ROOT}/THIRD_PARTY.spdx.json"

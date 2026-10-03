@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Visto 用户文档：安装、项目、素材、版本、审阅、分享、归档与维护。"><title>11 · 配置文件保存位置 · Visto 文档</title><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto <small>使用文档</small></a><div class="tools"><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="章节目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">01 · 先理解 Visto</a><a href="quick-start.html">02 · 做完你的第一个项目</a><a href="navigation.html">03 · 熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">04 · 安装前的准备</a><a href="install-macos.html">05 · Apple Silicon macOS 安装</a><a href="windows-install.html">06 · Windows x64 安装与维护</a><a href="linux-install.html">07 · Linux amd64 / ARM64 安装与维护</a><a href="runtime.html">08 · 安装视频处理运行时</a><a href="docker.html">09 · Docker 部署说明</a><a href="setup.html">10 · 首次设置与登录</a><h2>项目与素材</h2><a href="storage.html" class="active" aria-current="page">11 · 配置文件保存位置</a><a href="project.html">12 · 创建与管理项目</a><a href="members.html">13 · 成员、邀请与权限</a><a href="upload.html">14 · 上传、搜索与整理素材</a><a href="archive.html">15 · 回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">16 · 版本管理与新一轮修订</a><a href="reviews.html">17 · 创建一轮审阅</a><a href="comments.html">18 · 提交精确反馈与审核结论</a><a href="sharing.html">19 · 创建、安全检查与撤销分享</a><a href="guest.html">20 · 给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">21 · 通知、个人资料与活动</a><a href="network.html">22 · 网络与远程访问</a><a href="backup.html">23 · 备份：保护数据库与媒体</a><a href="maintenance.html">24 · 更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">25 · 按现象排查问题</a><a href="faq.html">26 · 常见问题</a><a href="checklist.html">27 · 交付检查单与求助模板</a><div class="offline"><a href="Visto-用户手册.html">↗ 单文件离线手册</a><a href="../USER_GUIDE.md">↗ Markdown 原文</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档中心</a><span>/</span>项目与素材</div><p class="eyebrow">VISTO USER GUIDE / 11</p><h1>配置文件保存位置</h1><div class="stamp"><span>用户手册</span><span>2026-10-03</span><span>Server 浏览器工作台</span></div><p><strong>谁来操作：</strong> Owner。<strong>入口：</strong> Owner 设置 → 存储与上传安全。</p>
+<p>Visto 需要先有可用且已开放的存储，项目才能选择上传落点。浏览器所在电脑的路径不等于服务器路径：主机目录始终指向运行 Visto 的电脑或容器可见目录。</p>
+<figure class="figure"><a href="assets/02-storage.png" aria-label="放大查看：真实界面：存储管理与类型选择向导"><img src="assets/02-storage.png" alt="真实界面：存储管理与类型选择向导" loading="lazy" decoding="async"></a><figcaption>真实界面 · 演示数据 · 存储管理与类型选择向导<span class="hint">点击放大查看</span></figcaption></figure>
+<p><strong>看图操作：</strong> 上方查看现有保存位置和异常，下面的向导按“类型 → 用途 → 位置 → 项目 → 安全”依次完成。</p>
+<h3 id="storage-section-1">三种存储选择</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>要准备的信息</th>
+<th>常见场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本机托管存储</td>
+<td>主机上的专用绝对目录、可写权限、空间</td>
+<td>单机制作、连接在部署主机上的磁盘</td>
+</tr>
+<tr>
+<td>WebDAV</td>
+<td>服务地址、用户名、密码、允许的目录</td>
+<td>支持 WebDAV 的 NAS 或存储服务</td>
+</tr>
+<tr>
+<td>S3 兼容</td>
+<td>Endpoint、Bucket、Region 及访问密钥等页面字段</td>
+<td>MinIO 或对象存储</td>
+</tr>
+</tbody>
+</table></div>
+<p>使用最小必要权限的账号。远程连接先按页面测试连通性；网络策略可能拒绝某些地址，不能把地址填成可访问任意主机的代理。</p>
+<h3 id="storage-section-2">本机存储：路径、权限和配额</h3>
+<p>名称用于让项目成员辨认，如“制作素材盘”；主机目录使用运行 Visto 的机器上的绝对路径。建议由维护者先建一个专用目录，给服务运行账号所需权限，再在向导填写；不要为了修复写入错误让所有人拥有整块磁盘的任意权限。</p>
+<p>外接盘使用前确认它已挂载，盘名和路径稳定。Docker 中填写的是容器可见路径，宿主机目录需要由维护者正确挂载。容量配额留空时按页面含义不限制，并不意味着磁盘无限大。关注存储剩余空间，预览与备份也需要容量。</p>
+<h3 id="storage-section-3">WebDAV：每个字段怎么填</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>示例（虚构）</th>
+<th>填写要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>连接名称</td>
+<td>团队 NAS · 制作资料</td>
+<td>让项目主管能识别，不写密码</td>
+</tr>
+<tr>
+<td>连接地址</td>
+<td><code>https://nas.example.com/dav</code></td>
+<td>使用服务提供的 WebDAV Endpoint，不填普通登录页</td>
+</tr>
+<tr>
+<td>用户名 / 密码</td>
+<td>独立的媒体服务账号</td>
+<td>需有目标目录的读取及所需写入权限</td>
+</tr>
+<tr>
+<td>默认路径前缀</td>
+<td><code>team-media</code> 或留空</td>
+<td>限定这条连接使用的范围，和服务器路径结构一致</td>
+</tr>
+<tr>
+<td>允许连接局域网或内网地址</td>
+<td>仅在需要接入可信 NAS 时启用</td>
+<td>只授权你明确知道的内部存储服务</td>
+</tr>
+</tbody>
+</table></div>
+<p>创建连接后按界面测试。连接通了但项目上传仍不可用时，继续检查根目录范围、项目开放和用途。修改既有凭据时读清页面“留空保留”说明，不误把密码清空。</p>
+<h3 id="storage-section-4">S3 兼容：Endpoint、Bucket 与前缀</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>字段</th>
+<th>示例（虚构）</th>
+<th>填写要点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>连接地址</td>
+<td><code>https://s3.example.com</code></td>
+<td>使用存储商提供的 API Endpoint，不用控制台网页地址</td>
+</tr>
+<tr>
+<td>Access Key / Secret Key</td>
+<td>专用访问密钥</td>
+<td>不截图、不写入项目说明，不用个人最高权限密钥</td>
+</tr>
+<tr>
+<td>区域</td>
+<td>存储商要求的 Region</td>
+<td>以服务实际配置为准，不复制其他供应商的值</td>
+</tr>
+<tr>
+<td>桶名称</td>
+<td><code>team-media</code></td>
+<td>必须是已存在且该密钥有权访问的 Bucket</td>
+</tr>
+<tr>
+<td>默认路径前缀</td>
+<td><code>visto/brand-film</code></td>
+<td>限定对象范围，和实际组织约定一致</td>
+</tr>
+</tbody>
+</table></div>
+<p>Endpoint、区域、桶与密钥要属于同一服务。测试失败时区分连通性、认证和对象权限，不连续换填猜测值。上述域名和桶名只用于解释字段，不能直接用作可连接的存储。</p>
+<h3 id="storage-section-5">完成五步向导</h3>
+<ol>
+<li><strong>类型：</strong> 选择本机、WebDAV 或 S3。</li>
+<li><strong>用途：</strong> 日常上传选“作为项目上传位置”；交付保存选“作为归档位置”；评论附件选对应用途。归档位置不会自动成为默认上传位置。</li>
+<li><strong>位置：</strong> 填可辨认的名称和相应连接信息。主机目录权限关闭时，本机路径不能在普通网页添加。</li>
+<li><strong>项目：</strong> 选择开放范围。保存一个连接不代表所有项目都获得使用权限。</li>
+<li><strong>安全：</strong> 选择上传安全策略并提交，查看成功或错误提示。</li>
+</ol>
+<h3 id="storage-section-6">上传安全策略</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>策略</th>
+<th>适合的使用情景</th>
+<th>需要理解的边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>快速</td>
+<td>可信素材和受控内部协作</td>
+<td>保留路径、权限、大小等基础检查；恶意软件扫描可能记为未扫描</td>
+</tr>
+<tr>
+<td>标准</td>
+<td>日常默认项目上传</td>
+<td>基础检查和媒体探测后处理；扫描结果继续影响分享与下载</td>
+</tr>
+<tr>
+<td>增强</td>
+<td>公网、访客或不可信来源素材</td>
+<td>检查通过前不应进入可分享、可下载、可审阅状态；还要配置实际扫描能力</td>
+</tr>
+</tbody>
+</table></div>
+<p>策略名称不代表扫描引擎已经配置。查看具体检查结果，“未扫描”不能当作“安全扫描通过”。</p>
+<h3 id="storage-section-7">让项目真正能用</h3>
+<p>创建后检查存储显示“可用”，用途是上传，开放范围包括当前项目。进入 <strong>项目设置 → 项目存储</strong> 确认上传位置。若下拉框为空，依次检查：是否有活动存储、是否允许上传、是否对项目开放、是否因配额或错误停用。</p>
+<h3 id="storage-section-8">修改、停用和删除</h3>
+<p>修改存储前先查看受影响项目。停用可能阻止后续上传；删除连接和删除原文件不是一回事，按影响说明处理。不要从操作系统直接挪走正在使用的目录；已有媒体引用可能失效。新增归档位置也不会自动把全部媒体复制过去。</p>
+<p><strong>完成检查：</strong> 项目能选到位置，上传小文件成功，预览可读，空间与权限符合预期。</p><nav class="pager" aria-label="章节翻页"><a href="setup.html"><small>上一章</small>← 10 · 首次设置与登录</a><a href="project.html"><small>下一章</small>12 · 创建与管理项目 →</a></nav><footer class="footer">Visto 用户文档 · 2026-10-03<br>截图使用独立演示数据；安装与发布可用性以对应版本说明为准。</footer></main><aside class="toc" aria-label="本页目录"><h2>本页内容</h2><a href="#storage-section-1">三种存储选择</a><a href="#storage-section-2">本机存储：路径、权限和配额</a><a href="#storage-section-3">WebDAV：每个字段怎么填</a><a href="#storage-section-4">S3 兼容：Endpoint、Bucket 与前缀</a><a href="#storage-section-5">完成五步向导</a><a href="#storage-section-6">上传安全策略</a><a href="#storage-section-7">让项目真正能用</a><a href="#storage-section-8">修改、停用和删除</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索整本手册</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="assets/search-data.js"></script><script src="assets/docs.js"></script></body></html>
