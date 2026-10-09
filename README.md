@@ -4,6 +4,10 @@
 
 <h1 align="center">Visto</h1>
 
+<p align="center">
+  <strong>简体中文</strong> · <a href="README.en.md">English</a>
+</p>
+
 <p align="center"><strong>把素材、版本和反馈，放在同一个项目里。</strong></p>
 
 <p align="center">
