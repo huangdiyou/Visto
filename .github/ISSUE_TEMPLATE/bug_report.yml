@@ -1,0 +1,80 @@
+name: 问题反馈 / Bug report
+description: 报告安装或使用中遇到的问题 / Report an installation or usage problem
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈！请先查看 [用户文档](https://visto.akahxh.top/docs/)。
+        Thanks for reporting a problem. You can also check the [user guide](https://visto.akahxh.top/docs/en/).
+
+        Issue 是公开的。请勿上传密码、访问令牌、真实分享链接、客户素材或未经处理的完整日志。
+        Issues are public. Remove passwords, access tokens, real share links, customer media and sensitive data from logs and screenshots.
+        安全漏洞请按 [安全政策 / Security policy](https://github.com/huangdiyou/Visto/blob/main/SECURITY.md) 私下报告。
+  - type: input
+    id: version
+    attributes:
+      label: Visto 版本 / Visto version
+      description: 填写设置或安装包中的版本；找不到时写“不确定”。 / Use the version shown in settings or the package name, or write “unknown”.
+      placeholder: "1.0.3"
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: 操作系统与架构 / Operating system and architecture
+      placeholder: "Debian 12 ARM64 / Windows 11 x64 / macOS 15 Apple Silicon"
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: 安装方式 / Installation method
+      options:
+        - 文档中的在线安装 / Online installer from the guide
+        - 本地安装包 / Local package
+        - Docker
+        - 源码运行 / From source
+        - 不确定 / Unknown
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: 浏览器及版本 / Browser and version
+      description: 页面相关问题请填写。 / For problems in the web interface.
+      placeholder: "Chrome 版本 / version …"
+  - type: textarea
+    id: steps
+    attributes:
+      label: 如何复现 / Steps to reproduce
+      description: 从哪里开始、依次做了什么？ / Where did you start, and what did you do?
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期结果 / Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果 / Actual behavior
+      description: 请包含错误提示；可添加已遮盖敏感信息的截图。 / Include the error message; screenshots must have sensitive information removed.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 相关日志 / Relevant logs
+      description: 只粘贴出错附近的内容，并删除敏感信息；没有日志可留空。 / Paste only the relevant excerpt, with sensitive data removed. Leave blank if unavailable.
+      render: text
+  - type: textarea
+    id: attempts
+    attributes:
+      label: 已尝试的处理 / What you have already tried
