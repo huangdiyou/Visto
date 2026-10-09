@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 用户文档 / User guide
+    url: https://visto.akahxh.top/docs/
+    about: 安装、使用与常见问题 / Installation, usage and troubleshooting
+  - name: English user guide
+    url: https://visto.akahxh.top/docs/en/
+    about: Installation, usage and troubleshooting in English
