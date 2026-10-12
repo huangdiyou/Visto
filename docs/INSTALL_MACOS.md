@@ -1,65 +1,9 @@
-# Apple Silicon macOS 安装
+# macOS 安装
 
-当前 Visto Server 的首发目标是 Apple Silicon macOS。
+适用于 Apple Silicon（M 系列）Mac。
 
-## 1. 下载并校验
+按[图文安装指南](web/install-macos.html)选择在线或手动方式。在线入口每次获取最新正式版；手动入口使用已经下载的包。官网安装脚本会自动准备 Server 和视频组件，原始 1.0.3 包也可使用，不需要手动填写组件版本或校验值。
 
-从 GitHub Releases 下载：
+下载开放情况见[下载页](web/downloads.html)。已有实例更新请看[维护指南](web/maintenance.html)。
 
-- `Visto-Server_<版本>_macos-arm64.tar.gz`
-- 对应的 `.sha256` 文件
-
-在终端校验：
-
-```bash
-shasum -a 256 Visto-Server_<版本>_macos-arm64.tar.gz
-```
-
-确认输出与发布页提供的 SHA-256 一致后再继续。
-
-## 2. 解压
-
-```bash
-mkdir -p ~/Downloads/visto-server
-tar -xzf Visto-Server_<版本>_macos-arm64.tar.gz -C ~/Downloads/visto-server
-cd ~/Downloads/visto-server
-```
-
-## 3. 安装
-
-安装需要管理员权限：
-
-```bash
-sudo bash scripts/install-visto-server.sh \
-  --version <版本> \
-  --source-dir "$PWD"
-```
-
-默认监听 `127.0.0.1:8787`，程序安装到 `/Library/Visto`，数据默认位于
-`/Library/Application Support/Visto/data`。
-
-安装完成后打开：
-
-```text
-http://127.0.0.1:8787/
-```
-
-## 4. 首次初始化
-
-按照浏览器中的首次运行向导创建工作空间和 Owner 账号。随后先配置存储位置，再创建第一个项目。
-
-## 5. 视频处理
-
-视频转码和预览需要 FFmpeg/ffprobe。Visto 的原生 Server 包不把 FFmpeg 直接塞进主程序包；兼容媒体运行时会独立提供并附带自己的许可证与来源说明。
-
-首个公开版本发布前，媒体运行时的最终下载与安装步骤会在这里补齐。
-
-## 卸载
-
-默认卸载不会删除用户数据和备份：
-
-```bash
-sudo /Library/Visto/current/scripts/uninstall-visto-server.sh --yes
-```
-
-只有确认不再需要数据时才使用 `--purge-data`。
+macOS 安装前会以当前用户检查两个程序是否能运行。遇到拦截时，在“隐私与安全性”放行，再执行终端打印的重试命令；脚本保留同一份程序，不需要重新下载或关闭系统安全检查。

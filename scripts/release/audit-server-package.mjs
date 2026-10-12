@@ -81,7 +81,7 @@ export const REQUIRED_BUNDLED_RUNTIME_DECLARATIONS = [
 
 /** Binaries and Studio entry point required on every native platform. */
 export const REQUIRED_MEMBERS = {
-  unix: ["bin/visto-server", "bin/visto-core", "web/index.html"],
+  unix: ["bin/visto-server", "bin/visto-core", "web/index.html", "scripts/install.sh", "scripts/package-version", "scripts/setup-visto-server.sh", "scripts/install-media-runtime.sh", "scripts/visto-server-env.sh", "scripts/install-visto-server.sh"],
   windows: ["bin/visto-server.exe", "bin/visto-core.exe", "web/index.html"],
 };
 
@@ -287,6 +287,14 @@ export function auditPackage({
           continue;
         }
         if (member.type === "d") {
+          continue;
+        }
+        // Version metadata is data, not a host script. All other scripts
+        // keep the executable-bit requirement unchanged.
+        if (member.name === "scripts/package-version") {
+          if (member.mode.slice(0, 10) !== "-rw-r--r--") {
+            problems.push("scripts/package-version must be a regular 0644 data file");
+          }
           continue;
         }
         const ownerExecutable = member.mode.slice(3, 4) === "x";

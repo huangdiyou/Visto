@@ -180,6 +180,52 @@ func TestShareLifecycleProtectsEntryAndPinnedItems(t *testing.T) {
 	}
 }
 
+func TestShareEntryCapacityDoesNotEvictActiveVisitors(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	db, err := database.Open(ctx, database.Config{
+		Path: filepath.Join(t.TempDir(), "review-studio.db"),
+	})
+	if err != nil {
+		t.Fatalf("open database: %v", err)
+	}
+	defer db.Close()
+	insertShareFixtures(t, db)
+
+	service := NewService(NewSQLiteRepository(db))
+	service.clock = func() time.Time {
+		return time.Date(2026, 8, 31, 10, 0, 0, 0, time.UTC)
+	}
+	created, err := service.Create(ctx, CreateInput{
+		WorkspaceID:     "workspace-1",
+		UserID:          "user-1",
+		ReviewSessionID: "review-1",
+		Name:            "Session capacity",
+		AllowComment:    true,
+	})
+	if err != nil {
+		t.Fatalf("create share: %v", err)
+	}
+
+	var firstSessionToken string
+	for index := 0; index < 200; index++ {
+		opened, openErr := service.Open(ctx, created.Link.Token)
+		if openErr != nil {
+			t.Fatalf("open session %d: %v", index+1, openErr)
+		}
+		if index == 0 {
+			firstSessionToken = opened.SessionToken
+		}
+	}
+	if _, err := service.Open(ctx, created.Link.Token); !errors.Is(err, ErrRateLimited) {
+		t.Fatalf("expected capacity rate limit, got %v", err)
+	}
+	if _, err := service.PublicSession(ctx, firstSessionToken); err != nil {
+		t.Fatalf("first active visitor was evicted: %v", err)
+	}
+}
+
 func TestSharePasswordVerificationRateLimit(t *testing.T) {
 	t.Parallel()
 

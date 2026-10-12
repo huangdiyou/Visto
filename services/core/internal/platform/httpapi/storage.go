@@ -519,6 +519,14 @@ func (h *handler) handleStorageError(
 			"storage.scan_limit_exceeded",
 			"目录超出当前扫描限制",
 		)
+	case errors.Is(err, storage.ErrProjectArchiveLimitExceeded):
+		writeError(
+			response,
+			http.StatusRequestEntityTooLarge,
+			requestID(response),
+			"storage.project_archive_limit_exceeded",
+			"项目媒体数量超出单次归档上限，请先拆分项目",
+		)
 	case errors.Is(err, storage.ErrRootUnavailable),
 		errors.Is(err, storage.ErrPathChanged),
 		errors.Is(err, os.ErrPermission):

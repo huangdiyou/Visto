@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
@@ -26,11 +27,24 @@ type accessInfo struct {
 	RemoteWorkspace bool   `json:"remoteWorkspace"`
 }
 
+// hostAccessDefault keeps the host management boundary closed for any instance
+// that never recorded a first-run choice (D2, docs/FREE_TIER_BOUNDARY_DESIGN.md).
+// A deployment that upgrades from before the setting existed therefore keeps the
+// previous behaviour instead of silently relaxing it.
+const hostAccessDefault = false
+
 func (h *handler) requireHostManagement(
 	response http.ResponseWriter,
 	request *http.Request,
 ) bool {
 	if h.requestHasHostManagement(request) {
+		return true
+	}
+	// D2, docs/FREE_TIER_BOUNDARY_DESIGN.md: when the Owner answered the first-run
+	// wizard in favour of web host paths, an Owner web session may reach the host
+	// management surface. The host token still works for every deployment, and
+	// the guard is unchanged when the switch is off.
+	if h.webHostPathsAllowed() && h.requestIsOwner(request) {
 		return true
 	}
 	writeError(
@@ -121,6 +135,46 @@ func (h *handler) requestHasHostManagement(request *http.Request) bool {
 	// Transport locality is not an authentication capability. A loopback proxy,
 	// local process, or DNS-rebound browser must present an explicit token.
 	return false
+}
+
+// webHostPathsAllowed reports whether an Owner web session may reach the host
+// management surface. An explicit deployment override wins over the value the
+// first-run wizard recorded (D2, docs/FREE_TIER_BOUNDARY_DESIGN.md).
+func (h *handler) webHostPathsAllowed() bool {
+	if h.allowWebHostPathsOverride != nil {
+		return *h.allowWebHostPathsOverride
+	}
+	return h.allowWebHostPaths.Load()
+}
+
+// requestIsOwner reports whether the request carries an Owner session. It does
+// not write a response, because requireHostManagement needs the answer before it
+// decides whether to fail.
+func (h *handler) requestIsOwner(request *http.Request) bool {
+	if h.identity == nil {
+		return false
+	}
+	session, err := h.authenticateRequest(request)
+	if err != nil {
+		return false
+	}
+	return strings.EqualFold(session.Role, "owner")
+}
+
+// loadHostAccessSetting seeds the runtime value from the database. A read
+// failure leaves the restrictive default in place, which is the safe direction.
+func (h *handler) loadHostAccessSetting() {
+	if h.systemSettings == nil || h.allowWebHostPathsOverride != nil {
+		return
+	}
+	settings, err := h.systemSettings.GetHostAccess(context.Background())
+	if err != nil {
+		if h.logger != nil {
+			h.logger.Warn("system host access settings are unavailable", "error", err)
+		}
+		return
+	}
+	h.allowWebHostPaths.Store(settings.AllowWebHostPaths)
 }
 
 func hostSessionValue(token string) string {

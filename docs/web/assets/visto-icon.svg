@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Visto app icon</title>
+  <desc id="desc">Dark rounded-square Visto app icon with the source-aligned neon folded V mark.</desc>
+  <defs>
+    <linearGradient id="icon-bg" x1="78" y1="56" x2="438" y2="484" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#13213A"/>
+      <stop offset="1" stop-color="#07111F"/>
+    </linearGradient>
+    <linearGradient id="icon-fold" x1="49.45" y1="100.05" x2="205.05" y2="244.65" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#57F7FF"/>
+      <stop offset=".5" stop-color="#00AFFF"/>
+      <stop offset="1" stop-color="#245CFF"/>
+    </linearGradient>
+    <linearGradient id="icon-check" x1="118" y1="452" x2="482.45" y2="61.85" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B48FF"/>
+      <stop offset=".52" stop-color="#008DFF"/>
+      <stop offset="1" stop-color="#24F7FF"/>
+    </linearGradient>
+    <filter id="icon-glow" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0 0 0 0 0 .58 0 0 0 0 1 0 0 0 .78 0"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="110" fill="url(#icon-bg)"/>
+  <g transform="translate(27 35) scale(.86)" filter="url(#icon-glow)">
+    <path d="M205.05 139.65L205.05 100.05L70.05 100.05C58.673 100.05 49.45 109.273 49.45 120.65L49.45 238.05L93.85 244.65L93.85 156.65C93.85 147.261 101.461 139.65 110.85 139.65Z" fill="url(#icon-fold)"/>
+    <path d="M482.45 61.85C482.45 61.85 319.378 230.851 236.114 371.368C235.425 372.532 233.77 372.593 232.995 371.484L144.25 244.65L93.85 244.65L235.85 455.65C262.95 415.466 285.948 380.343 304.203 352.057C347.014 285.721 368.419 252.554 395.05 206.85C411.064 179.366 426.489 151.682 454.65 106.05C466.195 87.341 475.912 72.049 482.45 61.85Z" fill="url(#icon-check)"/>
+    <path d="M482.45 61.85C482.45 61.85 319.378 230.851 236.114 371.368C235.425 372.532 233.77 372.593 232.995 371.484L144.25 244.65L93.85 244.65L235.85 455.65C262.95 415.466 285.948 380.343 304.203 352.057C347.014 285.721 368.419 252.554 395.05 206.85C411.064 179.366 426.489 151.682 454.65 106.05C466.195 87.341 475.912 72.049 482.45 61.85Z" fill="none" stroke="#85DDFF" stroke-width="4.4" opacity=".42"/>
+  </g>
+</svg>

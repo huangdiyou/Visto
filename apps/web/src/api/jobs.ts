@@ -5,9 +5,12 @@ export function getJob(jobId: string, signal?: AbortSignal): Promise<Job> {
   return requestJSON<Job>(`/api/v1/jobs/${jobId}`, signal ? { signal } : {});
 }
 
-export async function listJobs(signal?: AbortSignal): Promise<Job[]> {
+export async function listJobs(
+  signal?: AbortSignal,
+  failedOnly = false,
+): Promise<Job[]> {
   const response = await requestJSON<ItemList<Job>>(
-    "/api/v1/jobs",
+    failedOnly ? "/api/v1/jobs?status=failed&limit=200" : "/api/v1/jobs",
     signal ? { signal } : {},
   );
   return response.items;

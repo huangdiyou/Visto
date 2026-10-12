@@ -205,3 +205,41 @@ describe("buildMediaItem", () => {
     expect(item.uploadCheck?.resultCode).toBe("malware_scan_unavailable");
   });
 });
+
+describe("missing video components", () => {
+  it("explains historical probe failures as missing components", () => {
+    const failed = job("failed", "media.process_asset_version");
+    failed.error = {
+      code: "job.execution_failed",
+      message: "media probe failed: ffprobe is unavailable",
+    };
+    const item = buildMediaItem(
+      object,
+      {
+        ...probe,
+        status: "failed",
+        errorCode: "probe.unavailable",
+        errorMessage: "ffprobe is unavailable",
+      },
+      [],
+      [failed],
+    );
+    expect(item.stateLabel).toBe("等待视频组件");
+    expect(item.errorMessage).toContain("原文件已保留");
+  });
+  it("keeps a ready preview usable when an enhancement lacks components", () => {
+    const failed = job("failed", "media.generate_video_enhancements");
+    failed.error = {
+      code: "rendition.processor_unavailable",
+      message: "ffmpeg is unavailable",
+    };
+    const item = buildMediaItem(
+      object,
+      probe,
+      [rendition("proxy", "ready")],
+      [failed],
+    );
+    expect(item.state).toBe("enhancement_failed");
+    expect(item.preview).toBeDefined();
+  });
+});

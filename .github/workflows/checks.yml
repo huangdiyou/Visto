@@ -1,46 +1,55 @@
 name: checks
 
+# Synchronized source is validated before export. Public PRs are reviewed and
+# verified by a maintainer; neither pushes nor PRs repeat the full suite here.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
+    inputs:
+      tests:
+        description: Also run business tests (otherwise only verify independent build)
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
+concurrency:
+  group: public-checks-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  verify:
+    # Keep untrusted public code away from private self-hosted machines.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-
+        with:
+          persist-credentials: false
       - name: Set up Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: 22.12.0
           cache: npm
-
       - name: Set up Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
         with:
           go-version-file: go.work
           cache-dependency-path: services/core/go.sum
-
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-
       - name: Format
         run: npm run format:check
-
       - name: Typecheck
         run: npm run check --workspaces --if-present
-
-      - name: Tests
-        run: npm run test --workspaces --if-present
-
       - name: Build web
         run: npm run build --workspace @review-studio/web
-
+      - name: Build Core and host CLI
+        run: go build ./services/core/cmd/server ./services/core/cmd/visto-server
+      - name: Web and contracts tests
+        if: ${{ inputs.tests }}
+        run: npm run test --workspaces --if-present
       - name: Go tests
+        if: ${{ inputs.tests }}
         run: go test ./services/core/...

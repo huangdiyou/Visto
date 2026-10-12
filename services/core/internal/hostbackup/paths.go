@@ -1,10 +1,28 @@
 package hostbackup
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+// resolveExisting evaluates symlinks and refuses results that are not absolute.
+// On Windows the OS resolver can return a drive-relative spelling such as
+// "C:ProgramData\..." for an absolute "C:\ProgramData\..." input; accepting it
+// would record a non-absolute identity in backup metadata and break every
+// later comparison, so such results are treated as resolution failures and
+// callers fall back to the cleaned absolute input.
+func resolveExisting(path string) (string, error) {
+	resolved, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", err
+	}
+	if !filepath.IsAbs(resolved) {
+		return "", fmt.Errorf("resolver returned non-absolute path %q", resolved)
+	}
+	return resolved, nil
+}
 
 // NormalizedDirectory is a data directory path brought into a canonical form.
 // Path is absolute and cleaned. Resolved reports whether the filesystem could
@@ -31,7 +49,7 @@ func NormalizeDirectory(path string) NormalizedDirectory {
 	if err != nil {
 		absolute = filepath.Clean(trimmed)
 	}
-	resolved, resolveErr := filepath.EvalSymlinks(absolute)
+	resolved, resolveErr := resolveExisting(absolute)
 	if resolveErr == nil {
 		return NormalizedDirectory{
 			Path:     caseCorrectPath(filepath.Clean(resolved)),
@@ -49,7 +67,7 @@ func NormalizeDirectory(path string) NormalizedDirectory {
 			break
 		}
 		missing = filepath.Join(filepath.Base(current), missing)
-		resolved, err := filepath.EvalSymlinks(parent)
+		resolved, err := resolveExisting(parent)
 		if err == nil {
 			ancestor := caseCorrectPath(filepath.Clean(resolved))
 			return NormalizedDirectory{Path: filepath.Join(ancestor, missing)}
@@ -142,6 +160,12 @@ func caseCorrectPath(path string) string {
 	if volume := filepath.VolumeName(path); volume != "" {
 		prefix = volume
 		rest = strings.TrimPrefix(path, volume)
+		// On Windows, joining a drive-relative prefix such as "C:" with
+		// "ProgramData" produces "C:ProgramData". Preserve the root separator
+		// from absolute drive and UNC paths before walking their segments.
+		if strings.HasPrefix(rest, string(filepath.Separator)) {
+			prefix += string(filepath.Separator)
+		}
 	} else if strings.HasPrefix(rest, "/") {
 		prefix = "/"
 	}

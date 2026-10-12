@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type {
   AuthorizedRoot,
+  SystemHostAccess,
   SystemNetworkSettings,
   Job,
   LocalManagedBucket,
@@ -24,6 +25,7 @@ import {
   BellRing,
   CheckCircle2,
   Copy,
+  Cpu,
   Database,
   HardDrive,
   Info,
@@ -43,6 +45,7 @@ import {
   updateStatusView,
 } from "./lib/update-status";
 import {
+  getHostAccess,
   getNetworkSettings,
   getSystemUpdateStatus,
   updateNetworkSettings,
@@ -68,6 +71,8 @@ import {
   updateStorageProvider,
 } from "./api/storage";
 import type { OwnerSection } from "./lib/studio-route";
+import { MediaRuntimeCard } from "./MediaRuntimeCard";
+import { MediaEncodingSettingsCard } from "./MediaEncodingSettingsCard";
 import { NotificationWorkspace } from "./NotificationWorkspace";
 import { TeamWorkspace } from "./TeamWorkspace";
 import { useI18n } from "./lib/i18n-react";
@@ -97,6 +102,10 @@ const ownerSections: Array<{
   {
     id: "storage",
     icon: <HardDrive size={17} />,
+  },
+  {
+    id: "encoding",
+    icon: <Cpu size={17} />,
   },
   {
     id: "notifications",
@@ -199,6 +208,14 @@ export function OwnerSettingsWorkspace({
             />
           ) : section === "network" ? (
             <OwnerNetworkSettings />
+          ) : section === "encoding" ? (
+            <>
+              <MediaRuntimeCard
+                system={system}
+                english={session.user.locale === "en-US"}
+              />
+              <MediaEncodingSettingsCard />
+            </>
           ) : section === "notifications" ? (
             <NotificationWorkspace showAudit surface="owner-notifications" />
           ) : section === "activity" ? (
@@ -216,11 +233,23 @@ function OwnerNetworkSettings() {
   const { t } = useI18n();
   const [settings, setSettings] = useState<SystemNetworkSettings | null>(null);
   const [requireRemoteHTTPS, setRequireRemoteHTTPS] = useState(false);
+  const [hostAccess, setHostAccess] = useState<SystemHostAccess | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<InlineFeedbackState | null>(null);
 
   function load(signal?: AbortSignal) {
+    // D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2.5: the Owner page shows the
+    // persistent host access state. It is read-only here by design — the switch
+    // grants host-level reach, so the session that benefits from it must not be
+    // able to change it.
+    void getHostAccess(signal)
+      .then(setHostAccess)
+      .catch(() => {
+        // A missing marker must not blank the security card; the network half of
+        // the page still has to render.
+        if (!signal?.aborted) setHostAccess(null);
+      });
     return getNetworkSettings(signal)
       .then((loaded) => {
         setSettings(loaded);
@@ -369,6 +398,24 @@ function OwnerNetworkSettings() {
             <p className="owner-network-hint">
               {t("owner.networkNoRestartHint")}
             </p>
+
+            {hostAccess ? (
+              <div className="owner-host-access">
+                <div className="owner-network-status">
+                  <span>{t("owner.hostAccessStatus")}</span>
+                  <strong>
+                    {hostAccess.effectiveAllowWebHostPaths
+                      ? t("owner.hostAccessOn")
+                      : t("owner.hostAccessOff")}
+                  </strong>
+                </div>
+                <p className="owner-network-hint">
+                  {hostAccess.environmentForced
+                    ? t("owner.hostAccessEnvironmentForced")
+                    : t("owner.hostAccessSetOnce")}
+                </p>
+              </div>
+            ) : null}
           </>
         ) : null}
 
@@ -402,6 +449,12 @@ function networkSaveErrorMessage(error: unknown, t: Translator) {
 }
 
 function OwnerStorageSettings({ hostManagement }: { hostManagement: boolean }) {
+  const [hostAccess, setHostAccess] = useState<SystemHostAccess | null>(null);
+  const [hostAccessLoading, setHostAccessLoading] = useState(!hostManagement);
+  const [hostAccessError, setHostAccessError] = useState(false);
+  const [hostAccessAttempt, setHostAccessAttempt] = useState(0);
+  const canAddLocalStorage =
+    hostManagement || hostAccess?.effectiveAllowWebHostPaths === true;
   const [providers, setProviders] = useState<StorageProvider[]>([]);
   const [grants, setGrants] = useState<ProjectStorageGrant[]>([]);
   const [buckets, setBuckets] = useState<LocalManagedBucket[]>([]);
@@ -477,6 +530,25 @@ function OwnerStorageSettings({ hostManagement }: { hostManagement: boolean }) {
     Record<string, InlineFeedbackState>
   >({});
   const bucketPathInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (hostManagement) return;
+    const controller = new AbortController();
+    setHostAccessLoading(true);
+    setHostAccessError(false);
+    setHostAccess(null);
+    void getHostAccess(controller.signal)
+      .then((access) => {
+        if (!controller.signal.aborted) setHostAccess(access);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setHostAccessError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setHostAccessLoading(false);
+      });
+    return () => controller.abort();
+  }, [hostManagement, hostAccessAttempt]);
 
   useEffect(() => {
     if (!feedback) {
@@ -855,6 +927,7 @@ function OwnerStorageSettings({ hostManagement }: { hostManagement: boolean }) {
   }
 
   async function createBucket() {
+    if (!canAddLocalStorage) return;
     const quotaBytes = parseQuotaGb(bucketForm.quotaGb);
     if (quotaBytes === "invalid") {
       setFeedback({
@@ -1362,12 +1435,15 @@ function OwnerStorageSettings({ hostManagement }: { hostManagement: boolean }) {
       (remoteForm.region.trim() !== "" && remoteForm.bucket.trim() !== ""));
   const isLocalStorageWizard = storageWizardType === "local";
   const canAdvanceStorageWizard =
-    storageWizardStep === 1 ||
-    storageWizardStep === 2 ||
-    storageWizardStep === 4 ||
-    storageWizardStep === 5 ||
-    (storageWizardStep === 3 &&
-      (isLocalStorageWizard ? hasBucketLocationDraft : hasRemoteLocationDraft));
+    (!isLocalStorageWizard || storageWizardStep < 3 || canAddLocalStorage) &&
+    (storageWizardStep === 1 ||
+      storageWizardStep === 2 ||
+      storageWizardStep === 4 ||
+      storageWizardStep === 5 ||
+      (storageWizardStep === 3 &&
+        (isLocalStorageWizard
+          ? hasBucketLocationDraft
+          : hasRemoteLocationDraft)));
 
   return (
     <div className="owner-storage-settings">
@@ -2197,12 +2273,32 @@ function OwnerStorageSettings({ hostManagement }: { hostManagement: boolean }) {
 
             {storageWizardStep === 3 ? (
               storageWizardType === "local" ? (
-                !hostManagement ? (
+                !canAddLocalStorage ? (
                   <div className="owner-storage-wizard-locked">
-                    <strong>本机路径只能在运行 Visto 的电脑上添加</strong>
-                    <p>
-                      你现在通过远程页面访问。为了避免暴露主机目录结构，请回到桌面控制台选择本机托管位置。
-                    </p>
+                    {hostAccessLoading ? (
+                      <p role="status">正在确认网页端添加本机目录的权限…</p>
+                    ) : hostAccessError ? (
+                      <>
+                        <p role="alert">无法读取本机目录授权状态，请重试。</p>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={() =>
+                            setHostAccessAttempt((current) => current + 1)
+                          }
+                        >
+                          重新检查权限
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <strong>当前未允许网页端添加本机目录</strong>
+                        <p>
+                          请使用主机控制台添加存储位置，或由部署者在运行 Visto
+                          的电脑上修改目录授权配置，然后刷新页面。
+                        </p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="owner-storage-form owner-wizard-form-grid">
@@ -2972,25 +3068,17 @@ function OwnerUpdatePanel() {
               <div className="owner-update-release-head">
                 <strong>{status.latest.version}</strong>
                 <span className={`owner-update-badge is-${view.latestTone}`}>
-                  {status.latest.upToDate ? "已是最新" : "可更新"}
+                  {status.latest.state === "up_to_date"
+                    ? "已是最新"
+                    : status.latest.state === "update_available"
+                      ? "可更新"
+                      : "无法判断"}
                 </span>
-                {status.latest.minimumSupportedVersion ? (
-                  <small>
-                    最低支持版本 {status.latest.minimumSupportedVersion}
-                  </small>
-                ) : null}
               </div>
               {status.latest.publishedAt ? (
                 <small>
                   发布于 {formatReleaseDate(status.latest.publishedAt)}
                 </small>
-              ) : null}
-              {view.releaseNotes.length > 0 ? (
-                <ul>
-                  {view.releaseNotes.map((note) => (
-                    <li key={note}>{note}</li>
-                  ))}
-                </ul>
               ) : null}
             </div>
           ) : null}
@@ -3064,6 +3152,8 @@ function ownerSectionNavLabel(section: OwnerSection, t: Translator) {
       return t("owner.network");
     case "storage":
       return t("owner.storage");
+    case "encoding":
+      return t("owner.encoding");
     case "notifications":
       return t("owner.notifications");
     case "activity":
@@ -3081,6 +3171,8 @@ function ownerSectionNavDescription(section: OwnerSection, t: Translator) {
       return t("owner.networkDescription");
     case "storage":
       return t("owner.storageDescription");
+    case "encoding":
+      return t("owner.encodingDescription");
     case "notifications":
       return t("owner.notificationsDescription");
     case "activity":
@@ -3098,6 +3190,8 @@ function ownerSectionTitle(section: OwnerSection, t: Translator) {
       return t("owner.networkTitle");
     case "storage":
       return t("owner.storageTitle");
+    case "encoding":
+      return t("owner.encodingTitle");
     case "notifications":
       return t("owner.notificationsTitle");
     case "activity":
@@ -3115,6 +3209,8 @@ function ownerSectionDescription(section: OwnerSection, t: Translator) {
       return t("owner.networkDetail");
     case "storage":
       return t("owner.storageDetail");
+    case "encoding":
+      return t("owner.encodingDetail");
     case "notifications":
       return t("owner.notificationsDetail");
     case "activity":

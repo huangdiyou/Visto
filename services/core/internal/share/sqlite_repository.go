@@ -498,16 +498,16 @@ func (repository *SQLiteRepository) OpenEntry(
 	`, linkID, now); err != nil {
 		return sessionAccess{}, fmt.Errorf("prune expired share sessions: %w", err)
 	}
-	if _, err := tx.ExecContext(ctx, `
-		DELETE FROM share_visitor_sessions
-		WHERE id IN (
-			SELECT id FROM share_visitor_sessions
-			WHERE share_link_id = ? AND revoked_at IS NULL
-			ORDER BY last_seen_at ASC, created_at ASC
-			LIMIT -1 OFFSET 200
-		)
-	`, linkID); err != nil {
-		return sessionAccess{}, fmt.Errorf("bound active share sessions: %w", err)
+	var activeSessionCount int
+	if err := tx.QueryRowContext(ctx, `
+		SELECT COUNT(*)
+		FROM share_visitor_sessions
+		WHERE share_link_id = ? AND revoked_at IS NULL AND expires_at > ?
+	`, linkID, now).Scan(&activeSessionCount); err != nil {
+		return sessionAccess{}, fmt.Errorf("count active share sessions: %w", err)
+	}
+	if activeSessionCount >= 200 {
+		return sessionAccess{}, ErrRateLimited
 	}
 	if _, err := tx.ExecContext(ctx, `
 		DELETE FROM share_visitors
@@ -560,10 +560,10 @@ func (repository *SQLiteRepository) OpenEntry(
 			Identified:     false,
 			Verified:       false,
 		}), linkID, record.ID),
-		PasswordHash: passwordHash,
-		Verified:     passwordHash == "",
-		SessionID:    record.ID,
-		ShareLinkID:  linkID,
+		PasswordHash:     passwordHash,
+		Verified:         passwordHash == "",
+		SessionID:        record.ID,
+		ShareLinkID:      linkID,
 		SessionExpiresAt: sessionExpiresAt,
 	}, nil
 }
@@ -646,10 +646,10 @@ func (repository *SQLiteRepository) Session(
 			visitorMethod,
 			visitorVerifiedAt,
 		)), linkID, sessionID),
-		PasswordHash: passwordHash,
-		Verified:     verifiedAt.Valid,
-		SessionID:    sessionID,
-		ShareLinkID:  linkID,
+		PasswordHash:     passwordHash,
+		Verified:         verifiedAt.Valid,
+		SessionID:        sessionID,
+		ShareLinkID:      linkID,
 		SessionExpiresAt: now,
 	}, nil
 }

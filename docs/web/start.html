@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Visto 使用指南：安装、项目、媒体、版本、审阅、分享与维护。"><title>Visto 文档 · 先理解 Visto</title><link rel="icon" type="image/svg+xml" href="assets/visto-icon.svg"><link rel="alternate" hreflang="en" href="en/start.html"><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto 文档</a><div class="tools"><a class="plain github" href="downloads.html#project"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.3 11.3 0 0 0-3.6 22c.6.1.8-.2.8-.5v-2.1c-3.3.7-4-1.4-4-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.6 0-1.2.4-2.2 1.2-3-.1-.3-.5-1.5.1-3 0 0 1-.3 3.1 1.2a10.7 10.7 0 0 1 5.7 0c2.2-1.5 3.1-1.2 3.1-1.2.6 1.5.2 2.7.1 3 .8.8 1.2 1.8 1.2 3 0 4.3-2.7 5.3-5.3 5.6.4.4.8 1.1.8 2.2v3.1c0 .3.2.6.8.5A11.3 11.3 0 0 0 12 .7Z"/></svg>GitHub</a><a class="return-site" href="https://visto.akahxh.top/">返回官网 ↗</a><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><a class="plain language" id="language" href="en/start.html" hreflang="en" lang="en" aria-label="Switch to English">EN</a><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html" class="active" aria-current="page">先理解 Visto</a><a href="quick-start.html">做完你的第一个项目</a><a href="navigation.html">熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">安装 Visto</a><a href="install-macos.html">macOS 安装</a><a href="windows-install.html">Windows 安装</a><a href="linux-install.html">Linux 安装</a><a href="runtime.html">视频预览与组件安装</a><a href="docker.html">Docker 部署说明</a><a href="setup.html">首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">配置文件保存位置</a><a href="project.html">创建与管理项目</a><a href="members.html">成员、邀请与权限</a><a href="upload.html">上传、搜索与整理素材</a><a href="archive.html">回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">版本管理与新一轮修订</a><a href="reviews.html">创建一轮审阅</a><a href="comments.html">提交精确反馈与审核结论</a><a href="sharing.html">创建、安全检查与撤销分享</a><a href="guest.html">给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">通知、个人资料与活动</a><a href="network.html">网络与远程访问</a><a href="backup.html">备份：保护数据库与媒体</a><a href="maintenance.html">更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">按现象排查问题</a><a href="faq.html">常见问题</a><a href="checklist.html">交付检查单与求助模板</a><div class="offline"><a href="downloads.html">下载与版本</a><a href="Visto-用户手册.html">离线手册</a><a href="USER_GUIDE.md">Markdown</a><a href="checklist.html">反馈问题</a><a href="downloads.html#project">GitHub ↗</a><a href="https://visto.akahxh.top/">返回官网 ↗</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档首页</a><span>/</span>开始使用</div><h1>先理解 Visto</h1><p>Visto 在你控制的电脑或服务器上运行，用浏览器进入工作空间。它把项目、媒体文件、不同版本、审阅反馈和分享记录放在同一条协作流程里。存储可以位于部署主机，也可以由 Owner 连接 WebDAV 或 S3 兼容服务。</p>
+<p>“本地优先”意味着你决定数据部署在哪里。选择远程存储、配置外部通知或开放远程访问后，相关数据仍会经过你启用的服务和网络。</p>
+<h3 id="start-section-1">五个最常用的概念</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>用来做什么</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>工作空间</td>
+<td>容纳账号、项目、全局设置和基础设施</td>
+<td>一个制作团队</td>
+</tr>
+<tr>
+<td>项目</td>
+<td>划定协作范围、成员和文件保存位置</td>
+<td>品牌短片 · 10 月交付</td>
+</tr>
+<tr>
+<td>媒体 / 资产</td>
+<td>一份持续修订的作品或素材</td>
+<td>品牌短片主片</td>
+</tr>
+<tr>
+<td>版本</td>
+<td>保留同一资产的每次上传结果</td>
+<td>V1 初剪、V2 调色、V3 确认版</td>
+</tr>
+<tr>
+<td>审阅</td>
+<td>围绕选定版本发起的一轮反馈与结论</td>
+<td>第一轮导演审阅</td>
+</tr>
+</tbody>
+</table></div>
+<figure class="figure"><a href="assets/model.svg" aria-label="项目、资产、版本与审阅的关系示意"><img src="assets/model.svg" alt="项目、资产、版本与审阅的关系示意" loading="lazy" decoding="async"></a><figcaption>流程示意 · 项目、资产、版本与审阅的关系示意<span class="hint">点击放大查看</span></figcaption></figure>
+<p><strong>图解：</strong> 一个项目可以有多个资产；一个资产可以有多个版本；审阅引用选定的版本。上传新版以后，旧审阅仍保留原来审阅的版本，下一轮应明确选择新版。</p>
+<h3 id="start-section-2">按身份选择阅读路线</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>你的身份</th>
+<th>先读哪些章节</th>
+<th>你最需要知道的事</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>安装维护者</td>
+<td>安装准备 → 对应平台安装 → 媒体运行时 → 备份恢复</td>
+<td>主机操作在部署机器执行，需要相应系统权限</td>
+</tr>
+<tr>
+<td>Owner</td>
+<td>首次设置 → 存储 → 成员权限 → 网络安全</td>
+<td>管理全局基础设施，不要把 Owner 密码当团队共享密码</td>
+</tr>
+<tr>
+<td>项目主管</td>
+<td>创建项目 → 成员权限 → 审阅 → 归档</td>
+<td>项目成员关系和具体权限决定协作边界</td>
+</tr>
+<tr>
+<td>项目成员</td>
+<td>上传素材 → 版本 → 审阅 → 通知</td>
+<td>先进入正确项目，再上传和创建审阅</td>
+</tr>
+<tr>
+<td>外部审阅者</td>
+<td>外部审阅指南</td>
+<td>使用分享链接和访问码，按开放权限查看、评论或下载</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="start-section-3">适用与限制</h3>
+<p>本手册介绍 Visto Server 浏览器工作台。支持的安装包和下载开放情况请看<a href="downloads.html">下载与版本说明</a>。</p><nav class="pager"><a href="index.html"><small>上一篇</small>文档首页</a><a href="quick-start.html"><small>下一篇</small>做完你的第一个项目</a></nav><footer class="footer">Visto 文档 · 2026-10-03<br><a href="checklist.html">反馈问题</a><a href="Visto-用户手册.html">离线手册</a><a href="downloads.html">下载与版本</a></footer></main><aside class="toc" aria-label="本页内容"><h2>本页内容</h2><a href="#start-section-1">五个最常用的概念</a><a href="#start-section-2">按身份选择阅读路线</a><a href="#start-section-3">适用与限制</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索文档</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="search-data.js"></script><script src="assets/docs.js"></script></body></html>

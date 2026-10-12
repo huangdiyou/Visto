@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Visto 使用指南：安装、项目、媒体、版本、审阅、分享与维护。"><title>Visto 文档 · macOS 安装</title><link rel="icon" type="image/svg+xml" href="assets/visto-icon.svg"><link rel="alternate" hreflang="en" href="en/install-macos.html"><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto 文档</a><div class="tools"><a class="plain github" href="downloads.html#project"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.3 11.3 0 0 0-3.6 22c.6.1.8-.2.8-.5v-2.1c-3.3.7-4-1.4-4-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.6 0-1.2.4-2.2 1.2-3-.1-.3-.5-1.5.1-3 0 0 1-.3 3.1 1.2a10.7 10.7 0 0 1 5.7 0c2.2-1.5 3.1-1.2 3.1-1.2.6 1.5.2 2.7.1 3 .8.8 1.2 1.8 1.2 3 0 4.3-2.7 5.3-5.3 5.6.4.4.8 1.1.8 2.2v3.1c0 .3.2.6.8.5A11.3 11.3 0 0 0 12 .7Z"/></svg>GitHub</a><a class="return-site" href="https://visto.akahxh.top/">返回官网 ↗</a><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><a class="plain language" id="language" href="en/install-macos.html" hreflang="en" lang="en" aria-label="Switch to English">EN</a><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">先理解 Visto</a><a href="quick-start.html">做完你的第一个项目</a><a href="navigation.html">熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">安装 Visto</a><a href="install-macos.html" class="active" aria-current="page">macOS 安装</a><a href="windows-install.html">Windows 安装</a><a href="linux-install.html">Linux 安装</a><a href="runtime.html">视频预览与组件安装</a><a href="docker.html">Docker 部署说明</a><a href="setup.html">首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">配置文件保存位置</a><a href="project.html">创建与管理项目</a><a href="members.html">成员、邀请与权限</a><a href="upload.html">上传、搜索与整理素材</a><a href="archive.html">回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">版本管理与新一轮修订</a><a href="reviews.html">创建一轮审阅</a><a href="comments.html">提交精确反馈与审核结论</a><a href="sharing.html">创建、安全检查与撤销分享</a><a href="guest.html">给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">通知、个人资料与活动</a><a href="network.html">网络与远程访问</a><a href="backup.html">备份：保护数据库与媒体</a><a href="maintenance.html">更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">按现象排查问题</a><a href="faq.html">常见问题</a><a href="checklist.html">交付检查单与求助模板</a><div class="offline"><a href="downloads.html">下载与版本</a><a href="Visto-用户手册.html">离线手册</a><a href="USER_GUIDE.md">Markdown</a><a href="checklist.html">反馈问题</a><a href="downloads.html#project">GitHub ↗</a><a href="https://visto.akahxh.top/">返回官网 ↗</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档首页</a><span>/</span>安装与初始化</div><h1>macOS 安装</h1><p>适用于 <strong>Apple Silicon（M 系列）Mac</strong>。Intel Mac 暂不在支持范围内。准备管理员密码并保持联网，下载开放情况见<a href="downloads.html">下载页</a>。</p>
+<h3 id="install-macos-section-1">方式一：在线安装（推荐）</h3>
+<p>打开“终端”，复制这一行并回车：</p>
+<pre><code class="language-bash">curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh &amp;&amp; bash install-visto.sh
+</code></pre>
+<p>脚本先以当前用户检查 macOS 是否允许程序运行，再请求管理员密码安装。按提示确认视频组件下载。密码输入时不显示字符，这是正常现象。脚本会自动选择最新正式版，下载、检查并安装 Server 和视频组件；无需填写版本或组件名称。</p>
+<p>安装结束后，打开终端显示的地址，按<a href="setup.html">首次设置</a>创建工作空间。默认是 <a href="http://127.0.0.1:8787/">http://127.0.0.1:8787/</a>；如果端口已被占用，安装器会询问是否使用其他空闲端口。</p>
+<h3 id="install-macos-section-2">方式二：手动下载后安装</h3>
+<ol>
+<li>在<a href="downloads.html">下载页</a>或 GitHub Releases 取得 <strong>macOS · Apple Silicon</strong> 程序包。</li>
+<li>双击压缩包解压，保留原文件夹名称，例如 <code>Visto-Server_1.0.3_macos-arm64</code>，不要与旧版本混在一起。</li>
+<li>在 Finder 中右键点击解压后的文件夹，选择“服务 → 新建位于文件夹位置的终端窗口”。</li>
+</ol>
+<p>先取得安装辅助脚本：</p>
+<pre><code class="language-bash">curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh
+</code></pre>
+<p>再安装这个文件夹里的版本：</p>
+<pre><code class="language-bash">bash install-visto.sh --source-dir .
+</code></pre>
+<p>它使用已经解压的程序，不再下载或切换到其他 Server 版本；视频组件由脚本自动准备。原始 1.0.3 包也使用这两条命令，无需给旧安装器添加新参数。</p>
+<p>完成后打开终端显示的地址。<strong>两种方式都已包含视频组件安装，不需要额外执行一段组件安装命令。</strong></p>
+<h3 id="install-macos-section-3">如果 macOS 提示无法打开</h3>
+<p>当前程序没有 Apple 开发者签名与公证。脚本会在安装前检查 <code>visto-server</code> 与 <code>visto-core</code> 是否能运行，不会替你关闭系统安全检查。</p>
+<ol>
+<li>弹窗出现时点击<strong>“完成”</strong>，不要将程序移到废纸篓。</li>
+<li>脚本会尝试打开<strong>系统设置 → 隐私与安全性</strong>；没有打开时，手动进入该页面。向下滚动到<strong>“安全性”</strong>，点击终端提示的那个程序的<strong>“仍要打开”</strong>。如果再次出现确认弹窗，点击<strong>“打开”或“允许”</strong>。</li>
+<li><strong>保留终端窗口。完成放行后，回到终端按回车，安装就会继续。</strong> 无需复制另一条命令，脚本会重新检查同一份程序。</li>
+</ol>
+<p>两个程序可能需要分别放行；按终端提示依次处理即可。此时系统服务还没有开始安装。若没有“仍要打开”按钮，关闭并重新打开“隐私与安全性”；仍没有入口时，将终端错误提供给维护者。</p>
+<p>想稍后安装时，在等待提示处输入 <code>q</code> 或按 <code>Control-C</code>。脚本会保留安装文件，并显示一条下次继续的命令；只有暂停或退出后才需要使用它。不要重复最初的在线下载命令，它会创建另一份安装文件。完成放行后，脚本才会请求管理员密码并继续安装。</p>
+<h3 id="install-macos-section-4">安装之后</h3>
+<p>上传一个短视频，确认预览可以播放，再开始正式项目。服务管理、日志和卸载见<a href="maintenance.html#maintenance-macos">更新与维护</a>。</p><nav class="pager"><a href="prepare.html"><small>上一篇</small>安装 Visto</a><a href="windows-install.html"><small>下一篇</small>Windows 安装</a></nav><footer class="footer">Visto 文档 · 2026-10-03<br><a href="checklist.html">反馈问题</a><a href="Visto-用户手册.html">离线手册</a><a href="downloads.html">下载与版本</a></footer></main><aside class="toc" aria-label="本页内容"><h2>本页内容</h2><a href="#install-macos-section-1">方式一：在线安装（推荐）</a><a href="#install-macos-section-2">方式二：手动下载后安装</a><a href="#install-macos-section-3">如果 macOS 提示无法打开</a><a href="#install-macos-section-4">安装之后</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索文档</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="search-data.js"></script><script src="assets/docs.js"></script></body></html>

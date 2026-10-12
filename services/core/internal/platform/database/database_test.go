@@ -63,8 +63,8 @@ func TestOpenAppliesMigrationsAndPersistsData(t *testing.T) {
 		t.Fatalf("count migrations: %v", err)
 	}
 
-	if migrationCount != 41 {
-		t.Fatalf("expected forty-one migrations, got %d", migrationCount)
+	if migrationCount != 43 {
+		t.Fatalf("expected forty-three migrations, got %d", migrationCount)
 	}
 }
 

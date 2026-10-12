@@ -8,7 +8,9 @@ The exact dependency set for a release is recorded in `THIRD_PARTY.spdx.json`.
 Visto Server includes open-source dependencies used by the Web application and
 Go service. Their package names, versions and declared licenses are captured in
 the SPDX inventory generated for each release. Required attribution text is
-retained in `THIRD_PARTY_NOTICES.md`.
+retained in `THIRD_PARTY_NOTICES.md`. The public source keeps Go module license
+declarations in `scripts/server-go-license-inventory.json`; these are checked
+against the license text included in the notices when generating the SBOM.
 
 ## Media runtime boundary
 
