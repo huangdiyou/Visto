@@ -2192,6 +2192,12 @@ func TestProjectAPIHidesUnjoinedProjectsFromMember(t *testing.T) {
 
 func TestAuthorizedRootMetadataAndRangeAPI(t *testing.T) {
 	config := testConfig(t)
+	// D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2: pin the locked-down deployment so
+	// the "remote raw-object access" assertions below keep testing what they were
+	// written for. Without the pin the wizard's default (host paths allowed for an
+	// Owner web session) applies, which is a separate, deliberate behaviour covered
+	// by TestOwnerWebSessionMayRegisterAStorageLocationWhenTheWizardAllowedIt.
+	config.AllowWebHostPaths = boolSetting(false)
 	handler := NewHandler(config)
 
 	setup := performJSONRequest(
@@ -4033,8 +4039,16 @@ func TestStorageProviderManagementAPIDoesNotExposeCredentials(t *testing.T) {
 	}
 }
 
-func TestAuthorizedRootRegistrationRequiresLoopback(t *testing.T) {
-	handler := NewHandler(testConfig(t))
+// D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2: the first-run wizard may allow an
+// Owner web session to reach host management, so "loopback only" is no longer
+// the whole rule. This test pins the locked-down deployment — the switch closed
+// by the environment override — which is the configuration that must keep the
+// previous behaviour. The default is covered by
+// TestOwnerWebSessionMayRegisterAStorageLocationWhenTheWizardAllowedIt.
+func TestAuthorizedRootRegistrationRefusedWhenWebHostPathsAreClosed(t *testing.T) {
+	config := testConfig(t)
+	config.AllowWebHostPaths = boolSetting(false)
+	handler := NewHandler(config)
 	setup := performJSONRequest(
 		handler,
 		http.MethodPost,
@@ -4103,6 +4117,12 @@ func TestAuthorizedRootRegistrationRequiresLoopback(t *testing.T) {
 
 func TestLocalManagedBucketRequiresHostAndHidesPath(t *testing.T) {
 	config := testConfig(t)
+	// D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2: with the wizard's default in force
+	// an Owner web session may create a storage location, which is the point of the
+	// first-run switch. Pin it closed here so this test keeps proving that a member
+	// and a host-proxied non-owner request are still refused, and that the response
+	// never leaks the local path.
+	config.AllowWebHostPaths = boolSetting(false)
 	handler := NewHandler(config)
 	setup := performJSONRequest(
 		handler,

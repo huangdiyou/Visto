@@ -2,7 +2,6 @@ package httpapi
 
 import (
 	"net/http"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -14,12 +13,23 @@ import (
 // downloads an update package, never installs one, and never runs a host
 // command on behalf of a web request. The response only explains what an
 // administrator has to run on the deployment host.
+//
+// Free tier boundary (docs/FREE_TIER_BOUNDARY_DESIGN.md): the update channel is
+// unsigned and carries a version number only. Nothing in the manifest can name
+// a download location, so the fetch location below is compiled in.
 
 const (
 	updateStatusUnchecked     = "unchecked"
 	updateStatusNotConfigured = "not_configured"
 	updateStatusUnavailable   = "unavailable"
 	updateStatusAvailable     = "available"
+
+	// Version guard verdicts. "unknown" is deliberately distinct from
+	// "up_to_date": when a version cannot be compared the page must not claim
+	// the instance is current.
+	updateStateUpToDate        = "up_to_date"
+	updateStateUpdateAvailable = "update_available"
+	updateStateUnknown         = "unknown"
 
 	updateCommandPlatformDocker        = "docker"
 	updateCommandPlatformDockerWindows = "docker-windows"
@@ -29,6 +39,11 @@ const (
 	updateCommandPlatformSource        = "source"
 )
 
+// officialReleasePage is the only download location the free tier points at. It
+// is compiled in on purpose: the unsigned manifest must never be able to change
+// where an operator is told to fetch a package from.
+const officialReleasePage = "https://github.com/huangdiyou/Visto/releases"
+
 // Native package install prefixes. They match the directory contract the
 // platform update scripts are built against.
 const (
@@ -36,26 +51,20 @@ const (
 	macOSServerPrefixPath = "/Library/Visto"
 )
 
-// Placeholders are intentionally explicit: a command with a placeholder must be
-// edited on the host, while a command carrying a real digest or URL can be run
-// as copied.
+// Placeholders are intentionally explicit. The version placeholder is typed by
+// the administrator after reading the official release page; it is never
+// interpolated from the manifest, so a manifest cannot steer the download.
 const (
-	placeholderCoreImage   = "<核心镜像>@sha256:<发布页记录的摘要>"
-	placeholderWebImage    = "<Web 镜像>@sha256:<发布页记录的摘要>"
-	placeholderPackageURL  = "<发布页记录的 windows-server ZIP 地址>"
-	placeholderPackageFile = "Visto-Server_<版本>_windows-x64.zip"
-
-	placeholderLinuxPackageURL = "<发布页记录的 linux-server tar.gz 地址>"
-	placeholderMacOSPackageURL = "<发布页记录的 macos-server tar.gz 地址>"
-	placeholderUpdateSource    = "<更新源>"
-	placeholderPublicKey       = "<发布公钥>"
+	placeholderCoreImage       = "<核心镜像>@sha256:<从发布页复制的摘要>"
+	placeholderWebImage        = "<Web 镜像>@sha256:<从发布页复制的摘要>"
+	placeholderWindowsPackage  = "Visto-Server_<版本>_windows-x64.zip"
+	placeholderUnixPackage     = "Visto-Server_<版本>_<平台>.tar.gz"
+	placeholderSHA256          = "<从 .sha256 文件复制的 64 位摘要>"
 	placeholderPreviousVersion = "<上一个版本>"
 )
 
 // Native packages are staged in one directory that survives a reboot and is not
-// shared with other users' temporary files. The update script copies the three
-// release files into a private directory under <prefix>/recovery before it
-// verifies them, so the staged copies only have to stay put until it runs.
+// shared with other users' temporary files.
 const unixUpdateStageDir = "/var/tmp/visto-update"
 
 type systemUpdateStatusResponse struct {
@@ -90,24 +99,14 @@ type systemUpdateCheck struct {
 	Message   string     `json:"message"`
 }
 
+// systemUpdateRelease carries the version announcement. It has no artifact list
+// and no download location: the free tier channel is unsigned, so a location
+// taken from it could be rewritten by anyone who can rewrite the source.
 type systemUpdateRelease struct {
-	Version                 string                 `json:"version"`
-	PublishedAt             string                 `json:"publishedAt"`
-	MinimumSupportedVersion string                 `json:"minimumSupportedVersion"`
-	ReleaseNotes            []string               `json:"releaseNotes"`
-	SigningKeyID            string                 `json:"signingKeyId,omitempty"`
-	Source                  string                 `json:"source"`
-	UpToDate                bool                   `json:"upToDate"`
-	Artifacts               []systemUpdateArtifact `json:"artifacts"`
-}
-
-type systemUpdateArtifact struct {
-	Kind      string `json:"kind"`
-	Platform  string `json:"platform"`
-	URL       string `json:"url,omitempty"`
-	Image     string `json:"image,omitempty"`
-	SHA256    string `json:"sha256"`
-	SizeBytes int64  `json:"sizeBytes"`
+	Version     string `json:"version"`
+	PublishedAt string `json:"publishedAt"`
+	Source      string `json:"source"`
+	State       string `json:"state"`
 }
 
 type systemUpdateCommand struct {
@@ -147,7 +146,7 @@ func (h *handler) handleSystemUpdateStatus(
 	writeJSON(response, http.StatusOK, h.toSystemUpdateStatusResponse(state))
 }
 
-// currentUpdateCheckState reuses the last signed-manifest fetch until an Owner
+// currentUpdateCheckState reuses the last manifest fetch until an Owner
 // explicitly asks for a new one. A page load never reaches out to a public
 // platform by itself, so air-gapped deployments stay quiet.
 func (h *handler) currentUpdateCheckState(request *http.Request, force bool) updateCheckState {
@@ -171,9 +170,7 @@ func (h *handler) refreshUpdateCheckState(request *http.Request) updateCheckStat
 		}
 	}
 	result, err := serverupdate.Check(request.Context(), serverupdate.CheckConfig{
-		Sources:       h.updateSources,
-		PublicKey:     h.updatePublicKey,
-		RootPublicKey: h.updateRootPublicKey,
+		Sources: h.updateSources,
 	})
 	if err != nil {
 		// The raw error names sources and HTTP status codes; keep it in the log
@@ -188,14 +185,14 @@ func (h *handler) refreshUpdateCheckState(request *http.Request) updateCheckStat
 		return updateCheckState{
 			status:    updateStatusUnavailable,
 			checkedAt: time.Now().UTC(),
-			message:   "无法从已配置的更新源取得受信任的签名清单。请稍后重试，或改用官方发布页与离线更新包。",
+			message:   "无法从已配置的更新源取得版本清单。请稍后重试，或改用官方发布页与离线更新包。",
 		}
 	}
 	manifest := result.Manifest
 	return updateCheckState{
 		status:    updateStatusAvailable,
 		checkedAt: time.Now().UTC(),
-		message:   "已从受信任的更新源取得签名清单。",
+		message:   "已从更新源取得版本清单。",
 		source:    result.Source,
 		manifest:  &manifest,
 	}
@@ -221,7 +218,7 @@ func (h *handler) toSystemUpdateStatusResponse(
 			Status:  state.status,
 			Message: state.message,
 		},
-		Commands:      h.buildUpdateCommands(state.manifest),
+		Commands:      h.relevantUpdateCommands(state),
 		Offline:       buildOfflineUpdateGuidance(),
 		SecurityNotes: buildUpdateSecurityNotes(),
 	}
@@ -240,59 +237,62 @@ func toSystemUpdateRelease(
 	source string,
 	currentVersion string,
 ) *systemUpdateRelease {
-	release := &systemUpdateRelease{
-		Version:                 manifest.Version,
-		PublishedAt:             manifest.PublishedAt.UTC().Format(time.RFC3339),
-		MinimumSupportedVersion: manifest.MinimumSupportedVersion,
-		ReleaseNotes:            append([]string(nil), manifest.ReleaseNotes...),
-		SigningKeyID:            manifest.SigningKeyID,
-		Source:                  source,
-		UpToDate: strings.TrimSpace(manifest.Version) != "" &&
-			strings.TrimSpace(manifest.Version) == strings.TrimSpace(currentVersion),
-		Artifacts: make([]systemUpdateArtifact, 0, len(manifest.Artifacts)),
+	return &systemUpdateRelease{
+		Version:     manifest.Version,
+		PublishedAt: manifest.PublishedAt.UTC().Format(time.RFC3339),
+		Source:      source,
+		State:       versionGuardState(currentVersion, manifest.Version),
 	}
-	for _, artifact := range manifest.Artifacts {
-		release.Artifacts = append(release.Artifacts, systemUpdateArtifact{
-			Kind:      artifact.Kind,
-			Platform:  artifact.Platform,
-			URL:       artifact.URL,
-			Image:     artifact.Image,
-			SHA256:    artifact.SHA256,
-			SizeBytes: artifact.SizeBytes,
-		})
-	}
-	return release
 }
 
-func (h *handler) buildUpdateCommands(
-	manifest *serverupdate.Manifest,
-) []systemUpdateCommand {
+// versionGuardState classifies the published version against the running one.
+//
+// Downgrade guard, docs/FREE_TIER_BOUNDARY_DESIGN.md §1.2: only a strictly newer
+// published version counts as an available update, and a version that cannot be
+// compared on either side is reported as unknown rather than as up to date.
+func versionGuardState(currentVersion, publishedVersion string) string {
+	comparison, err := serverupdate.CompareVersions(currentVersion, publishedVersion)
+	if err != nil {
+		return updateStateUnknown
+	}
+	if comparison < 0 {
+		return updateStateUpdateAvailable
+	}
+	return updateStateUpToDate
+}
+
+// relevantUpdateCommands returns actionable update commands only when the
+// published version is strictly newer than the running one.
+//
+// Downgrade guard, docs/FREE_TIER_BOUNDARY_DESIGN.md D1: an instance at or ahead
+// of the published version must not be shown a command that would walk it
+// backwards, and the page would otherwise say "已是最新" while still prompting an
+// update. When no manifest was obtained at all there is no version claim to act
+// on, so the generic guidance is kept.
+func (h *handler) relevantUpdateCommands(state updateCheckState) []systemUpdateCommand {
+	if state.manifest != nil &&
+		versionGuardState(h.version, state.manifest.Version) != updateStateUpdateAvailable {
+		return nil
+	}
+	return h.buildUpdateCommands()
+}
+
+func (h *handler) buildUpdateCommands() []systemUpdateCommand {
 	switch h.deploymentKind {
 	case serverupdate.DeploymentDocker:
-		return buildDockerUpdateCommands(manifest)
+		return buildDockerUpdateCommands()
 	case serverupdate.DeploymentWindowsServer:
-		return buildWindowsServerUpdateCommands(manifest)
+		return buildWindowsServerUpdateCommands()
 	case serverupdate.DeploymentLinuxServer:
-		return buildLinuxServerUpdateCommands(manifest)
+		return buildUnixServerUpdateCommands(linuxServerProfile)
 	case serverupdate.DeploymentMacOSServer:
-		return buildMacOSServerUpdateCommands(manifest)
+		return buildUnixServerUpdateCommands(macOSServerProfile)
 	default:
-		return buildSourceUpdateCommands(manifest)
+		return buildSourceUpdateCommands()
 	}
 }
 
-const dockerCoreImageKind = "docker-core"
-const dockerWebImageKind = "docker-web"
-
-func buildDockerUpdateCommands(manifest *serverupdate.Manifest) []systemUpdateCommand {
-	coreImage := artifactImage(manifest, dockerCoreImageKind)
-	webImage := artifactImage(manifest, dockerWebImageKind)
-	if coreImage == "" {
-		coreImage = placeholderCoreImage
-	}
-	if webImage == "" {
-		webImage = placeholderWebImage
-	}
+func buildDockerUpdateCommands() []systemUpdateCommand {
 	commands := []systemUpdateCommand{
 		{
 			ID:          "docker-backup",
@@ -302,25 +302,35 @@ func buildDockerUpdateCommands(manifest *serverupdate.Manifest) []systemUpdateCo
 			Description: "在部署主机执行。备份会先停止 Core、归档整个数据卷，再启动 Core 并等待健康检查。",
 		},
 		{
+			ID:       "docker-download",
+			Label:    "从官方发布页取得镜像摘要",
+			Platform: updateCommandPlatformDocker,
+			Command: strings.Join([]string{
+				"# 打开官方发布页，记下本版本 core 与 web 镜像的 @sha256 摘要：",
+				"# " + officialReleasePage,
+			}, "\n"),
+			Description: "免费版清单不携带产物摘要。镜像引用必须带 @sha256，不要使用 latest 等可变标签。",
+		},
+		{
 			ID:       "docker-update",
 			Label:    "拉取固定镜像并重建服务",
 			Platform: updateCommandPlatformDocker,
 			Command: strings.Join([]string{
 				"./scripts/docker/update-visto-docker.sh \\",
-				"  --core-image '" + coreImage + "' \\",
-				"  --web-image '" + webImage + "' \\",
+				"  --core-image '" + placeholderCoreImage + "' \\",
+				"  --web-image '" + placeholderWebImage + "' \\",
 				"  --backup-dir ./backups",
 			}, "\n"),
-			Description: "脚本只接受发布清单记录的 @sha256 摘要，先备份、再拉取、最后等待 Core 健康检查；失败会恢复更新前的数据和镜像。",
+			Description: "把两个占位符替换为发布页上的固定摘要后再执行。脚本先备份、再拉取、最后等待 Core 健康检查；失败会恢复更新前的数据和镜像。",
 		},
 		{
 			ID:       "docker-manual",
 			Label:    "不用脚本的等价命令",
 			Platform: updateCommandPlatformDocker,
 			Command: strings.Join([]string{
-				"docker pull '" + coreImage + "'",
-				"docker pull '" + webImage + "'",
-				"VISTO_CORE_IMAGE='" + coreImage + "' VISTO_WEB_IMAGE='" + webImage + "' \\",
+				"docker pull '" + placeholderCoreImage + "'",
+				"docker pull '" + placeholderWebImage + "'",
+				"VISTO_CORE_IMAGE='" + placeholderCoreImage + "' VISTO_WEB_IMAGE='" + placeholderWebImage + "' \\",
 				"  docker compose -f compose.yaml -p visto up -d --no-build",
 			}, "\n"),
 			Description: "先执行上面的备份命令。只使用 docker compose pull 与 up -d，不要用 down 扩大停机时间。",
@@ -336,10 +346,10 @@ func buildDockerUpdateCommands(manifest *serverupdate.Manifest) []systemUpdateCo
 			Description: "Core 容器健康后再继续使用；健康检查失败时按备份文件回滚。",
 		},
 	}
-	return append(commands, buildDockerWindowsUpdateCommands(coreImage, webImage)...)
+	return append(commands, buildDockerWindowsUpdateCommands()...)
 }
 
-func buildDockerWindowsUpdateCommands(coreImage, webImage string) []systemUpdateCommand {
+func buildDockerWindowsUpdateCommands() []systemUpdateCommand {
 	return []systemUpdateCommand{
 		{
 			ID:          "docker-windows-backup",
@@ -354,23 +364,16 @@ func buildDockerWindowsUpdateCommands(coreImage, webImage string) []systemUpdate
 			Platform: updateCommandPlatformDockerWindows,
 			Command: strings.Join([]string{
 				"./scripts/docker/Update-VistoDocker.ps1 \\",
-				"  -CoreImage '" + coreImage + "' \\",
-				"  -WebImage '" + webImage + "' \\",
+				"  -CoreImage '" + placeholderCoreImage + "' \\",
+				"  -WebImage '" + placeholderWebImage + "' \\",
 				"  -BackupDirectory D:\\Visto-backups",
 			}, "\n"),
-			Description: "同样只接受 @sha256 摘要；失败会自动恢复更新前的数据和镜像。",
+			Description: "镜像摘要同样从官方发布页取得，必须带 @sha256；失败会自动恢复更新前的数据和镜像。",
 		},
 	}
 }
 
-func buildWindowsServerUpdateCommands(
-	manifest *serverupdate.Manifest,
-) []systemUpdateCommand {
-	packageURL := artifactURL(manifest, "windows-server", "windows-amd64")
-	if packageURL == "" {
-		packageURL = placeholderPackageURL
-	}
-	fileName := packageFileName(packageURL, placeholderPackageFile)
+func buildWindowsServerUpdateCommands() []systemUpdateCommand {
 	return []systemUpdateCommand{
 		{
 			ID:          "windows-backup",
@@ -381,27 +384,38 @@ func buildWindowsServerUpdateCommands(
 		},
 		{
 			ID:       "windows-download",
-			Label:    "下载签名更新包与清单",
+			Label:    "从官方发布页下载更新包与校验文件",
 			Platform: updateCommandPlatformWindowsServer,
 			Command: strings.Join([]string{
-				"Invoke-WebRequest -Uri '" + packageURL + "' -OutFile '.\\" + fileName + "'",
-				"Invoke-WebRequest -Uri '" + placeholderUpdateSource + "/latest.json' -OutFile '.\\latest.json'",
-				"Invoke-WebRequest -Uri '" + placeholderUpdateSource + "/latest.json.sig' -OutFile '.\\latest.json.sig'",
+				"# 在浏览器打开官方发布页，把 <版本> 换成页面上的版本号：",
+				"# " + officialReleasePage,
+				"Invoke-WebRequest -Uri '" + officialReleasePage + "/download/v<版本>/" + placeholderWindowsPackage + "' -OutFile '.\\" + placeholderWindowsPackage + "'",
+				"Invoke-WebRequest -Uri '" + officialReleasePage + "/download/v<版本>/" + placeholderWindowsPackage + ".sha256' -OutFile '.\\" + placeholderWindowsPackage + ".sha256'",
 			}, "\n"),
-			Description: "三个文件必须来自同一次发布。离线环境请改用可移动介质复制，不要改动文件名或内容。",
+			Description: "两个文件必须来自同一次发布、同一个版本。离线环境请改用可移动介质复制，不要改动文件名或内容。",
+		},
+		{
+			ID:       "windows-verify",
+			Label:    "校验下载的包",
+			Platform: updateCommandPlatformWindowsServer,
+			Command: strings.Join([]string{
+				".\\bin\\visto-server.exe update verify-package \\",
+				"  --artifact '.\\" + placeholderWindowsPackage + "' \\",
+				"  --kind windows-server --platform windows-amd64 \\",
+				"  --sha256 '" + placeholderSHA256 + "'",
+			}, "\n"),
+			Description: "只证明下载未损坏、不是拿错了文件；免费版不再做签名校验，因此它不能证明来源可信。",
 		},
 		{
 			ID:       "windows-apply",
-			Label:    "校验并应用更新",
+			Label:    "备份、停服、应用更新",
 			Platform: updateCommandPlatformWindowsServer,
 			Command: strings.Join([]string{
-				"$env:VISTO_SERVER_UPDATE_PUBLIC_KEY = '" + placeholderPublicKey + "'",
 				".\\Update-VistoServer.ps1 \\",
-				"  -PackageArchive '.\\" + fileName + "' \\",
-				"  -ManifestFile '.\\latest.json' \\",
-				"  -ManifestSignatureFile '.\\latest.json.sig'",
+				"  -PackageArchive '.\\" + placeholderWindowsPackage + "' \\",
+				"  -Sha256 '" + placeholderSHA256 + "'",
 			}, "\n"),
-			Description: "脚本用已安装包内的 visto-server.exe 复验 Ed25519 签名、大小和 SHA-256，再备份、停服、替换、健康检查；失败自动回滚。",
+			Description: "脚本先备份数据、证明服务已停止，再切换版本、启动并等待健康检查；无法证明停服或健康检查失败时自动回滚。",
 		},
 		{
 			ID:       "windows-health",
@@ -416,72 +430,33 @@ func buildWindowsServerUpdateCommands(
 	}
 }
 
-const (
-	linuxServerArtifactKind = "linux-server"
-	macOSServerArtifactKind = "macos-server"
-)
-
 // unixServerProfile carries everything that differs between the Linux and macOS
 // native update paths. The release layout, the scripts and their verification
 // order are identical, so both hosts share one command builder.
 type unixServerProfile struct {
 	platform             string
 	prefix               string
-	artifactKind         string
-	artifactPlatform     string
-	urlPlaceholder       string
 	backupDirArg         string
 	serviceStatusCommand string
 }
 
-// nativeArtifactPlatform maps the running Core binary onto the manifest platform
-// key. Go's GOARCH already spells amd64 and arm64 the way the native update
-// scripts do, and the deployment host is the host Core runs on.
-func nativeArtifactPlatform(osName string) string {
-	return osName + "-" + runtime.GOARCH
+var linuxServerProfile = unixServerProfile{
+	platform:             updateCommandPlatformLinuxServer,
+	prefix:               linuxServerPrefixPath,
+	backupDirArg:         "/var/backups/visto",
+	serviceStatusCommand: "systemctl status visto.service --no-pager",
 }
 
-func buildLinuxServerUpdateCommands(manifest *serverupdate.Manifest) []systemUpdateCommand {
-	return buildUnixServerUpdateCommands(manifest, unixServerProfile{
-		platform:             updateCommandPlatformLinuxServer,
-		prefix:               linuxServerPrefixPath,
-		artifactKind:         linuxServerArtifactKind,
-		artifactPlatform:     nativeArtifactPlatform("linux"),
-		urlPlaceholder:       placeholderLinuxPackageURL,
-		backupDirArg:         "/var/backups/visto",
-		serviceStatusCommand: "systemctl status visto.service --no-pager",
-	})
+var macOSServerProfile = unixServerProfile{
+	platform:             updateCommandPlatformMacOSServer,
+	prefix:               macOSServerPrefixPath,
+	backupDirArg:         `"/Library/Application Support/Visto/backups"`,
+	serviceStatusCommand: "launchctl print system/com.visto.server",
 }
 
-func buildMacOSServerUpdateCommands(manifest *serverupdate.Manifest) []systemUpdateCommand {
-	return buildUnixServerUpdateCommands(manifest, unixServerProfile{
-		platform:             updateCommandPlatformMacOSServer,
-		prefix:               macOSServerPrefixPath,
-		artifactKind:         macOSServerArtifactKind,
-		artifactPlatform:     nativeArtifactPlatform("macos"),
-		urlPlaceholder:       placeholderMacOSPackageURL,
-		backupDirArg:         `"/Library/Application Support/Visto/backups"`,
-		serviceStatusCommand: "launchctl print system/com.visto.server",
-	})
-}
-
-func buildUnixServerUpdateCommands(
-	manifest *serverupdate.Manifest,
-	profile unixServerProfile,
-) []systemUpdateCommand {
+func buildUnixServerUpdateCommands(profile unixServerProfile) []systemUpdateCommand {
 	scripts := profile.prefix + "/current/scripts"
-	packageURL := artifactURL(manifest, profile.artifactKind, profile.artifactPlatform)
-	if packageURL == "" {
-		packageURL = profile.urlPlaceholder
-	}
-	// A package whose manifest and signature keep the default names lets the
-	// update script find all three from --package alone.
-	packageName := packageFileName(
-		packageURL,
-		"Visto-Server_<版本>_"+profile.artifactPlatform+".tar.gz",
-	)
-	stagedPackage := unixUpdateStageDir + "/" + packageName
-	stagedManifest := stagedPackage + ".manifest.json"
+	stagedPackage := unixUpdateStageDir + "/" + placeholderUnixPackage
 	return []systemUpdateCommand{
 		{
 			ID:          profile.platform + "-backup",
@@ -492,30 +467,42 @@ func buildUnixServerUpdateCommands(
 		},
 		{
 			ID:       profile.platform + "-download",
-			Label:    "下载签名更新包、清单与签名",
+			Label:    "从官方发布页下载更新包与校验文件",
 			Platform: profile.platform,
 			Command: strings.Join([]string{
+				"# 在浏览器打开官方发布页，把 <版本> 与 <平台> 换成页面上的实际值：",
+				"# " + officialReleasePage,
 				"mkdir -p " + unixUpdateStageDir,
-				"curl -fL '" + packageURL + "' -o '" + stagedPackage + "'",
-				"curl -fL '" + placeholderUpdateSource + "/latest.json' -o '" + stagedManifest + "'",
-				"curl -fL '" + placeholderUpdateSource + "/latest.json.sig' -o '" + stagedManifest + ".sig'",
+				"curl -fL '" + officialReleasePage + "/download/v<版本>/" + placeholderUnixPackage + "' -o '" + stagedPackage + "'",
+				"curl -fL '" + officialReleasePage + "/download/v<版本>/" + placeholderUnixPackage + ".sha256' -o '" + stagedPackage + ".sha256'",
 			}, "\n"),
-			Description: "三个文件必须来自同一次发布，包名要匹配本机架构（" + profile.artifactPlatform +
-				"）。离线环境用可移动介质把三个文件复制到同一目录，命令不变。",
-		},
-		{
-			ID:       profile.platform + "-apply",
-			Label:    "校验并应用更新",
-			Platform: profile.platform,
-			Command: strings.Join([]string{
-				"sudo env VISTO_SERVER_UPDATE_PUBLIC_KEY='" + placeholderPublicKey + "' \\",
-				"  " + scripts + "/update-visto-server.sh \\",
-				"  --package '" + stagedPackage + "'",
-			}, "\n"),
-			Description: "脚本用已安装的 bin/visto-server 复验 Ed25519 签名、SHA-256、大小和包内目录白名单，再备份数据、停服、把 current 切到新 release、启动并等待健康检查。不需要手工替换程序文件。",
+			Description: "两个文件必须来自同一次发布，包名要匹配本机架构。离线环境用可移动介质复制到同一目录，命令不变。",
 		},
 		{
 			ID:       profile.platform + "-verify",
+			Label:    "校验下载的包",
+			Platform: profile.platform,
+			Command: strings.Join([]string{
+				"sudo " + profile.prefix + "/current/bin/visto-server update verify-package \\",
+				"  --artifact '" + stagedPackage + "' \\",
+				"  --kind " + profile.platform + " --platform <平台> \\",
+				"  --sha256 '" + placeholderSHA256 + "'",
+			}, "\n"),
+			Description: "只证明下载未损坏、不是拿错了文件；免费版不再做签名校验，因此它不能证明来源可信。",
+		},
+		{
+			ID:       profile.platform + "-apply",
+			Label:    "备份、停服、应用更新",
+			Platform: profile.platform,
+			Command: strings.Join([]string{
+				"sudo " + scripts + "/update-visto-server.sh \\",
+				"  --package '" + stagedPackage + "' \\",
+				"  --sha256 '" + placeholderSHA256 + "'",
+			}, "\n"),
+			Description: "脚本先备份数据、证明服务已停止，再切换 current 到新 release、启动并等待健康检查；无法证明停服或健康检查失败时自动回滚。",
+		},
+		{
+			ID:       profile.platform + "-confirm",
 			Label:    "确认更新结果",
 			Platform: profile.platform,
 			Command: strings.Join([]string{
@@ -540,11 +527,7 @@ func buildUnixServerUpdateCommands(
 	}
 }
 
-func buildSourceUpdateCommands(manifest *serverupdate.Manifest) []systemUpdateCommand {
-	version := "v<版本>"
-	if manifest != nil && strings.TrimSpace(manifest.Version) != "" {
-		version = "v" + strings.TrimSpace(manifest.Version)
-	}
+func buildSourceUpdateCommands() []systemUpdateCommand {
 	return []systemUpdateCommand{
 		{
 			ID:          "source-backup",
@@ -558,11 +541,13 @@ func buildSourceUpdateCommands(manifest *serverupdate.Manifest) []systemUpdateCo
 			Label:    "切换到发布标签并重启",
 			Platform: updateCommandPlatformSource,
 			Command: strings.Join([]string{
+				"# 发布标签以官方发布页为准，把 <版本> 换成页面上的版本号：",
+				"# " + officialReleasePage,
 				"git fetch --tags --force",
-				"git checkout " + version,
+				"git checkout v<版本>",
 				"# 按部署方式重启 Core，例如 systemd 或进程管理器",
 			}, "\n"),
-			Description: "只签出官方发布标签，不要直接跟随开发分支。",
+			Description: "只签出官方发布仓库的发布标签，不要直接跟随开发分支。",
 		},
 	}
 }
@@ -571,11 +556,11 @@ func buildOfflineUpdateGuidance() systemUpdateOffline {
 	return systemUpdateOffline{
 		Summary: "离线或受控网络环境不从本页面下载任何文件，管理员手工取得更新包后回到部署主机执行同样的命令。",
 		Steps: []string{
-			"在可联网的机器打开官方 Releases 页面，下载同一版本的更新包、latest.json 与 latest.json.sig。",
-			"用可移动介质或内部文件服务把三个文件复制到部署主机，保持文件名不变。",
-			"核对更新包的 SHA-256 与清单记录一致，再执行本页“校验并应用更新”命令。",
+			"在可联网的机器打开官方发布页，下载与目标版本对应的更新包和同名 .sha256 文件。",
+			"用可移动介质或内部文件服务把两个文件复制到部署主机，保持文件名不变。",
+			"用 update verify-package 核对包的大小与 SHA-256 与 .sha256 文件一致，再执行本页的更新命令。",
 			"Docker 离线环境改用内部镜像仓库时，镜像引用必须保持同一 @sha256 摘要。",
-			"不要因为离线就跳过签名校验，也不要使用 latest 之类可变标签。",
+			"免费版不对更新包做签名校验，因此更要坚持只从官方发布页取包，不要使用 latest 之类可变标签。",
 		},
 	}
 }
@@ -584,50 +569,9 @@ func buildUpdateSecurityNotes() []string {
 	return []string{
 		"本页面只显示版本信息与命令，不会下载更新包、不会安装更新、也不会在服务器上执行任何命令。",
 		"更新检查只读取公开的版本清单，不上传项目名、媒体路径、用户列表、存储凭据或诊断数据。",
-		"只信任 HTTPS 官方源和 Ed25519 签名清单；签名或 SHA-256 不通过时更新脚本必须拒绝继续。",
+		"免费版更新通道不签名，清单只提供版本号，不含下载地址；更新包一律从官方发布页取得。",
+		"更新包只做完整性校验（大小与 SHA-256）。它不能证明来源可信，请始终从官方发布页下载。",
 		"更新前必须在部署主机创建备份，并把备份复制到另一块磁盘或可信位置后再继续。",
-		"Docker 更新使用发布清单记录的固定 digest，不要依赖 latest 等可变标签。",
 		"更新脚本失败会保留上一个可启动版本、数据备份和诊断证据，不要手工删除 recovery 目录。",
 	}
-}
-
-func artifactImage(manifest *serverupdate.Manifest, kind string) string {
-	if manifest == nil {
-		return ""
-	}
-	for _, artifact := range manifest.Artifacts {
-		if artifact.Kind != kind {
-			continue
-		}
-		if image := strings.TrimSpace(artifact.Image); image != "" {
-			return image
-		}
-	}
-	return ""
-}
-
-func artifactURL(manifest *serverupdate.Manifest, kind, platform string) string {
-	if manifest == nil {
-		return ""
-	}
-	for _, artifact := range manifest.Artifacts {
-		if artifact.Kind != kind || artifact.Platform != platform {
-			continue
-		}
-		if url := strings.TrimSpace(artifact.URL); url != "" {
-			return url
-		}
-	}
-	return ""
-}
-
-func packageFileName(packageURL, fallback string) string {
-	if packageURL == "" || strings.HasPrefix(packageURL, "<") {
-		return fallback
-	}
-	index := strings.LastIndex(packageURL, "/")
-	if index < 0 || index == len(packageURL)-1 {
-		return fallback
-	}
-	return packageURL[index+1:]
 }

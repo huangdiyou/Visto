@@ -454,7 +454,7 @@ func (repository *SQLiteRepository) Fail(
 	if status == StatusCancelRequested {
 		attemptStatus = "cancelled"
 		nextStatus = StatusCancelled
-	} else if attemptCount < maxAttempts {
+	} else if attemptCount < maxAttempts && !jobError.NonRetryable {
 		nextStatus = StatusQueued
 		completedAt = nil
 	}

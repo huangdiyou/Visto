@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -205,320 +204,208 @@ func TestSystemUpdateStatusReportsUnavailableSourceAndCoversErrorDetail(t *testi
 	}
 }
 
+// testManifest is the free tier version announcement: four fields, no artifacts
+// and no download location.
 func testManifest() serverupdate.Manifest {
 	return serverupdate.Manifest{
-		SchemaVersion:           1,
-		Channel:                 "stable",
-		Version:                 "1.0.1",
-		PublishedAt:             time.Date(2026, 9, 2, 8, 0, 0, 0, time.UTC),
-		MinimumSupportedVersion: "1.0.0",
-		ReleaseNotes:            []string{"Fixed an update rollback bug", "Improved diagnostics"},
-		SigningKeyID:            "release-2026-01",
-		Artifacts: []serverupdate.Artifact{
-			{
-				Kind:      "windows-server",
-				Platform:  "windows-amd64",
-				URL:       "https://github.com/huangdiyou/Visto/releases/download/v1.0.1/Visto-Server_1.0.1_windows-x64.zip",
-				SHA256:    strings.Repeat("a", 64),
-				SizeBytes: 2048,
-			},
-			{
-				Kind:      dockerCoreImageKind,
-				Platform:  "linux-amd64",
-				Image:     "ghcr.io/visto/core@sha256:" + strings.Repeat("b", 64),
-				SHA256:    strings.Repeat("c", 64),
-				SizeBytes: 4096,
-			},
-			{
-				Kind:      dockerWebImageKind,
-				Platform:  "linux-amd64",
-				Image:     "ghcr.io/visto/web@sha256:" + strings.Repeat("d", 64),
-				SHA256:    strings.Repeat("e", 64),
-				SizeBytes: 8192,
-			},
-			{
-				Kind:      linuxServerArtifactKind,
-				Platform:  "linux-amd64",
-				URL:       "https://github.com/huangdiyou/Visto/releases/download/v1.0.1/Visto-Server_1.0.1_linux-amd64.tar.gz",
-				SHA256:    strings.Repeat("f", 64),
-				SizeBytes: 16384,
-			},
-			{
-				Kind:      linuxServerArtifactKind,
-				Platform:  "linux-arm64",
-				URL:       "https://github.com/huangdiyou/Visto/releases/download/v1.0.1/Visto-Server_1.0.1_linux-arm64.tar.gz",
-				SHA256:    strings.Repeat("1", 64),
-				SizeBytes: 16384,
-			},
-			{
-				Kind:      macOSServerArtifactKind,
-				Platform:  "macos-amd64",
-				URL:       "https://github.com/huangdiyou/Visto/releases/download/v1.0.1/Visto-Server_1.0.1_macos-amd64.tar.gz",
-				SHA256:    strings.Repeat("2", 64),
-				SizeBytes: 16384,
-			},
-			{
-				Kind:      macOSServerArtifactKind,
-				Platform:  "macos-arm64",
-				URL:       "https://github.com/huangdiyou/Visto/releases/download/v1.0.1/Visto-Server_1.0.1_macos-arm64.tar.gz",
-				SHA256:    strings.Repeat("3", 64),
-				SizeBytes: 16384,
-			},
-		},
+		SchemaVersion: 1,
+		Channel:       "stable",
+		Version:       "1.0.1",
+		PublishedAt:   time.Date(2026, 9, 2, 8, 0, 0, 0, time.UTC),
 	}
 }
 
-// TestUpdateStatusResponseUsesSignedManifestArtifacts verifies the mapping from
-// a verified manifest to what the Owner sees. The manifest itself is only
-// trusted after serverupdate.Check verifies its signature.
-func TestUpdateStatusResponseUsesSignedManifestArtifacts(t *testing.T) {
-	h := &handler{
-		version:        "1.0.0",
-		deploymentKind: serverupdate.DeploymentDocker,
-	}
-	state := updateCheckState{
+func manifestPointer(manifest serverupdate.Manifest) *serverupdate.Manifest {
+	return &manifest
+}
+
+func manifestState() updateCheckState {
+	return updateCheckState{
 		status:    updateStatusAvailable,
 		checkedAt: time.Now().UTC(),
 		message:   "ok",
 		source:    "https://updates.example.com/server/stable",
 		manifest:  manifestPointer(testManifest()),
 	}
-	status := h.toSystemUpdateStatusResponse(state)
+}
+
+// The Owner page receives the announcement only. There is no artifact list and
+// no download location, so nothing a source publishes can redirect an operator.
+func TestUpdateStatusResponseExposesOnlyTheVersionAnnouncement(t *testing.T) {
+	h := &handler{version: "1.0.0", deploymentKind: serverupdate.DeploymentMacOSServer}
+	status := h.toSystemUpdateStatusResponse(manifestState())
 
 	if status.Latest == nil {
-		t.Fatal("latest release must be present for a verified manifest")
+		t.Fatal("latest release must be present for a parsed manifest")
 	}
-	if status.Latest.Version != "1.0.1" || status.Latest.UpToDate {
+	if status.Latest.Version != "1.0.1" || status.Latest.State != updateStateUpdateAvailable {
 		t.Fatalf("unexpected latest release: %#v", status.Latest)
 	}
-	if len(status.Latest.Artifacts) != 7 || status.Latest.SigningKeyID != "release-2026-01" {
-		t.Fatalf("unexpected artifacts: %#v", status.Latest.Artifacts)
+	if status.Latest.PublishedAt != "2026-09-02T08:00:00Z" {
+		t.Fatalf("publishedAt = %q", status.Latest.PublishedAt)
 	}
 
-	var update string
-	for _, command := range status.Commands {
-		if command.ID == "docker-update" {
-			update = command.Command
+	// Only the announcement object is checked here: command text legitimately
+	// mentions SHA-256, but the release object must carry nothing but the
+	// version, its publication time, the answering source and the verdict.
+	encoded, err := json.Marshal(status.Latest)
+	if err != nil {
+		t.Fatalf("marshal latest release: %v", err)
+	}
+	serialized := string(encoded)
+	for _, forbidden := range []string{
+		"artifacts", `"url"`, `"image"`, "sha256", "signingKeyId",
+		"releaseNotes", "minimumSupportedVersion",
+	} {
+		if strings.Contains(serialized, forbidden) {
+			t.Fatalf("latest release must not carry %q: %s", forbidden, serialized)
 		}
-	}
-	if update == "" {
-		t.Fatalf("docker update command missing: %#v", status.Commands)
-	}
-	if !strings.Contains(update, "ghcr.io/visto/core@sha256:"+strings.Repeat("b", 64)) ||
-		!strings.Contains(update, "ghcr.io/visto/web@sha256:"+strings.Repeat("d", 64)) {
-		t.Fatalf("docker update command must carry the signed digests: %s", update)
-	}
-	if strings.Contains(update, "latest") {
-		t.Fatalf("docker update command must not use mutable tags: %s", update)
-	}
-	if len(status.Sources) != 0 {
-		t.Fatalf("sources come from config, not from the caller: %#v", status.Sources)
 	}
 }
 
-func TestUpdateStatusResponseUsesWindowsPackageURL(t *testing.T) {
-	h := &handler{
-		version:        "1.0.0",
-		deploymentKind: serverupdate.DeploymentWindowsServer,
+// A source that still publishes artifact and free-text fields must not be able
+// to reach the page: the fields are dropped when the manifest is decoded, and
+// nothing derived from them can appear in a command.
+func TestUpdateStatusIgnoresManifestFieldsThatCouldSteerADownload(t *testing.T) {
+	raw := `{"schemaVersion":1,"channel":"stable","version":"1.0.1",` +
+		`"publishedAt":"2026-09-02T00:00:00Z",` +
+		`"artifacts":[{"kind":"macos-server","platform":"macos-arm64",` +
+		`"url":"https://evil.example/Visto-Server.tar.gz",` +
+		`"sha256":"` + strings.Repeat("a", 64) + `","sizeBytes":1}],` +
+		`"releaseNotes":["download from evil.example"]}`
+	var manifest serverupdate.Manifest
+	if err := json.Unmarshal([]byte(raw), &manifest); err != nil {
+		t.Fatalf("decode manifest: %v", err)
 	}
+	h := &handler{version: "1.0.0", deploymentKind: serverupdate.DeploymentMacOSServer}
 	status := h.toSystemUpdateStatusResponse(updateCheckState{
 		status:    updateStatusAvailable,
 		checkedAt: time.Now().UTC(),
-		manifest:  manifestPointer(testManifest()),
+		message:   "ok",
+		source:    "https://updates.example.com/server/stable",
+		manifest:  manifestPointer(manifest),
 	})
 
-	var download, apply string
-	for _, command := range status.Commands {
-		switch command.ID {
-		case "windows-download":
-			download = command.Command
-		case "windows-apply":
-			apply = command.Command
-		}
+	encoded, err := json.Marshal(status)
+	if err != nil {
+		t.Fatalf("marshal status: %v", err)
 	}
-	if !strings.Contains(download, "Visto-Server_1.0.1_windows-x64.zip") {
-		t.Fatalf("download command must use the signed artifact URL: %s", download)
-	}
-	if !strings.Contains(apply, "Update-VistoServer.ps1") ||
-		!strings.Contains(apply, "latest.json.sig") {
-		t.Fatalf("apply command must verify the signed manifest: %s", apply)
-	}
-	if !strings.Contains(apply, "Visto-Server_1.0.1_windows-x64.zip") {
-		t.Fatalf("apply command must target the downloaded package: %s", apply)
+	if strings.Contains(string(encoded), "evil.example") {
+		t.Fatalf("manifest content reached the response: %s", encoded)
 	}
 	for _, command := range status.Commands {
-		if command.Platform != updateCommandPlatformWindowsServer {
-			t.Fatalf("unexpected command platform %q for a Windows deployment", command.Platform)
+		if strings.Contains(command.Command, "evil.example") {
+			t.Fatalf("manifest content reached a command: %#v", command)
 		}
 	}
 }
 
-// TestUpdateStatusResponseUsesNativeServerPackage covers the Linux and macOS
-// native hosts. The page must point at the update script that is already
-// installed for the architecture Core runs on, so an administrator never has to
-// replace program files by hand.
-func TestUpdateStatusResponseUsesNativeServerPackage(t *testing.T) {
-	cases := []struct {
-		deployment  string
-		platform    string
-		prefix      string
-		packageName string
-	}{
-		{
-			deployment:  serverupdate.DeploymentLinuxServer,
-			platform:    updateCommandPlatformLinuxServer,
-			prefix:      linuxServerPrefixPath,
-			packageName: "Visto-Server_1.0.1_linux-" + runtime.GOARCH + ".tar.gz",
-		},
-		{
-			deployment:  serverupdate.DeploymentMacOSServer,
-			platform:    updateCommandPlatformMacOSServer,
-			prefix:      macOSServerPrefixPath,
-			packageName: "Visto-Server_1.0.1_macos-" + runtime.GOARCH + ".tar.gz",
-		},
-	}
-	for _, testCase := range cases {
-		t.Run(testCase.deployment, func(t *testing.T) {
-			h := &handler{version: "1.0.0", deploymentKind: testCase.deployment}
-			status := h.toSystemUpdateStatusResponse(updateCheckState{
-				status:    updateStatusAvailable,
-				checkedAt: time.Now().UTC(),
-				manifest:  manifestPointer(testManifest()),
-			})
-			if status.Deployment != testCase.deployment {
-				t.Fatalf("deployment = %q, want %q", status.Deployment, testCase.deployment)
+// Every generated command must point at the compiled-in release page and never
+// at a location taken from a manifest.
+func TestUpdateStatusCommandsPointOnlyAtTheOfficialReleasePage(t *testing.T) {
+	for _, deployment := range []string{
+		serverupdate.DeploymentDocker,
+		serverupdate.DeploymentWindowsServer,
+		serverupdate.DeploymentLinuxServer,
+		serverupdate.DeploymentMacOSServer,
+		serverupdate.DeploymentSource,
+	} {
+		t.Run(deployment, func(t *testing.T) {
+			h := &handler{version: "1.0.0", deploymentKind: deployment}
+			status := h.toSystemUpdateStatusResponse(manifestState())
+			if len(status.Commands) == 0 {
+				t.Fatalf("%s must keep its update guidance", deployment)
 			}
-			if status.Policy.DownloadsPackage || status.Policy.ExecutesHostCommands ||
-				status.Policy.WebInstallSupported {
-				t.Fatalf("the update page must stay read-only: %#v", status.Policy)
-			}
-
-			commands := map[string]string{}
+			namesOfficialPage := false
 			for _, command := range status.Commands {
-				if command.Platform != testCase.platform {
-					t.Fatalf("command %q uses platform %q, want %q",
-						command.ID, command.Platform, testCase.platform)
+				if strings.Contains(command.Command, officialReleasePage) {
+					namesOfficialPage = true
 				}
-				commands[command.ID] = command.Command
-			}
-			for _, suffix := range []string{"-backup", "-download", "-apply", "-verify", "-rollback"} {
-				if commands[testCase.platform+suffix] == "" {
-					t.Fatalf("missing %q command: %#v", testCase.platform+suffix, status.Commands)
+				if strings.Contains(command.Command, "http://") {
+					t.Fatalf("command %q uses plain HTTP: %#v", command.ID, command)
 				}
-			}
-
-			download := commands[testCase.platform+"-download"]
-			staged := unixUpdateStageDir + "/" + testCase.packageName
-			// latest.json and latest.json.sig keep the default names next to the
-			// package so the update script can find all three from --package.
-			for _, want := range []string{testCase.packageName, staged + ".manifest.json.sig"} {
-				if !strings.Contains(download, want) {
-					t.Fatalf("download command must contain %q: %s", want, download)
+				// Any HTTPS location must be the official release page; a
+				// manifest-derived or invented host is a failure.
+				if strings.Contains(command.Command, "https://") &&
+					!strings.Contains(command.Command, officialReleasePage) {
+					t.Fatalf("command %q carries a foreign location: %#v", command.ID, command)
 				}
 			}
-
-			apply := commands[testCase.platform+"-apply"]
-			for _, want := range []string{
-				testCase.prefix + "/current/scripts/update-visto-server.sh",
-				"VISTO_SERVER_UPDATE_PUBLIC_KEY='" + placeholderPublicKey + "'",
-				"--package '" + staged + "'",
-			} {
-				if !strings.Contains(apply, want) {
-					t.Fatalf("apply command must contain %q: %s", want, apply)
-				}
-			}
-
-			rollback := commands[testCase.platform+"-rollback"]
-			for _, want := range []string{
-				testCase.prefix + "/current/scripts/rollback-visto-server.sh",
-				"--to-version " + placeholderPreviousVersion,
-				"--confirm-rollback",
-			} {
-				if !strings.Contains(rollback, want) {
-					t.Fatalf("rollback command must contain %q: %s", want, rollback)
-				}
-			}
-
-			verify := commands[testCase.platform+"-verify"]
-			for _, want := range []string{
-				"readlink " + testCase.prefix + "/current",
-				testCase.prefix + "/current/bin/visto-server doctor",
-			} {
-				if !strings.Contains(verify, want) {
-					t.Fatalf("verify command must contain %q: %s", want, verify)
-				}
+			if !namesOfficialPage {
+				t.Fatalf("%s must name the official release page", deployment)
 			}
 		})
 	}
 }
 
-// TestUpdateStatusResponseFallsBackToNativePlaceholders keeps the native hosts
-// usable before a check succeeds: the scripts and their flags are known without
-// a manifest, only the package address is not.
-func TestUpdateStatusResponseFallsBackToNativePlaceholders(t *testing.T) {
-	h := &handler{version: "1.0.0", deploymentKind: serverupdate.DeploymentLinuxServer}
-	status := h.toSystemUpdateStatusResponse(updateCheckState{status: updateStatusNotConfigured})
-	if status.Latest != nil {
-		t.Fatalf("latest must be nil without a manifest: %#v", status.Latest)
+// Downgrade guard coverage, docs/FREE_TIER_BOUNDARY_DESIGN.md D1.
+func TestUpdateStatusWithholdsDowngradePrompts(t *testing.T) {
+	cases := []struct {
+		name             string
+		currentVersion   string
+		publishedVersion string
+		wantState        string
+	}{
+		{"published version is newer", "1.0.0", "1.0.1", updateStateUpdateAvailable},
+		{"published version matches", "1.0.1", "1.0.1", updateStateUpToDate},
+		{"published version is older", "1.0.2", "1.0.1", updateStateUpToDate},
+		{"installed build is ahead of the published release", "1.0.3-integration.3", "1.0.0", updateStateUpToDate},
+		{"published pre-release is behind a stable install", "1.0.0", "1.0.0-rc.1", updateStateUpToDate},
+		{"published version is malformed", "1.0.0", "not-a-version", updateStateUnknown},
+		// A development build has no comparable version, so the page must not
+		// claim the instance is current either.
+		{"running version is malformed", "development", "1.0.1", updateStateUnknown},
 	}
-	var download, apply string
-	for _, command := range status.Commands {
-		switch command.ID {
-		case updateCommandPlatformLinuxServer + "-download":
-			download = command.Command
-		case updateCommandPlatformLinuxServer + "-apply":
-			apply = command.Command
-		}
-	}
-	if !strings.Contains(download, placeholderLinuxPackageURL) {
-		t.Fatalf("download command must expose an explicit placeholder: %s", download)
-	}
-	wantPackage := unixUpdateStageDir + "/Visto-Server_<版本>_linux-" + runtime.GOARCH + ".tar.gz"
-	if !strings.Contains(apply, "--package '"+wantPackage+"'") {
-		t.Fatalf("apply command must stay copyable with the placeholder package: %s", apply)
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			h := &handler{
+				version:        testCase.currentVersion,
+				deploymentKind: serverupdate.DeploymentDocker,
+			}
+			manifest := testManifest()
+			manifest.Version = testCase.publishedVersion
+			status := h.toSystemUpdateStatusResponse(updateCheckState{
+				status:    updateStatusAvailable,
+				checkedAt: time.Now().UTC(),
+				message:   "ok",
+				source:    "https://updates.example.com/server/stable",
+				manifest:  manifestPointer(manifest),
+			})
+
+			if status.Latest == nil {
+				t.Fatal("latest release must be present for a parsed manifest")
+			}
+			if status.Latest.State != testCase.wantState {
+				t.Fatalf("State = %q, want %q", status.Latest.State, testCase.wantState)
+			}
+			if status.Latest.State == updateStateUnknown && status.Latest.Version == "" {
+				t.Fatal("an unknown verdict must still report the published version verbatim")
+			}
+			// An instance that is not strictly behind must not be handed an
+			// actionable update command: the page would otherwise claim
+			// "已是最新" while still prompting an update to an older version.
+			if testCase.wantState != updateStateUpdateAvailable && len(status.Commands) != 0 {
+				t.Fatalf("downgrade prompt was surfaced: %#v", status.Commands)
+			}
+			if testCase.wantState == updateStateUpdateAvailable && len(status.Commands) == 0 {
+				t.Fatal("a strictly newer release must keep its update commands")
+			}
+		})
 	}
 }
 
-// TestUpdateStatusResponseFallsBackToPlaceholders keeps the page usable before
-// a check succeeds: commands stay copyable but visibly require the values from
-// the public release page.
-func TestUpdateStatusResponseFallsBackToPlaceholders(t *testing.T) {
-	h := &handler{
-		version:        "1.0.0",
-		deploymentKind: serverupdate.DeploymentDocker,
-	}
+// A deployment that never obtained a manifest keeps its generic guidance: no
+// version claim was made, so there is nothing to withhold.
+func TestUpdateStatusKeepsGuidanceWithoutAManifest(t *testing.T) {
+	h := &handler{version: "1.0.0", deploymentKind: serverupdate.DeploymentMacOSServer}
 	status := h.toSystemUpdateStatusResponse(updateCheckState{
-		status:    updateStatusNotConfigured,
-		checkedAt: time.Now().UTC(),
+		status:  updateStatusNotConfigured,
+		message: "no source",
 	})
 	if status.Latest != nil {
-		t.Fatalf("latest must be nil without a manifest: %#v", status.Latest)
+		t.Fatalf("latest must be nil: %#v", status.Latest)
 	}
-	for _, command := range status.Commands {
-		if command.ID != "docker-update" {
-			continue
-		}
-		if !strings.Contains(command.Command, placeholderCoreImage) ||
-			!strings.Contains(command.Command, placeholderWebImage) {
-			t.Fatalf("update command must expose explicit placeholders: %s", command.Command)
-		}
+	if len(status.Commands) == 0 {
+		t.Fatal("offline guidance must stay available without a manifest")
 	}
-}
-
-func TestPackageFileNameDerivesNameFromURL(t *testing.T) {
-	cases := map[string]string{
-		"https://example.test/a/Visto-Server_1.0.1_windows-x64.zip": "Visto-Server_1.0.1_windows-x64.zip",
-		"https://example.test/a/":                                   "fallback.zip",
-		"":                                                          "fallback.zip",
-		"<placeholder>":                                             "fallback.zip",
-	}
-	for input, want := range cases {
-		if got := packageFileName(input, "fallback.zip"); got != want {
-			t.Fatalf("packageFileName(%q) = %q, want %q", input, got, want)
-		}
-	}
-}
-
-func manifestPointer(manifest serverupdate.Manifest) *serverupdate.Manifest {
-	return &manifest
 }

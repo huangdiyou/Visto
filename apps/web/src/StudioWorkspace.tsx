@@ -1108,6 +1108,7 @@ function ProjectSurface({
         {section === "media" ? (
           <Suspense fallback={<StudioLoading label="正在加载项目媒体" />}>
             <MediaWorkspace
+              isOwner={session.role === "owner"}
               project={project}
               initialAssetId={initialAssetId}
               onCreateReview={onCreateReview}

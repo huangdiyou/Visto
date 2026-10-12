@@ -122,6 +122,9 @@ func (service *Service) ProbeStorageObject(
 		if metadata.ErrorMessage != nil {
 			message = *metadata.ErrorMessage
 		}
+		if metadata.ErrorCode != nil && *metadata.ErrorCode == "probe.unavailable" {
+			return metadata, codedProbeJobError{code: "probe.unavailable", err: ErrProbeUnavailable}
+		}
 		return metadata, fmt.Errorf("%w: %s", ErrProbeFailed, message)
 	}
 	return metadata, nil

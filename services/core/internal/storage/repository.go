@@ -7,16 +7,19 @@ import (
 )
 
 var (
-	ErrRootNotFound           = errors.New("authorized root not found")
-	ErrObjectNotFound         = errors.New("storage object not found")
-	ErrPathInvalid            = errors.New("relative path is invalid")
-	ErrPathEscapesRoot        = errors.New("path escapes authorized root")
-	ErrPathChanged            = errors.New("path changed while opening")
-	ErrNotRegularFile         = errors.New("path is not a regular file")
-	ErrRangeInvalid           = errors.New("byte range is invalid")
-	ErrRootUnavailable        = errors.New("authorized root is unavailable")
-	ErrRevisionConflict       = errors.New("authorized root revision conflict")
-	ErrScanLimitExceeded      = errors.New("directory scan limit exceeded")
+	ErrRootNotFound                = errors.New("authorized root not found")
+	ErrObjectNotFound              = errors.New("storage object not found")
+	ErrPathInvalid                 = errors.New("relative path is invalid")
+	ErrPathEscapesRoot             = errors.New("path escapes authorized root")
+	ErrPathChanged                 = errors.New("path changed while opening")
+	ErrNotRegularFile              = errors.New("path is not a regular file")
+	ErrRangeInvalid                = errors.New("byte range is invalid")
+	ErrRootUnavailable             = errors.New("authorized root is unavailable")
+	ErrRevisionConflict            = errors.New("authorized root revision conflict")
+	ErrScanLimitExceeded           = errors.New("directory scan limit exceeded")
+	ErrProjectArchiveLimitExceeded = errors.New(
+		"project archive object limit exceeded",
+	)
 	ErrInvalidRootInput       = errors.New("authorized root input is invalid")
 	ErrProviderUnsupported    = errors.New("storage provider is unsupported")
 	ErrProviderNotFound       = errors.New("storage provider not found")
@@ -39,6 +42,11 @@ var (
 // hostile directory or remote provider cannot force Core to materialise an
 // unbounded number of entries (SAR-F63).
 const maxDirectoryListingEntries = 50000
+
+// A project archive request creates one durable copy task and one queue job per
+// object. Bound a single request before task creation so a large or hostile
+// project cannot materialise an unbounded plan or flood the job queue.
+const maxProjectArchiveObjects = 5000
 
 type rootRecord struct {
 	ID                string

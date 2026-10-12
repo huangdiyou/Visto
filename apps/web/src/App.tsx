@@ -1,7 +1,6 @@
 import { lazy, Suspense, type FormEvent, useEffect, useState } from "react";
 import type {
   SessionInfo,
-  SetupInput,
   SetupStatus,
   SystemInfo,
 } from "@review-studio/contracts";
@@ -14,11 +13,13 @@ import {
   logout,
 } from "./api/identity";
 import { ApiError } from "./api/client";
+import { MediaRuntimeCard } from "./MediaRuntimeCard";
 import { getSystemInfo } from "./api/system";
 import { formatRuntimeLabel } from "./lib/format";
 import {
   browserLocale,
   browserTimezone,
+  buildSetupInput,
   type SetupDraft,
   validateSetupDraft,
 } from "./lib/setup";
@@ -210,7 +211,10 @@ function SetupScreen({
   const [error, setError] = useState<string | null>(null);
   const [hostToken, setHostToken] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
+  // D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2.2: the documented default is
+  // enabled, and the consequence is stated on the same screen rather than
+  // folded into a help link.
+  const [allowWebHostPaths, setAllowWebHostPaths] = useState(true);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const validationError = validateSetupDraft(draft);
@@ -222,13 +226,12 @@ function SetupScreen({
     setSubmitting(true);
     setError(null);
 
-    const input: SetupInput = {
-      workspaceName: draft.workspaceName.trim(),
-      ownerName: draft.ownerName.trim(),
-      password: draft.password,
-      locale: browserLocale(),
-      timezone: browserTimezone(),
-    };
+    const input = buildSetupInput(
+      draft,
+      allowWebHostPaths,
+      browserLocale(),
+      browserTimezone(),
+    );
 
     try {
       if (setup.hostClaimRequired) {
@@ -252,6 +255,11 @@ function SetupScreen({
           <h1>先建立你的本地工作空间</h1>
           <p>这一步只在本机创建数据库和 Owner。媒体文件不会被上传或移动。</p>
           <RuntimePill system={system} />
+          <MediaRuntimeCard
+            system={system}
+            setup
+            english={browserLocale() === "en-US"}
+          />
         </div>
 
         <form className="setup-form" onSubmit={submit}>
@@ -310,6 +318,26 @@ function SetupScreen({
               }));
             }}
           />
+
+          <div className="team-registration-controls owner-network-controls setup-host-access">
+            <label>
+              <input
+                type="checkbox"
+                checked={allowWebHostPaths}
+                onChange={(event) => setAllowWebHostPaths(event.target.checked)}
+              />
+              <span>
+                <strong>允许 Owner 在网页端添加本机目录作为存储位置</strong>
+                <small>
+                  开启后，任何能登录 Owner
+                  的账号都能读写本机上的任意目录。仅当你独占管理这台机器时才建议开启。
+                </small>
+              </span>
+            </label>
+          </div>
+          <p className="form-note">
+            这个开关只在首次设置时询问一次，之后不能在网页上修改；如需变更，请在主机上编辑配置文件。
+          </p>
 
           {error ? (
             <p className="form-error" role="alert">

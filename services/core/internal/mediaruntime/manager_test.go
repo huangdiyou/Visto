@@ -181,6 +181,32 @@ func TestFailuresKeepPreviousSelection(t *testing.T) {
 		})
 	}
 }
+
+// The Visto Pages runtime channel is a supported payload shape, so a signed
+// manifest pointing at it has to verify rather than be rejected as untrusted.
+func TestManifestAcceptsVistoPagesPayload(t *testing.T) {
+	_, body, _, _ := fixture(t, "ffmpeg-1")
+	p, _ := delivery.Current()
+	key, priv, _ := ed25519.GenerateKey(rand.Reader)
+	var m map[string]any
+	if err := json.Unmarshal(body, &m); err != nil {
+		t.Fatal(err)
+	}
+	m["sourceBundleSha256"] = strings.Repeat("a", 64)
+	m["url"] = "https://visto-server-updates.pages.dev/media-runtime/" + p.ID + "-v1/runtime.tar.xz"
+	encoded, _ := json.Marshal(m)
+	sig := []byte(base64.StdEncoding.EncodeToString(ed25519.Sign(priv, encoded)))
+	manifest, err := VerifyManifest(encoded, sig, base64.StdEncoding.EncodeToString(key), p.ID, "1.0.0")
+	if err != nil {
+		t.Fatalf("pages payload rejected: %v", err)
+	}
+	if manifest.SourceBundleSHA256 != strings.Repeat("a", 64) {
+		t.Fatal("source archive digest lost")
+	}
+	if manifest.URL != m["url"] {
+		t.Fatalf("URL = %q, want %q", manifest.URL, m["url"])
+	}
+}
 func TestManifestRejectsUntrustedPolicy(t *testing.T) {
 	_, body, _, _ := fixture(t, "ffmpeg-1")
 	p, _ := delivery.Current()
@@ -189,10 +215,20 @@ func TestManifestRejectsUntrustedPolicy(t *testing.T) {
 		name   string
 		mutate func(map[string]any)
 	}{
+		{"invalid source digest", func(m map[string]any) { m["sourceBundleSha256"] = "invalid" }},
 		{"unknown field", func(m map[string]any) { m["command"] = "execute" }},
 		{"wrong platform", func(m map[string]any) { m["platform"] = "other" }},
 		{"gpl", func(m map[string]any) { m["license"] = "GPL-3.0" }},
 		{"rolling URL", func(m map[string]any) { m["url"] = "https://github.com/a/b/releases/download/latest/runtime.zip" }},
+		{"rolling Pages version", func(m map[string]any) {
+			m["url"] = "https://visto-server-updates.pages.dev/media-runtime/latest/runtime.tar.xz"
+		}},
+		{"Pages traversal", func(m map[string]any) {
+			m["url"] = "https://visto-server-updates.pages.dev/media-runtime/../secret/runtime.tar.xz"
+		}},
+		{"Pages wrong root", func(m map[string]any) {
+			m["url"] = "https://visto-server-updates.pages.dev/other/v1/runtime.tar.xz"
+		}},
 		{"private URL", func(m map[string]any) { m["url"] = "https://127.0.0.1/runtime.zip" }},
 		{"large", func(m map[string]any) { m["size"] = MaxArchiveBytes + 1 }},
 		{"newer Server", func(m map[string]any) { m["minimumServerVersion"] = "2.0.0" }},

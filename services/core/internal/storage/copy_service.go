@@ -110,6 +110,9 @@ func (service *Service) CreateProjectArchiveTasks(
 	if err != nil || plan.TargetRootID == "" {
 		return nil, err
 	}
+	if err := projectArchivePlanLimitError(len(plan.Objects)); err != nil {
+		return nil, err
+	}
 	tasks := make([]CopyTask, 0, len(plan.Objects))
 	for _, object := range plan.Objects {
 		if object.AuthorizedRootID == plan.TargetRootID {
@@ -133,6 +136,13 @@ func (service *Service) CreateProjectArchiveTasks(
 		tasks = append(tasks, task)
 	}
 	return tasks, nil
+}
+
+func projectArchivePlanLimitError(objectCount int) error {
+	if objectCount > maxProjectArchiveObjects {
+		return ErrProjectArchiveLimitExceeded
+	}
+	return nil
 }
 
 func (service *Service) copySourceObject(

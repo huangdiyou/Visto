@@ -1,0 +1,170 @@
+[
+  {
+    "module": "github.com/dustin/go-humanize",
+    "version": "v1.0.1",
+    "license": "MIT",
+    "licenseSha256": "a973b4498c13eb74baa2a8e5c351426a6826f2fcdd909916dbe53ee2e755fd71"
+  },
+  {
+    "module": "github.com/google/pprof",
+    "version": "v0.0.0-20250317173921-a4b03ec1a45e",
+    "license": "Apache-2.0",
+    "licenseSha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "module": "github.com/google/uuid",
+    "version": "v1.6.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d"
+  },
+  {
+    "module": "github.com/hashicorp/golang-lru/v2",
+    "version": "v2.0.7",
+    "license": "MPL-2.0",
+    "licenseSha256": "6c7088eb877b5d7e6e0e9d27e822ea25fcda2e83f9eba59bb5f1418a656796e0"
+  },
+  {
+    "module": "github.com/mattn/go-isatty",
+    "version": "v0.0.20",
+    "license": "MIT",
+    "licenseSha256": "08eab1118c80885fa1fa6a6dd7303f65a379fcb3733e063d20d1bbc2c76e6fa1"
+  },
+  {
+    "module": "github.com/ncruces/go-strftime",
+    "version": "v1.0.0",
+    "license": "MIT",
+    "licenseSha256": "38ae43959daf953a393a585b2988672cb65a5a541aca0d0be5e72595a0a16883"
+  },
+  {
+    "module": "github.com/remyoudompheng/bigfft",
+    "version": "v0.0.0-20230129092748-24d4a6f8daec",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "dd26a7abddd02e2d0aba97805b31f248ef7835d9e10da289b22e3b8ab78b324d"
+  },
+  {
+    "module": "github.com/ulikunitz/xz",
+    "version": "v0.5.16",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "701cbcc144a7c865b072f27547e66ddbf17ac44a3bd21f71149ace02518f107c"
+  },
+  {
+    "module": "golang.org/x/crypto",
+    "version": "v0.52.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "module": "golang.org/x/image",
+    "version": "v0.45.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "module": "golang.org/x/mod",
+    "version": "v0.33.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "module": "golang.org/x/sync",
+    "version": "v0.20.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "module": "golang.org/x/sys",
+    "version": "v0.47.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "module": "golang.org/x/tools",
+    "version": "v0.42.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "module": "modernc.org/cc/v4",
+    "version": "v4.27.3",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "1c77905db36f407e0fdb513f97f1f2a3f2282049ca273637841face982d5d003"
+  },
+  {
+    "module": "modernc.org/ccgo/v4",
+    "version": "v4.32.4",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "343748b20da2ceb739c1ab7b85fe16f6fe4b67fad88fea40c5835a08383d8ffe"
+  },
+  {
+    "module": "modernc.org/fileutil",
+    "version": "v1.4.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "7dc07397727fc500d5ce768d724e4d555eee8fb7687f421fd40d72249868b0ca"
+  },
+  {
+    "module": "modernc.org/gc/v2",
+    "version": "v2.6.5",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "4719790df5e9d33b1cef3a67df8264fb1e3e7f54f3ca900c562e84a951de62d9"
+  },
+  {
+    "module": "modernc.org/gc/v3",
+    "version": "v3.1.2",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "4719790df5e9d33b1cef3a67df8264fb1e3e7f54f3ca900c562e84a951de62d9"
+  },
+  {
+    "module": "modernc.org/goabi0",
+    "version": "v0.2.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "6d33428c98f9d7113dfc86e17fca00f81aeaac33e02f79c8a5afafb0a5fd33c6"
+  },
+  {
+    "module": "modernc.org/libc",
+    "version": "v1.72.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "95ff867eb55a56935fa7492406cfa953fb7c13ca73f4c0a86ae05756b4605600"
+  },
+  {
+    "module": "modernc.org/mathutil",
+    "version": "v1.7.1",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "bfa9bf72a72ca009fd62a8f84fca3dca67e51d93af96352723646599898b6cf5"
+  },
+  {
+    "module": "modernc.org/memory",
+    "version": "v1.11.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "59895e669f48f168b6b858358f6005779cdf40a265f7828813061b56af67b496"
+  },
+  {
+    "module": "modernc.org/opt",
+    "version": "v0.1.4",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "7a0dd90f1d1c8fa80d03c1806bdd8e4dca7285fae9b4a34f2c4a8a2552fdd77c"
+  },
+  {
+    "module": "modernc.org/sortutil",
+    "version": "v1.2.1",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "7bc9df688c16dd8e64463ec0ad66728730a0e1a70a1dbda3dcbcd8a9b45bfaab"
+  },
+  {
+    "module": "modernc.org/sqlite",
+    "version": "v1.50.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "c6fe05491a60ae13bcd223088d2705e36dede24e5587226231d2459ada5c4822"
+  },
+  {
+    "module": "modernc.org/strutil",
+    "version": "v1.2.1",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "0f594b710bedb0335b15155204150cb1aac98e76144b52b852b43ce6a65eaaad"
+  },
+  {
+    "module": "modernc.org/token",
+    "version": "v1.1.0",
+    "license": "BSD-3-Clause",
+    "licenseSha256": "2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067"
+  }
+]

@@ -65,3 +65,7 @@ func (jobError codedProbeJobError) Unwrap() error {
 func (jobError codedProbeJobError) Code() string {
 	return jobError.code
 }
+
+func (jobError codedProbeJobError) Retryable() bool {
+	return jobError.code != "probe.unavailable"
+}

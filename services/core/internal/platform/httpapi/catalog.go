@@ -429,7 +429,7 @@ func (h *handler) handleProjectState(
 			session.Workspace.ID,
 			input.ID,
 		); err != nil {
-			h.internalError(response, request, err)
+			h.handleStorageError(response, request, err)
 			return
 		}
 		project, err = h.catalog.ArchiveProject(request.Context(), input)

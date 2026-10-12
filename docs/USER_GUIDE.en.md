@@ -1,0 +1,1068 @@
+# Visto User Guide
+
+Keep media, versions, feedback, and delivery records in your own workspace. This guide covers Visto Server, which runs on your computer or server and is accessed through a browser.
+
+Updated: 2026-10-03. Screenshots show a fictional demo workspace using the Chinese interface. Product labels may differ with the interface language.
+
+<!-- chapter: start | Getting started -->
+## 01 · Understand Visto
+
+Visto brings projects, media, revisions, review feedback, and sharing into one workflow. The host can store media locally or connect to WebDAV or S3-compatible storage.
+
+Local-first means you choose where the workspace runs. Remote storage, notifications, and remote access use the services and networks you configure.
+
+### The main concepts
+
+| Concept | Purpose | Example |
+| --- | --- | --- |
+| Workspace | Accounts, projects, settings, and storage | A production team |
+| Project | A collaboration boundary with its own members | October brand film |
+| Asset | A piece of work with an ongoing history | Main film |
+| Version | One revision of that asset | V1 rough cut, V2 revised cut |
+| Review | Feedback and decisions for selected versions | Client approval of V2 |
+
+![Projects, assets, versions, and reviews](web/assets/en/model.svg)
+
+A review refers to specific versions. Uploading V2 does not replace V1 in an existing review. Create the next review with V2 when you are ready.
+
+### Choose your route
+
+- Invited team member: open the team's workspace, then read [uploading](upload.html) and [reviews](reviews.html).
+- Project supervisor: start with [your first project](quick-start.html), then manage members and delivery.
+- Workspace Owner: configure storage, accounts, and network access.
+- Host administrator: follow [installation](prepare.html), then arrange backups.
+- External reviewer: follow the [shared review guide](guest.html). No installation is needed.
+
+Available downloads and supported packages are listed on the [downloads page](downloads.html).
+
+<!-- chapter: quick-start | Getting started -->
+## 02 · Complete your first project
+
+Try the full workflow with a short test video before using a real delivery. Keep the same asset through its revisions.
+
+### Set up a project
+
+1. Ask the Owner to provide an available upload location.
+2. Open the project list and choose **New project**.
+3. Enter a recognizable name, select project storage, and add the delivery brief.
+4. Open the new project and upload a small video in **Media**.
+5. Wait for upload and processing to finish, then play the preview.
+
+### Collect feedback
+
+1. Open the asset, select V1, and create a review.
+2. Choose the participants, deadline, and approval rule.
+3. If external feedback is needed, configure the share password and allowed actions.
+4. Ask the reviewer to leave a time-based comment and a decision.
+5. Reply to feedback and resolve threads after making the changes.
+
+### Deliver a revision
+
+Open the original asset and choose **Upload new version**. After V2 is ready, create a review that explicitly selects V2. Check the final decision and share the correct review link.
+
+Before archiving, save an actual backup and any separate media copies you need. Archiving a project does not copy its files to another disk.
+
+![From a project to delivery](web/assets/en/workflow.svg)
+
+At the end, you should be able to open both versions, find their separate review histories, and access the final shared version from the recipient's device.
+
+<!-- chapter: navigation | Getting started -->
+## 03 · Find your way around
+
+Global navigation covers projects, notifications, and your account. Media, reviews, activity, and project settings belong to the project you have opened.
+
+### Common destinations
+
+| Task | Where to go |
+| --- | --- |
+| Upload or find media | Project → Media |
+| See earlier revisions | Asset details → Version history |
+| Create or follow a review | Project → Reviews |
+| Manage project members | Project settings → Members and permissions |
+| Configure storage | Owner settings → Storage and upload security |
+| Edit personal details | My account |
+
+Use the project overview to find failed processing tasks, unresolved feedback, and reviews waiting for decisions. If information fails to load, refresh before treating an empty area as completed work.
+
+After an action, wait for the visible success or error message. A processing indicator means the action is still running. If copying a share link fails, open the existing review and copy again rather than creating a duplicate review.
+
+<!-- chapter: prepare | Installation and setup -->
+## 04 · Install Visto
+
+If your team already runs Visto, open its workspace address in your browser. To host your own workspace, choose either route:
+
+- **Online installation (recommended):** one command obtains the latest stable release for your system and installs Server with video support.
+- **Manual installation:** download a package from GitHub, then follow the commands for your system. Use this when you want a particular version or already have the package.
+
+| Device | Guide | Requirements |
+| --- | --- | --- |
+| M-series Mac | [macOS](install-macos.html) | Apple Silicon; administrator password |
+| Windows PC | [Windows](windows-install.html) | x64; administrator privileges |
+| Linux server | [Linux](linux-install.html) | x86_64 / ARM64; systemd |
+| Existing Docker setup | [Docker](docker.html) | Familiarity with containers |
+
+See [downloads](downloads.html) for availability. The website installer is delivered separately and also works with the original 1.0.3 package. Online installation resolves the latest stable release on each run; manual installation uses your downloaded version.
+
+### Before installing
+
+- Leave enough disk space for originals, previews, and backups.
+- Choose a dedicated media folder rather than your entire home or a system directory.
+- For an existing instance, read [maintenance](maintenance.html) first.
+
+### After installation
+
+Open the address printed by the installer and follow [first setup](setup.html). The default is <http://127.0.0.1:8787/>; use the printed address if the port changes. Docker defaults to <http://127.0.0.1:8080/>.
+
+`127.0.0.1` refers to the device running the browser. Configure a [team address](network.html) for other people.
+
+<!-- chapter: install-macos | Installation and setup -->
+## 05 · macOS installation
+
+For **Apple Silicon (M-series) Macs**. Intel Macs are not supported in this release. Keep your administrator password handy and stay online. See [downloads](downloads.html) for availability.
+
+### Option 1: Online installation (recommended)
+
+Open Terminal, paste this line, and press Return:
+
+```bash
+curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh && bash install-visto.sh
+```
+
+The script checks that macOS allows both programs to run as your current user before requesting administrator privileges. Confirm the video component download when prompted. Terminal does not display password characters. The script selects the latest stable release and prepares Server and video support without version or component substitutions.
+
+Open the address printed at completion and follow [first setup](setup.html). The default is <http://127.0.0.1:8787/>. If that port is occupied, the installer asks whether to use a free port.
+
+### Option 2: Download a package manually
+
+1. Download **macOS · Apple Silicon** from [downloads](downloads.html) or GitHub Releases.
+2. Double-click the archive to extract it. Keep the original folder name, such as `Visto-Server_1.0.3_macos-arm64`; do not mix versions.
+3. Right-click that folder in Finder and choose **Services → New Terminal at Folder**.
+
+Get the installation helper:
+
+```bash
+curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh
+```
+
+Install the version in this folder:
+
+```bash
+bash install-visto.sh --source-dir .
+```
+
+This uses the extracted Server without fetching another version. The helper prepares video support automatically and also supports the original 1.0.3 package.
+
+Open the address printed at completion. **Both routes include video support; no separate component command is needed.**
+
+### If macOS blocks a program
+
+The current programs do not have Apple Developer signing or notarization. The script checks `visto-server` and `visto-core` before installation without disabling system security.
+
+1. Choose **Done** in the alert rather than moving the program to Trash.
+2. The script tries to open **System Settings → Privacy & Security**. If it does not open, go there manually. Scroll down to **Security** and choose **Open Anyway** for the program named in Terminal. If another confirmation appears, choose **Open** or **Allow**.
+3. **Keep the Terminal window open. After approving the program, return to Terminal and press Return to continue.** You do not need another command; the script checks the same files again.
+
+Both programs may require separate approval. Follow Terminal's prompts for each in turn. The system service has not been installed at this stage. If Open Anyway is missing, close and reopen Privacy & Security; if it is still unavailable, send the terminal error to the maintainer.
+
+To install later, enter `q` at the waiting prompt or press `Control-C`. The script retains the installation files and prints a command for continuing later; you only need that command after pausing or exiting. Avoid rerunning the original online download command, which creates another copy. Once approval succeeds, the script requests your administrator password and continues installation.
+
+### After installing
+
+Upload a short video and check playback before starting a real project. Service management, logs, and uninstalling are covered in [maintenance](maintenance.html#maintenance-macos).
+
+<!-- chapter: windows-install | Installation and setup -->
+## 06 · Windows installation
+
+For **Windows x64** with administrator access. Team members only need a browser.
+
+### Option 1: Online installation
+
+Search for **Windows PowerShell** in Start and choose **Run as administrator**. Paste this line:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing https://visto.akahxh.top/install.ps1 -OutFile install-visto.ps1 -ErrorAction Stop; powershell -NoProfile -ExecutionPolicy Bypass -File .\install-visto.ps1
+```
+
+The script obtains the latest stable release, verifies the package, and installs it under `C:\Program Files\Visto Server`. Confirm installation and wait for the service and video support to be ready. Windows packages already include the video component.
+
+### Option 2: Download a package manually
+
+#### Download and extract
+
+Choose the Windows x64 package on the [downloads page](downloads.html). In File Explorer, right-click the ZIP and choose **Extract All**. Put the extracted program in a permanent folder, such as `C:\Program Files\Visto Server`.
+
+The folder should contain `Install-VistoServer.ps1`, `bin`, and `web`. The video component is already included in the Windows package.
+
+#### Install
+
+Search for **Windows PowerShell** in the Start menu and choose **Run as administrator**. Enter the program directory:
+
+```powershell
+Set-Location 'C:\Program Files\Visto Server'
+```
+
+If you used another folder, enter its actual location. Then run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-VistoServer.ps1
+```
+
+This registers an automatic startup task. The execution policy applies to this process; no global policy change is needed.
+
+### Open Visto
+
+Open **http://127.0.0.1:8787/** on that PC and follow [first setup](setup.html). If it does not open immediately, wait briefly and refresh.
+
+Upload a short video and play its preview after processing. For help, see [troubleshooting](troubleshooting.html). Backups and service management are in [maintenance](maintenance.html#maintenance-windows).
+
+<!-- chapter: linux-install | Installation and setup -->
+## 07 · Linux installation
+
+For **x86_64 / ARM64 systemd Linux servers**. Requires kernel 4.18+, glibc 2.28+, systemd 239+, sudo privileges, Bash, GNU tar, and curl. See [downloads](downloads.html) for availability.
+
+### Option 1: Online installation (recommended)
+
+Paste this line in the server terminal:
+
+```bash
+curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh && sudo bash install-visto.sh
+```
+
+The script detects the architecture, obtains the latest stable release, and prepares Server with video support. Confirm the download when prompted; no version substitutions are needed.
+
+### Option 2: Download a package manually
+
+1. Download the Linux package from [downloads](downloads.html) or GitHub Releases. Choose x86_64 for Intel / AMD, or ARM64 for an ARM server.
+2. Keep the original archive filename in a dedicated folder containing only one Visto `.tar.gz` package.
+3. Open that folder in a terminal and get the helper:
+
+```bash
+curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh
+```
+
+Install the package you downloaded:
+
+```bash
+sudo bash install-visto.sh --package ./Visto-Server_*.tar.gz
+```
+
+The helper extracts the archive, uses its version, and prepares video support. It does not select a different Server version. Package verification is automatic.
+
+### Open your workspace
+
+Use the address printed by the installer; the default is <http://127.0.0.1:8787/>. If the server has a browser, follow [first setup](setup.html) there.
+
+For a remote server, temporarily forward the setup page over SSH. On your own computer, replace `user@server` with the server's SSH login:
+
+```bash
+ssh -N -L 18787:127.0.0.1:8787 user@server
+```
+
+Keep SSH connected and open <http://127.0.0.1:18787/>. If the installation port changed, also change the server port in this command. For everyday collaboration, configure a [team address](network.html).
+
+Service management, logs, backups, and uninstalling are covered in [maintenance](maintenance.html#maintenance-linux).
+
+<!-- chapter: runtime | Installation and setup -->
+## 08 · Video previews and components
+
+Visto uses FFmpeg and ffprobe to generate covers, previews, and media information.
+
+**The website installer in the macOS and Linux guides installs video support alongside Server. The Windows package already includes it. No additional component command is needed after a complete installation.**
+
+Server and components can be updated separately. The installer chooses compatible components and downloads and verifies them without asking you to edit versions, signatures, or checksums.
+
+The component does not sit inside the program directory, so uninstalling Server does not remove it; a reinstall reuses whatever is already there. See *Removing the video component* in [maintenance](maintenance.html) when you need a fully clean host.
+
+### An older package is missing video support
+
+The original 1.0.3 package also works with the standalone helper. Open a terminal in its original extracted folder:
+
+```bash
+curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh
+# macOS: run without sudo; the helper checks the programs as your user first
+bash install-visto.sh --source-dir .
+# Linux: use sudo
+sudo bash install-visto.sh --source-dir .
+```
+
+For an existing Server of the same version, the helper prepares video support and restarts the service without replacing project data. It stops when a different version is installed; read [maintenance](maintenance.html) first.
+
+This does not update the older package's web interface. Component status guidance depends on the actual program version.
+
+### unknown option: --with-media-runtime
+
+The original 1.0.3 installer does not support this option. Use the standalone helper above. An unknown-option error does not start installation and is not a reason to uninstall or delete data.
+
+### Check playback
+
+Upload a short video to a test project, wait for processing, and play the preview from media details.
+
+### When the page reports missing video components
+
+The server could not find FFmpeg or ffprobe. This does not mean the video is damaged; original files are retained. Repeated retries cannot fix a missing dependency.
+
+- Workspace Owners can open **Check video components** from the video details, or use **Owner settings → Video components and encoding**.
+- Project members should contact the server administrator or workspace Owner. Installing FFmpeg on the browser's computer does not fix a remote server.
+- First setup can continue, but video covers and previews require the components.
+
+On the Visto server, inspect an existing installation first and reuse it if compatible. The settings page offers commands matched to the server platform. Both FFmpeg and ffprobe must be present; run the local capability inspection to confirm encoding support. CLI and service must use the same runtime root. If components are missing or incompatible, follow the platform instructions for a reviewed runtime, or use the matching offline archive and signed manifest. Windows release packages include the runtime; Docker uses its matching image. Keep signature and checksum checks enabled.
+
+After configuration, restart the same Visto instance and click **Check again**. **Retry affected jobs** selects component-related media failures from the most recent 200 failed jobs and reports each result. Older failures can be retried from project media. Other failures are kept separate. New jobs stop automatic retries after their first missing-component failure; users can retry after repair. Existing playable previews remain available.
+
+### Troubleshooting
+
+| Symptom | What to do |
+| --- | --- |
+| Download fails | Check your connection and retry; keep the error |
+| Verification fails | Stop and send the error to the maintainer |
+| macOS blocks execution | Follow the [Mac instructions](install-macos.html), then retry |
+| Installation completes but previews are missing | Check processing errors and disk space |
+| Only one video fails | Test another short video, then check the original format |
+
+<!-- chapter: docker | Installation and setup -->
+## 09 · Docker deployment
+
+### Install directly from Docker Hub (recommended)
+
+Visto Server 1.0.3 is published as [Core](https://hub.docker.com/r/akahxh404/visto-core) and [Web](https://hub.docker.com/r/akahxh404/visto-web) images for Linux amd64 and arm64. Docker selects the host architecture automatically. Use Linux containers in Windows Docker Desktop. The two images work together through Compose: browsers connect to Web, and the Core port remains private to the container network.
+
+1. Download the official [Visto Docker 1.0.3 deployment kit](https://visto.akahxh.top/downloads/docker/1.0.3/Visto-Docker_1.0.3.zip) and extract it into a new directory. It contains a pinned `compose.yaml`, an image manifest, and `scripts/docker/` backup, restore and update tools. The full application source is not required.
+2. Start Docker Desktop and wait for its Engine, or start Docker Engine on the host. Open a terminal in the extracted directory and confirm that `docker version` and `docker compose version` work. An installed client without a running Engine cannot deploy the application.
+3. Generate the private initialization token in a directory readable only by the maintainer, then pull and start the images. The commands stop if `.env` already exists and preserve existing configuration.
+
+Windows native PowerShell:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try {
+  $bytes = New-Object byte[] 32
+  $rng.GetBytes($bytes)
+  $token = [Convert]::ToBase64String($bytes)
+  $stream = [System.IO.File]::Open((Join-Path $PWD '.env'), [System.IO.FileMode]::CreateNew)
+  try {
+    $content = [System.Text.Encoding]::ASCII.GetBytes("VISTO_VERSION=1.0.3`nVISTO_HOST_MANAGEMENT_TOKEN=$token`n")
+    $stream.Write($content, 0, $content.Length)
+  } finally { $stream.Dispose() }
+} finally { $rng.Dispose() }
+docker compose pull
+if ($LASTEXITCODE -ne 0) { throw 'Image download failed; check Docker and network access before retrying' }
+docker compose up -d --no-build --wait
+if ($LASTEXITCODE -ne 0) { throw 'Docker startup failed; resolve the error before retrying' }
+docker compose ps
+```
+
+Bash on macOS, Linux, or Windows WSL:
+
+```bash
+(
+set -eu
+umask 077
+set -C
+printf 'VISTO_VERSION=1.0.3\nVISTO_HOST_MANAGEMENT_TOKEN=%s\n' "$(openssl rand -base64 32)" > .env
+docker compose pull
+docker compose up -d --no-build --wait
+docker compose ps
+)
+```
+
+4. Open <http://127.0.0.1:8080/>. Read the full token privately from your own `.env` and follow [first setup](setup.html) to create the workspace and account. Preserve this file for future starts; do not regenerate or share the token.
+
+If another service uses port 8080, add `VISTO_HOST_PORT=18080` to `.env` before starting, then open <http://127.0.0.1:18080/>. Do not stop another application's service. Docker Engine 26+ and Compose v2 are required, with enough disk space for media, previews and backups.
+
+Both image digests are already fixed in the kit; no manual digest entry is needed. Core includes the video runtime, so it does not need a separate component installation. Initial deployment requires network access to pull the images. If pulling times out, check Docker's network and proxy settings, then retry `docker compose pull`.
+
+### Build from the complete source (optional)
+
+The following alternative requires the complete source delivery, not the small deployment kit above.
+
+This route is for people already familiar with Docker Compose, volumes, and server administration. Use the complete source bundle supplied for the release. A standalone macOS package is not a Docker source bundle.
+
+### Prepare the source and configuration
+
+The source must contain `Dockerfile`, `compose.yaml`, `infra/docker/nginx.conf`, the application source, and `scripts/docker`. Build this alternative from the matching complete source bundle.
+
+Docker Engine 26+, Compose v2, at least 4 GB of available memory, and free space for persistent volumes are required. In a new deployment directory, run the following in Bash (macOS/Linux or Windows WSL). The version below belongs to the supplied source bundle; use its release version when deploying another bundle. Existing `.env` files are preserved.
+
+```bash
+(
+set -eu
+umask 077
+set -C
+printf 'VISTO_VERSION=1.0.3\nVISTO_HOST_MANAGEMENT_TOKEN=%s\n' "$(openssl rand -base64 32)" > .env
+docker compose up -d --build
+docker compose ps
+)
+```
+
+Open **http://127.0.0.1:8080/** on the host. Read the initialization token privately from the local `.env` file and complete setup. Do not regenerate that token, overwrite `.env`, or share it with project members. In a new Bash terminal, load your own trusted deployment configuration before running maintenance tools:
+
+```bash
+set -a; . ./.env; set +a
+```
+
+Compose contains separate Core and Web services. The Core port remains internal; browsers connect through Web. Check services and recent logs if the page cannot open. Windows native PowerShell can use the initialization instructions in the source bundle; the Bash examples here are for WSL.
+
+### Use a supplied video archive
+
+Place the architecture-matching component archive in a `runtime-input` directory next to the source directory. Use Docker Buildx with named build contexts. The archive names and version are supplied with the source bundle.
+
+```bash
+(
+set -eu
+set -a; . ./.env; set +a
+case "$(uname -m)" in
+  arm64|aarch64) PLATFORM=linux/arm64 ;;
+  x86_64) PLATFORM=linux/amd64 ;;
+  *) echo 'Unsupported architecture'; exit 1 ;;
+esac
+docker buildx build --load --platform "$PLATFORM" \
+  --build-context runtime-input=../runtime-input \
+  --build-arg VISTO_VERSION="$VISTO_VERSION" \
+  --target core -t visto-core:local .
+docker buildx build --load --platform "$PLATFORM" \
+  --build-arg VISTO_VERSION="$VISTO_VERSION" \
+  --target web -t visto-web:local .
+docker compose up -d --no-build
+)
+```
+
+Use these local image names for a fresh deployment only. Do not overwrite an existing deployment's images to bypass protected update procedures. Base images and dependencies still require internet access or a suitable cache.
+
+### Manage and back up
+
+```bash
+docker compose logs --tail 100 core
+docker compose exec core visto-server doctor
+./scripts/docker/backup-visto-docker.sh --backup-dir ./backups
+docker compose down
+```
+
+Do not add `-v` to `down`: that can remove business-data volumes. Back up additional host mounts and remote media separately.
+
+Before restoring, save the current data and run the bundle's restore tool with `--check-only`. Keep the archive and its companion metadata together. Then use `--confirm-restore` only after reviewing what will be replaced. The deployment kit records the published 1.0.3 image references in `docker-images.json`. For later upgrades, use the protected update tool and the immutable references published for that version; preserve pre-update backups and failure recovery. Do not replace this workflow with an arbitrary `latest` image or a simple container recreation.
+
+<!-- chapter: setup | Installation and setup -->
+## 10 · First setup and login
+
+A new instance opens the workspace setup form. This creates the workspace and Owner account; it does not move existing media.
+
+![First setup in the Chinese interface](web/assets/01-setup.png)
+
+### Fill in the form
+
+| Field | What to enter |
+| --- | --- |
+| Initialization token | The private token obtained by the host administrator |
+| Workspace name | A name your team will recognize |
+| Your name | Your own name for comments and decisions |
+| Local access password | A strong password of at least 10 characters |
+| Confirm password | Exactly the same password |
+
+For the default macOS instance, read the initialization token privately:
+
+```bash
+sudo cat /Library/Visto/config/host-management-token
+```
+
+On Linux it is in `/etc/visto/host-management-token`. For the default Windows installation, read the full token in an **administrator PowerShell** window on the deployment host:
+
+```powershell
+Get-Content -LiteralPath "$env:ProgramData\Visto\data\host-management-token.txt"
+```
+
+Keep `data` in the default path. If you configured a different data directory, use the actual token location printed by the installer. If the path is missing, check the location and whether installation succeeded. If access is denied, reopen PowerShell as administrator; do not relax file permissions. The installer's short fingerprint cannot replace the full token. Never paste the token into a public issue, screenshot, or chat.
+
+### Decide host-directory access
+
+The option allowing the Owner to add host directories in the browser is enabled by default. Decide whether that suits your host before submitting the form.
+
+This choice cannot be changed in the browser after setup. A host administrator can change `VISTO_ALLOW_WEB_HOST_PATHS` in the host configuration and restart the service: `0` disables it; `1` forces it on. View the effective state in **Owner settings → Network and security**.
+
+Disabling this option does not remove members' access to storage already authorized for their projects.
+
+### Sign in normally
+
+After setup, use your member email and password. Older workspaces or the initial Owner may have no email yet; leave the email empty only when the login page explicitly supports that route.
+
+If an existing instance unexpectedly shows first setup, check the address and data directory before creating another workspace. For a forgotten Owner password, ask the host administrator to use the supported recovery procedure rather than deleting the database.
+
+<!-- chapter: storage | Projects and media -->
+## 11 · Configure storage
+
+**Owner settings → Storage and upload security**. Projects need an available upload location before they can accept media.
+
+![Storage configuration in the Chinese interface](web/assets/02-storage.png)
+
+### Choose a storage type
+
+| Type | Information needed |
+| --- | --- |
+| Local managed storage | Dedicated absolute path on the host, service permissions, free space |
+| WebDAV | WebDAV endpoint, username, password, permitted directory |
+| S3-compatible | API endpoint, bucket, region, access key, secret key, prefix |
+
+A local path belongs to the Server host, not the computer running your browser. For Docker it must be a path visible inside the container. Mount external disks before using them and keep their paths stable.
+
+Use a dedicated service account with only the required storage permissions. A WebDAV endpoint is not the service's ordinary login page. An S3 endpoint is not its management console; endpoint, region, bucket, and credentials must refer to the same service. Enable private-network access only for a storage service you trust.
+
+### Complete the wizard
+
+1. Choose the storage type.
+2. Select its purpose: project uploads, archives, or comment attachments.
+3. Enter a recognizable name and the connection or directory details.
+4. Select the projects allowed to use it.
+5. Choose the upload-security policy, save, and wait for the result.
+
+Test remote connections. A connected service still needs the correct purpose and project scope. An archive location does not automatically become an upload location.
+
+### Upload-security policies
+
+Fast suits controlled, trusted uploads; Standard is the usual project policy; Enhanced is for less-trusted uploads and requires appropriate scanning capability. The policy name does not prove a scan engine is configured. “Not scanned” is not a successful malware scan.
+
+Open **Project settings → Project storage** and check that the upload location is available. An empty list can mean missing authorization, an inactive location, a wrong purpose, or a quota issue.
+
+Changing the upload location affects future uploads; it does not automatically move existing media. Review affected projects before disabling or deleting a connection.
+
+<!-- chapter: project | Projects and media -->
+## 12 · Create and manage projects
+
+Separate customers, delivery batches, or access boundaries into different projects.
+
+![Creating a project in the Chinese interface](web/assets/03-project.png)
+
+### Create a project
+
+1. Open the project list and select **New project**.
+2. Enter a recognizable project name.
+3. Select an upload location authorized by the Owner.
+4. Describe the deliverables, people responsible, and deadline.
+5. Save and confirm you have entered the intended project.
+
+If there is no storage choice, ask the Owner to configure storage. There is no need to scan the host for a new project.
+
+### Maintain project settings
+
+The project supervisor manages project information and members within that project. Choose only authorized storage. If transferring responsibility, use the project's transfer flow and check the new supervisor and your remaining role.
+
+If a member cannot see a project, check their workspace, account, membership, status, and expiry. Having an account does not automatically grant access to every project.
+
+<!-- chapter: members | Projects and media -->
+## 13 · Members and permissions
+
+Workspace accounts identify people. Project membership determines where they can work.
+
+![Account and project authorization](web/assets/en/permissions.svg)
+
+### Roles
+
+| Role | Scope |
+| --- | --- |
+| Owner | Global accounts, infrastructure, and workspace settings |
+| Project supervisor | Members and collaboration in assigned projects |
+| Project member | Authorized uploads, reviews, sharing, and other project actions |
+| Temporary account | Limited access and expiry as configured |
+| Share visitor | Only the shared review and its allowed actions |
+
+Do not assume a member is read-only from the role name. Review the individual upload, removal, sharing, and decision permissions.
+
+![Member settings in the Chinese interface](web/assets/08-members.png)
+
+### Invite someone
+
+1. The Owner creates an invitation in **Accounts and registration**.
+2. Give that invitation to the intended person.
+3. The person sets their own profile and password.
+4. The Owner or authorized project supervisor adds the account in **Project settings → Members and permissions**.
+5. Select permissions and any expiry date.
+6. Have the member check access using their own account.
+
+Open registration also requires a separate project-membership step. When someone leaves, review their membership, temporary-account expiry, and existing shares. Removing access cannot retrieve files already downloaded.
+
+<!-- chapter: upload | Projects and media -->
+## 14 · Upload and organize media
+
+Open the intended project's **Media** page before uploading.
+
+![Project media in the Chinese interface](web/assets/04-media.png)
+
+### Upload files
+
+Choose files or use the available drop area. Wait for the transfer result, then check the safety and processing states. Open the asset and confirm the preview and file information.
+
+| Stage | Meaning |
+| --- | --- |
+| Upload | File transfer progress |
+| Safety checks | Whether the file can continue into collaboration |
+| Media processing | Preview, metadata, and derived tasks |
+
+A completed upload may still be processing. If a preview fails, inspect the task and runtime before deleting and uploading the source again.
+
+### Find and organize
+
+Search by filename, then narrow results by type, processing status, date, and sorting. Reset filters and check the project and page number if a new upload appears missing.
+
+Grid view emphasizes images; list view emphasizes file information. Asset details contain renaming, metadata, previews, and version history.
+
+Adding existing media lists only assets you can use. Cross-project copy or cut operations do not by themselves prove a physical copy to another disk. Verify the target project's access and readability. Removing an asset from the current project sends its project relationship to the recycle bin.
+
+Use one asset for revisions of the same work. Independently delivered aspect ratios or language editions can be separate assets.
+
+<!-- chapter: archive | Projects and media -->
+## 15 · Recycle bin, archiving, and deletion
+
+| Action | Effect |
+| --- | --- |
+| Remove media from a project | Removes its project relationship; can be restored from that project's recycle bin |
+| Restore removed media | Adds it back to that project |
+| Archive a project | Keeps records and pauses project writes and storage changes |
+| Restore a project | Returns an archived project to active work |
+| Delete a project | Follow the displayed deletion scope and recovery limits |
+
+None of these operations replaces a backup.
+
+### Restore removed media
+
+Open **Media → Recycle bin**, find the asset, and restore it. Check that the file and versions are readable. Restoring the relationship cannot recreate an original deleted outside Visto.
+
+### Archive after delivery
+
+![Project archive controls in the Chinese interface](web/assets/09-archive.png)
+
+Check the final version and decision, resolve or document outstanding feedback, review shares, and save backups. Then use **Project settings → Dangerous actions → Archive**.
+
+Archiving does not copy media to archive storage or automatically revoke every share. Restore the project before starting another revision. Read the confirmation carefully before deletion; instance backup restoration can affect more than one project.
+
+<!-- chapter: versions | Reviews and delivery -->
+## 16 · Versions and revisions
+
+To revise an existing piece of work, open the original asset and choose **Upload new version**. Uploading an unrelated asset with the same filename does not create a version relationship.
+
+![Version history in the Chinese interface](web/assets/05-version.png)
+
+### Start the next revision
+
+1. Open the asset's version history.
+2. Upload the revised file.
+3. Wait for transfer and processing.
+4. Check the new version number, preview, and file information.
+5. Check which version is marked **Current**.
+6. Create the next review with the new version selected.
+
+Previewing a historical version and making it the current version are different actions.
+
+Old reviews and comments remain attached to their original versions. Uploading V2 does not replace V1 in old review links. Name the new review clearly, for example “V2 — revised ending and subtitles.”
+
+<!-- chapter: reviews | Reviews and delivery -->
+## 17 · Create a review
+
+A review is a defined feedback or approval task for selected media versions.
+
+![Review configuration in the Chinese interface](web/assets/06-review.png)
+
+### Configure the review
+
+1. Select the version from asset details, or add media from the project's Reviews page.
+2. Check each asset and version; remove unrelated items.
+3. Name the review according to its purpose.
+4. Choose the deadline and participants.
+5. Select the approval rule and responsible person where needed.
+6. Configure external access, comments, and downloads if you plan to share.
+7. Save and check the review state and share result.
+
+### Approval rules
+
+| Rule | Use when |
+| --- | --- |
+| Any reviewer | One designated reviewer's approval is sufficient |
+| All reviewers | Every required reviewer must approve |
+| Responsible person only | One selected person makes the final decision |
+
+Without sharing permission, a created review may remain a draft. Check its state before sending it out. If copying fails after creation, continue from the existing review instead of creating another one.
+
+The review board organizes rounds by state. Review details preserve the selected versions, participants, comment threads, and decisions.
+
+<!-- chapter: comments | Reviews and delivery -->
+## 18 · Feedback and decisions
+
+Useful feedback describes the location, the issue, and the requested change.
+
+### Video comments
+
+Pause at the relevant moment. Choose a time-based comment and capture the current time. For a longer passage, select a time range with a start and end. Submit and click the saved comment to check its position.
+
+Example: “00:12.400–00:15.000: subtitles appear before the voice-over. Move them to the start of the first sentence.”
+
+### Image comments
+
+Use a point for one location or a region for an area. Available arrows, brush, and rectangle tools can clarify the change. Add the marker first, then write the explanation. Check the saved marker.
+
+![Shared image review in the Chinese interface](web/assets/07-public-review.png)
+
+Attachments are available only when enabled and backed by suitable storage. An authorized person can resolve a thread after addressing it. Resolved feedback does not automatically approve the whole review.
+
+### Formal decisions
+
+Choose **Approve**, **Changes requested**, or **Reject**, then explain the result. The review combines these decisions according to its approval rule.
+
+Share visitors can submit a decision for the fixed version when feedback is enabled and the review is open. Closing share feedback disables both new comments and new visitor decisions. An anonymous visitor's identity is recorded through the share session.
+
+<!-- chapter: sharing | Reviews and delivery -->
+## 19 · Share and revoke access
+
+Sharing opens a specific review to external people without giving them the Owner account or full workspace access.
+
+### Before sharing
+
+Check the media and versions, password and expiry, comment/download permissions, and reachable address. A playable preview does not necessarily allow downloading the original.
+
+Create a share from review creation or **Sharing and notifications** in review details. Wait for success, copy the link, and provide the access code separately when appropriate.
+
+Test with a signed-out browser and then from the recipient's actual network. A successful test on the host alone does not prove external reachability.
+
+### Manage an existing share
+
+Open the share record to view or change the supported settings, revoke access, or regenerate the link. Tell recipients when the link changes. Revocation blocks future access; it cannot retrieve previous downloads.
+
+If a recipient sees an old version, check the review linked by the share. Create a review for the revision and send that new link.
+
+<!-- chapter: guest | Reviews and delivery -->
+## 20 · Review a shared version
+
+You normally need only the link and access code from the sender. No Visto installation or Owner password is required.
+
+### Open the work
+
+Open the link, enter its access code if requested, and provide a recognizable name when required. Check the work and version before leaving feedback.
+
+For video, pause and capture the current time or select a range. For images, mark a point or region. Write the location, issue, and expected change, then confirm your comment appears.
+
+### Submit a decision
+
+When feedback is enabled and the review is open, use the current-version decision area to approve, request changes, or reject. Add an explanation and check the recorded result. A text comment and a formal decision are separate records.
+
+| Problem | What to do |
+| --- | --- |
+| Wrong access code | Check spaces and case; ask whether the password changed |
+| Expired or revoked link | Ask the sender for an active link |
+| Page cannot open | Check whether a VPN or team network is required |
+| No comment or download button | Ask the sender which actions are enabled |
+| Unexpected version | Ask the sender to confirm the review version |
+
+<!-- chapter: notifications | Settings and maintenance -->
+## 21 · Account, notifications, and activity
+
+Use **My account** to check your profile and login identity. Do not share one account among several reviewers.
+
+In-app notifications point to work requiring attention. Open the target project or review and check its current state; notifications can refer to records that later changed or became inaccessible.
+
+External notification channels require the workspace's configured services and the relevant account settings. Delivery failures need checking in the channel configuration; do not assume an in-app notification proves an external message arrived.
+
+Project activity and audit records help trace changes. Their visibility depends on your permissions. Avoid including private paths, credentials, or personal data when exporting details for support.
+
+<!-- chapter: network | Settings and maintenance -->
+## 22 · Network and remote access
+
+A local address is usable on the host. Team collaboration needs a reachable team address; public collaboration also needs suitable HTTPS, proxy, and network configuration.
+
+![A reachable team address](web/assets/en/network.svg)
+
+### Configure access
+
+1. The host administrator configures a reverse proxy, domain, certificate, and firewall as needed.
+2. The Owner configures the workspace's external access address and related policy.
+3. Check login and project access from a second device.
+4. Test a share from the recipient's network.
+
+A page's HTTPS requirement does not obtain certificates or set up the proxy for you. Do not send `127.0.0.1` to someone using another device, and do not expose the Core port directly as an unprotected public entry.
+
+Host configuration can force policies that the browser cannot override. Give members the correct HTTPS address, any required network/VPN instructions, and their own invitation or login details.
+
+<!-- chapter: backup | Settings and maintenance -->
+## 23 · Back up data and media
+
+Backups protect different things depending on where the originals are stored.
+
+| Content | Coverage |
+| --- | --- |
+| Database and managed files inside the data directory | Native data backup |
+| Originals outside the data directory | Separate file backup required |
+| WebDAV or S3 media | Storage provider backup/versioning or another independent copy |
+| Host environment and proxy configuration | Separate secure configuration backup |
+
+### Create a backup
+
+For the default macOS instance:
+
+```bash
+sudo /Library/Visto/current/scripts/backup-visto-server.sh
+```
+
+For Linux:
+
+```bash
+sudo /opt/visto/current/scripts/backup-visto-server.sh
+```
+
+For Windows, run `Backup-VistoServer.ps1` from the program folder in administrator PowerShell. Docker uses its own backup tool described in the Docker guide.
+
+The native tool stops the service safely, creates the archive and companion metadata, then restarts it. Confirm success and preserve both files. Keep a copy on a separate disk or trusted remote location; a backup beside the only originals does not protect against losing that disk.
+
+Back up after initial setup and important deliveries, before updates or restoration, and on a schedule appropriate for the project. Periodically test restoration with isolated data.
+
+<!-- chapter: maintenance | Settings and maintenance -->
+## 24 · Update, restore, and uninstall
+
+Host administrators perform these operations. Project members do not need to run them. Keep a current backup before updates and restoration.
+
+### Update from a downloaded package
+
+**The 1.0.3 package does not include the new update helpers shown below. These commands are for later packages. For an existing 1.0.3 installation, follow the update instructions supplied with the target Release.**
+
+The workspace can notify you about a newer version; it does not automatically download or install it. Download the complete official update and keep its package, companion checksum file, and version manifest together.
+
+The new update helper reads the companion files and verifies the package automatically. Specify only the package path. Replace the example path with your actual downloaded file:
+
+```bash
+sudo bash /Library/Visto/current/scripts/update-from-package.sh \
+  --package '/path/to/downloaded-package.tar.gz'
+```
+
+Linux uses the same helper under `/opt/visto/current/scripts/`.
+
+For Windows 1.0.3 → 1.0.4, download the ZIP, companion `.sha256`, and `.manifest.json` from the same Release. Check the published checksum and extract the ZIP into a separate temporary folder. The old updater does not recognize the added maintenance files. Run the new package's helper in administrator PowerShell and specify the existing installation directory:
+
+```powershell
+& 'C:\Downloads\Visto-Server_1.0.4\Update-VistoServerPackage.ps1' `
+  -PackageArchive 'C:\Downloads\Visto-Server_1.0.4_windows-x64.zip' `
+  -InstallDirectory 'C:\Program Files\Visto Server'
+```
+
+The helper retains the existing configuration, token, data, and video components, using the installed verifier and update protections. Do not copy new files over the running installation or run the first-install command again.
+
+Older installations without these helpers must follow their own version's update instructions. Never manually replace the running binaries or edit the current-version link to bypass an update failure.
+
+### Restore data
+
+Restoration replaces the current instance's data, including changes made after the backup. Back up the current state first and keep the backup archive and metadata together.
+
+For macOS, first run the read-only check:
+
+```bash
+sudo /Library/Visto/current/scripts/restore-visto-server.sh \
+  --backup-file '/path/to/backup.tar.gz' --check-only
+```
+
+After checking the replacement scope, use `--confirm-restore` instead of `--check-only`. Linux uses `/opt/visto/current/scripts/restore-visto-server.sh`. Windows uses `Restore-VistoServer.ps1 -BackupFile 'C:\Backups\backup.zip' -CheckOnly`, followed by `-ConfirmRestore` only after reviewing the result.
+
+A path mismatch or unsupported backup is a reason to stop. Do not alter metadata or manually overwrite the database to force a restore. External originals must be restored separately.
+
+### Roll back the program
+
+macOS/Linux can roll back to a retained program version through `rollback-visto-server.sh --to-version` with `--confirm-rollback`. Program rollback does not restore all historical data or guarantee compatibility with a changed database. Follow the tool's checks and preserve the recovery point.
+
+<a id="maintenance-macos"></a>
+### macOS host management
+
+Default program: `/Library/Visto/current`; configuration: `/Library/Visto/config`; logs: `/Library/Logs/Visto`. The private initialization token is in the configuration directory. Use the actual configured data and backup directories for maintenance.
+
+Restart an already registered service:
+
+```bash
+sudo launchctl kickstart -k system/com.visto.server
+```
+
+Stop it with `sudo launchctl bootout system/com.visto.server`. Start a stopped service with `sudo launchctl bootstrap system /Library/LaunchDaemons/com.visto.server.plist`.
+
+Uninstall while preserving data and backups:
+
+```bash
+sudo /Library/Visto/current/scripts/uninstall-visto-server.sh --yes
+```
+
+If stopping the service fails, uninstall aborts. Resolve the cause before retrying. Destructive data-removal options require a separate decision and a usable backup.
+
+#### Removing the video component (optional cleanup)
+
+The uninstall above handles the service registration and the program directory only; it does not remove the FFmpeg and ffprobe media component. That component stays in a shared system location and a reinstall reuses it instead of downloading it again, so removing it is only worthwhile when you hand the machine over or want a fully clean host.
+
+Continue only after `launchctl print system/com.visto.server` reports that the service cannot be found.
+
+| Platform | Default location | After uninstall |
+| --- | --- | --- |
+| macOS | `/Library/Application Support/Visto/runtime` | Kept; remove manually |
+| Linux | `/var/lib/visto-runtime` | Kept; remove manually |
+| Windows | `runtime\ffmpeg` in the program folder | Removed with the program |
+
+macOS:
+
+```bash
+sudo rm -rf "/Library/Application Support/Visto/runtime"
+sudo ls -l "/Library/Application Support/Visto"
+```
+
+Check three things before pressing Enter. Keep the exact path from the table: `data` and `backups` hold your own projects. If the install used a custom `VISTO_MEDIA_RUNTIME_ROOT`, delete that directory instead; the recorded value survives uninstall in `/Library/Visto/config/visto.env`, readable with `sudo grep VISTO_MEDIA_RUNTIME_ROOT /Library/Visto/config/visto.env`. This step does not touch business data or backups — keeping or removing those is a separate decision. A later installation downloads and verifies the component again, so it needs network access.
+
+<a id="maintenance-windows"></a>
+### Windows host management
+
+The program stays in the chosen installation folder. The default data directory is `%ProgramData%\Visto\data`; initialization uses `host-management-token.txt` inside that directory. Keep the program directory and token protected from ordinary users.
+
+Inspect the startup task or request a restart from administrator PowerShell:
+
+```powershell
+Get-ScheduledTask -TaskName 'Visto Server'
+Stop-ScheduledTask -TaskName 'Visto Server'
+Start-ScheduledTask -TaskName 'Visto Server'
+```
+
+Use the package's backup, restore, and uninstall scripts with PowerShell `Get-Help` and the release's supported parameters. Do not delete a folder or task manually to bypass a refused operation. Confirm the service, projects, old media, new uploads, and shares after an update or restore.
+
+<a id="maintenance-linux"></a>
+### Linux host management
+
+| Content | Default location |
+| --- | --- |
+| Program | `/opt/visto/current` |
+| Configuration | `/etc/visto/visto.env` |
+| Data | `/var/lib/visto` |
+| Backups | `/var/backups/visto` |
+| Video runtime | `/var/lib/visto-runtime` |
+
+```bash
+sudo systemctl status visto.service --no-pager
+sudo systemctl restart visto.service
+sudo journalctl -u visto.service -n 100 --no-pager
+```
+
+systemd 239 uses the journal; later supported versions can also use `/var/log/visto` files. Custom instances must keep host tools and service configuration aligned.
+
+Uninstall while preserving data and backups:
+
+```bash
+sudo /opt/visto/current/scripts/uninstall-visto-server.sh --yes
+```
+
+After any maintenance, open the workspace and check actual files, previews, and sharing. A running process alone does not prove the data workflow works.
+
+The media component is outside the uninstall scope: it remains at `/var/lib/visto-runtime` after uninstall and is reused by a reinstall. To clean the host completely, remove it with:
+
+```bash
+sudo rm -rf /var/lib/visto-runtime
+```
+
+Confirm the path before running it, keep this separate from the data and backup directories, and use the recorded `VISTO_MEDIA_RUNTIME_ROOT` in `/etc/visto/visto.env` when the instance used a custom root. On Windows the component lives in the program folder's `runtime\ffmpeg` and is removed together with the program.
+
+<!-- chapter: troubleshooting | Help and reference -->
+## 25 · Troubleshoot by symptom
+
+### The page does not open
+
+Check the address first: local native Server uses port 8787, Docker uses 8080. Check the service or container and recent errors. On macOS, inspect Privacy & Security for a blocked program. On another device, use the team address rather than that device's loopback address.
+
+### A project or upload is unavailable
+
+Check the workspace, account, project membership, and permissions. For uploads, check an active upload location authorized for the project, available disk/quota, and any security rejection. Having an account alone is not project access.
+
+### Upload finished but the preview is missing
+
+Check processing status and the specific error. Confirm the video component is installed, restart after adding it, and test a small known video. Large or unusual files can fail for their own format or resource requirements.
+
+### A file is quarantined or rejected
+
+Ask the Owner to inspect the safety result and reason. Refreshing a result is not a forced rescan. Do not bypass quarantine simply to create a share.
+
+### An original became unreadable
+
+Check whether an external disk was disconnected, a path changed, remote credentials expired, or the source was deleted outside Visto. Restoring a project relationship cannot recreate a missing physical file.
+
+### A share fails or buttons are absent
+
+Check expiry, revocation, access code, review state, and comment/download permissions. Ask the sender to confirm the fixed version and reachable address.
+
+### Saving, updating, or restoring fails
+
+Read the visible error and keep the relevant logs. Check login/session expiry or a conflict before retrying a save. For maintenance failures, preserve backups and recovery files and contact the administrator rather than repeatedly reinstalling.
+
+<!-- chapter: faq | Help and reference -->
+## 26 · Frequently asked questions
+
+### Do I need Desktop?
+
+No. Server provides a browser workspace. Other members and external reviewers do not need to install Desktop.
+
+### Is everything uploaded to the cloud?
+
+No. Data goes to the storage you configure. Remote storage and external services use their own networks and providers.
+
+### Does the same filename create a version?
+
+No. Use **Upload new version** on the existing asset.
+
+### Will an old share show the new version?
+
+An existing review keeps its selected versions. Create a review for the revision and send its share.
+
+### Why is a registered account missing the project?
+
+Workspace registration and project membership are separate. Ask the project supervisor to add the account.
+
+### Can I change host-directory permission later in the browser?
+
+No. The first-run choice is changed later only through host configuration by the administrator.
+
+### Does archiving copy files to another disk?
+
+No. Archiving, copying media, and backing up are separate operations.
+
+### Is copying the database a complete backup?
+
+No. You also need the relevant managed media, secrets, configuration, and separate external originals.
+
+### Is an unscanned file safe?
+
+“Not scanned” does not mean a successful safety scan. Review the actual checks and policy.
+
+### Does an update notification install the update?
+
+No. The administrator downloads and installs the official update.
+
+### Can I send a local address to a client?
+
+Only if they use that same host. Normally provide a reachable HTTPS team address.
+
+### Does opening on a phone prove full mobile support?
+
+No. Check the release's support statement and try the operations you need on your device.
+
+<!-- chapter: checklist | Help and reference -->
+## 27 · Delivery checklist and support
+
+### Before sending a review
+
+Check the selected work and versions, participants and approval rule, outstanding feedback, share password and permissions, and access from the recipient's network.
+
+### After uploading a revision
+
+Check its preview, version number, current-version state, and whether the next review points to that revision. Keep previous review records.
+
+### After installation or maintenance
+
+Open the workspace and check login, an existing project, an old original, a new upload, video playback, and a share. Confirm backups and external storage remain available.
+
+### Ask for help
+
+Use the project issue link on the [downloads page](downloads.html) once the project is public. Before that, send the following to your workspace administrator:
+
+```text
+What I was trying to do:
+Visto version:
+Operating system and device:
+Steps to reproduce:
+Expected result:
+Actual result / full error:
+Approximate time of the problem:
+Whether it affects one file or all files:
+```
+
+Include a relevant screenshot or a short redacted log excerpt. Remove passwords, initialization tokens, private access links, storage credentials, and personal information. Keep a local copy of the original error for investigation.

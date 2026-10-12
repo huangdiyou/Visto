@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Visto user guide: installation, projects, media, versions, reviews, sharing, and maintenance."><title>Visto Docs · Update, restore, and uninstall</title><link rel="icon" type="image/svg+xml" href="../assets/visto-icon.svg"><link rel="alternate" hreflang="zh-CN" href="../maintenance.html"><link rel="stylesheet" href="../assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">Skip to content</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="../assets/visto-icon.svg" alt="" aria-hidden="true">Visto Docs</a><div class="tools"><a class="plain github" href="downloads.html#project"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.3 11.3 0 0 0-3.6 22c.6.1.8-.2.8-.5v-2.1c-3.3.7-4-1.4-4-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.6 0-1.2.4-2.2 1.2-3-.1-.3-.5-1.5.1-3 0 0 1-.3 3.1 1.2a10.7 10.7 0 0 1 5.7 0c2.2-1.5 3.1-1.2 3.1-1.2.6 1.5.2 2.7.1 3 .8.8 1.2 1.8 1.2 3 0 4.3-2.7 5.3-5.3 5.6.4.4.8 1.1.8 2.2v3.1c0 .3.2.6.8.5A11.3 11.3 0 0 0 12 .7Z"/></svg>GitHub</a><a class="return-site" href="https://visto.akahxh.top/">Website ↗</a><button type="button" id="search" class="plain search-trigger js-only">Search <kbd>⌘ / Ctrl K</kbd></button><a class="plain language" id="language" href="../maintenance.html" hreflang="zh-CN" lang="zh-CN" aria-label="切换到中文">中文</a><button type="button" id="theme" class="plain js-only" aria-label="Switch theme">Dark</button><button type="button" id="print" class="plain print js-only">Print</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">Menu</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="Menu"><a class="home" href="index.html">Docs home</a><h2>Getting started</h2><a href="start.html">Understand Visto</a><a href="quick-start.html">Complete your first project</a><a href="navigation.html">Find your way around</a><h2>Installation and setup</h2><a href="prepare.html">Install Visto</a><a href="install-macos.html">macOS installation</a><a href="windows-install.html">Windows installation</a><a href="linux-install.html">Linux installation</a><a href="runtime.html">Video previews and components</a><a href="docker.html">Docker deployment</a><a href="setup.html">First setup and login</a><h2>Projects and media</h2><a href="storage.html">Configure storage</a><a href="project.html">Create and manage projects</a><a href="members.html">Members and permissions</a><a href="upload.html">Upload and organize media</a><a href="archive.html">Recycle bin, archiving, and deletion</a><h2>Reviews and delivery</h2><a href="versions.html">Versions and revisions</a><a href="reviews.html">Create a review</a><a href="comments.html">Feedback and decisions</a><a href="sharing.html">Share and revoke access</a><a href="guest.html">Review a shared version</a><h2>Settings and maintenance</h2><a href="notifications.html">Account, notifications, and activity</a><a href="network.html">Network and remote access</a><a href="backup.html">Back up data and media</a><a href="maintenance.html" class="active" aria-current="page">Update, restore, and uninstall</a><h2>Help and reference</h2><a href="troubleshooting.html">Troubleshoot by symptom</a><a href="faq.html">Frequently asked questions</a><a href="checklist.html">Delivery checklist and support</a><div class="offline"><a href="downloads.html">Downloads</a><a href="Visto-User-Guide.html">Offline guide</a><a href="USER_GUIDE.md">Markdown</a><a href="checklist.html">Report an issue</a><a href="downloads.html#project">GitHub ↗</a><a href="https://visto.akahxh.top/">Website ↗</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">Docs home</a><span>/</span>Settings and maintenance</div><h1>Update, restore, and uninstall</h1><p>Host administrators perform these operations. Project members do not need to run them. Keep a current backup before updates and restoration.</p>
+<h3 id="maintenance-section-1">Update from a downloaded package</h3>
+<p><strong>The 1.0.3 package does not include the new update helpers shown below. These commands are for later packages. For an existing 1.0.3 installation, follow the update instructions supplied with the target Release.</strong></p>
+<p>The workspace can notify you about a newer version; it does not automatically download or install it. Download the complete official update and keep its package, companion checksum file, and version manifest together.</p>
+<p>The new update helper reads the companion files and verifies the package automatically. Specify only the package path. Replace the example path with your actual downloaded file:</p>
+<pre><code class="language-bash">sudo bash /Library/Visto/current/scripts/update-from-package.sh \
+  --package '/path/to/downloaded-package.tar.gz'
+</code></pre>
+<p>Linux uses the same helper under <code>/opt/visto/current/scripts/</code>.</p>
+<p>For Windows 1.0.3 → 1.0.4, download the ZIP, companion <code>.sha256</code>, and <code>.manifest.json</code> from the same Release. Check the published checksum and extract the ZIP into a separate temporary folder. The old updater does not recognize the added maintenance files. Run the new package's helper in administrator PowerShell and specify the existing installation directory:</p>
+<pre><code class="language-powershell">&amp; 'C:\Downloads\Visto-Server_1.0.4\Update-VistoServerPackage.ps1' `
+  -PackageArchive 'C:\Downloads\Visto-Server_1.0.4_windows-x64.zip' `
+  -InstallDirectory 'C:\Program Files\Visto Server'
+</code></pre>
+<p>The helper retains the existing configuration, token, data, and video components, using the installed verifier and update protections. Do not copy new files over the running installation or run the first-install command again.</p>
+<p>Older installations without these helpers must follow their own version's update instructions. Never manually replace the running binaries or edit the current-version link to bypass an update failure.</p>
+<h3 id="maintenance-section-2">Restore data</h3>
+<p>Restoration replaces the current instance's data, including changes made after the backup. Back up the current state first and keep the backup archive and metadata together.</p>
+<p>For macOS, first run the read-only check:</p>
+<pre><code class="language-bash">sudo /Library/Visto/current/scripts/restore-visto-server.sh \
+  --backup-file '/path/to/backup.tar.gz' --check-only
+</code></pre>
+<p>After checking the replacement scope, use <code>--confirm-restore</code> instead of <code>--check-only</code>. Linux uses <code>/opt/visto/current/scripts/restore-visto-server.sh</code>. Windows uses <code>Restore-VistoServer.ps1 -BackupFile 'C:\Backups\backup.zip' -CheckOnly</code>, followed by <code>-ConfirmRestore</code> only after reviewing the result.</p>
+<p>A path mismatch or unsupported backup is a reason to stop. Do not alter metadata or manually overwrite the database to force a restore. External originals must be restored separately.</p>
+<h3 id="maintenance-section-3">Roll back the program</h3>
+<p>macOS/Linux can roll back to a retained program version through <code>rollback-visto-server.sh --to-version</code> with <code>--confirm-rollback</code>. Program rollback does not restore all historical data or guarantee compatibility with a changed database. Follow the tool's checks and preserve the recovery point.</p>
+<p><a id="maintenance-macos"></a></p>
+<h3 id="maintenance-section-4">macOS host management</h3>
+<p>Default program: <code>/Library/Visto/current</code>; configuration: <code>/Library/Visto/config</code>; logs: <code>/Library/Logs/Visto</code>. The private initialization token is in the configuration directory. Use the actual configured data and backup directories for maintenance.</p>
+<p>Restart an already registered service:</p>
+<pre><code class="language-bash">sudo launchctl kickstart -k system/com.visto.server
+</code></pre>
+<p>Stop it with <code>sudo launchctl bootout system/com.visto.server</code>. Start a stopped service with <code>sudo launchctl bootstrap system /Library/LaunchDaemons/com.visto.server.plist</code>.</p>
+<p>Uninstall while preserving data and backups:</p>
+<pre><code class="language-bash">sudo /Library/Visto/current/scripts/uninstall-visto-server.sh --yes
+</code></pre>
+<p>If stopping the service fails, uninstall aborts. Resolve the cause before retrying. Destructive data-removal options require a separate decision and a usable backup.</p>
+<h4 id="maintenance-section-5">Removing the video component (optional cleanup)</h4>
+<p>The uninstall above handles the service registration and the program directory only; it does not remove the FFmpeg and ffprobe media component. That component stays in a shared system location and a reinstall reuses it instead of downloading it again, so removing it is only worthwhile when you hand the machine over or want a fully clean host.</p>
+<p>Continue only after <code>launchctl print system/com.visto.server</code> reports that the service cannot be found.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Default location</th>
+<th>After uninstall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS</td>
+<td><code>/Library/Application Support/Visto/runtime</code></td>
+<td>Kept; remove manually</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td><code>/var/lib/visto-runtime</code></td>
+<td>Kept; remove manually</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>runtime\ffmpeg</code> in the program folder</td>
+<td>Removed with the program</td>
+</tr>
+</tbody>
+</table></div>
+<p>macOS:</p>
+<pre><code class="language-bash">sudo rm -rf &quot;/Library/Application Support/Visto/runtime&quot;
+sudo ls -l &quot;/Library/Application Support/Visto&quot;
+</code></pre>
+<p>Check three things before pressing Enter. Keep the exact path from the table: <code>data</code> and <code>backups</code> hold your own projects. If the install used a custom <code>VISTO_MEDIA_RUNTIME_ROOT</code>, delete that directory instead; the recorded value survives uninstall in <code>/Library/Visto/config/visto.env</code>, readable with <code>sudo grep VISTO_MEDIA_RUNTIME_ROOT /Library/Visto/config/visto.env</code>. This step does not touch business data or backups — keeping or removing those is a separate decision. A later installation downloads and verifies the component again, so it needs network access.</p>
+<p><a id="maintenance-windows"></a></p>
+<h3 id="maintenance-section-6">Windows host management</h3>
+<p>The program stays in the chosen installation folder. The default data directory is <code>%ProgramData%\Visto\data</code>; initialization uses <code>host-management-token.txt</code> inside that directory. Keep the program directory and token protected from ordinary users.</p>
+<p>Inspect the startup task or request a restart from administrator PowerShell:</p>
+<pre><code class="language-powershell">Get-ScheduledTask -TaskName 'Visto Server'
+Stop-ScheduledTask -TaskName 'Visto Server'
+Start-ScheduledTask -TaskName 'Visto Server'
+</code></pre>
+<p>Use the package's backup, restore, and uninstall scripts with PowerShell <code>Get-Help</code> and the release's supported parameters. Do not delete a folder or task manually to bypass a refused operation. Confirm the service, projects, old media, new uploads, and shares after an update or restore.</p>
+<p><a id="maintenance-linux"></a></p>
+<h3 id="maintenance-section-7">Linux host management</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Content</th>
+<th>Default location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Program</td>
+<td><code>/opt/visto/current</code></td>
+</tr>
+<tr>
+<td>Configuration</td>
+<td><code>/etc/visto/visto.env</code></td>
+</tr>
+<tr>
+<td>Data</td>
+<td><code>/var/lib/visto</code></td>
+</tr>
+<tr>
+<td>Backups</td>
+<td><code>/var/backups/visto</code></td>
+</tr>
+<tr>
+<td>Video runtime</td>
+<td><code>/var/lib/visto-runtime</code></td>
+</tr>
+</tbody>
+</table></div>
+<pre><code class="language-bash">sudo systemctl status visto.service --no-pager
+sudo systemctl restart visto.service
+sudo journalctl -u visto.service -n 100 --no-pager
+</code></pre>
+<p>systemd 239 uses the journal; later supported versions can also use <code>/var/log/visto</code> files. Custom instances must keep host tools and service configuration aligned.</p>
+<p>Uninstall while preserving data and backups:</p>
+<pre><code class="language-bash">sudo /opt/visto/current/scripts/uninstall-visto-server.sh --yes
+</code></pre>
+<p>After any maintenance, open the workspace and check actual files, previews, and sharing. A running process alone does not prove the data workflow works.</p>
+<p>The media component is outside the uninstall scope: it remains at <code>/var/lib/visto-runtime</code> after uninstall and is reused by a reinstall. To clean the host completely, remove it with:</p>
+<pre><code class="language-bash">sudo rm -rf /var/lib/visto-runtime
+</code></pre>
+<p>Confirm the path before running it, keep this separate from the data and backup directories, and use the recorded <code>VISTO_MEDIA_RUNTIME_ROOT</code> in <code>/etc/visto/visto.env</code> when the instance used a custom root. On Windows the component lives in the program folder's <code>runtime\ffmpeg</code> and is removed together with the program.</p><nav class="pager"><a href="backup.html"><small>Previous</small>Back up data and media</a><a href="troubleshooting.html"><small>Next</small>Troubleshoot by symptom</a></nav><footer class="footer">Visto Docs · 2026-10-03<br><a href="checklist.html">Report an issue</a><a href="Visto-User-Guide.html">Offline guide</a><a href="downloads.html">Downloads</a></footer></main><aside class="toc" aria-label="On this page"><h2>On this page</h2><a href="#maintenance-section-1">Update from a downloaded package</a><a href="#maintenance-section-2">Restore data</a><a href="#maintenance-section-3">Roll back the program</a><a href="#maintenance-section-4">macOS host management</a><a href="#maintenance-section-5">Removing the video component (optional cleanup)</a><a href="#maintenance-section-6">Windows host management</a><a href="#maintenance-section-7">Linux host management</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">Search the docs</h2><button type="button" id="search-close" class="plain">Close</button></div><label for="search-input" class="search-note">Search titles, steps, and troubleshooting</label><input id="search-input" class="search-input" type="search" placeholder="Search upload, access code, restore…" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="Search results"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">View image</h2><button type="button" id="image-close" class="plain">Close</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="search-data.js"></script><script src="../assets/docs.js"></script></body></html>

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "provider": "Visto (self-built from upstream release tarballs)",
+  "sourceRepository": "https://github.com/huangdiyou/Visto",
+  "release": "ffmpeg-8.1.2-linux-amd64-lgpl.2 / ffmpeg-8.1.2-linux-arm64-lgpl.2 / ffmpeg-8.1.2-windows-amd64-lgpl",
+  "upstreamVersion": "ffmpeg-8.1.2",
+  "license": "LGPL-2.1-or-later",
+  "softwareVideoEncoder": "libopenh264",
+  "sourceImmutability": "Versioned self-built runtime archives use fixed SHA-256 values. Corresponding source, license, build flags and signed manifests are distributed alongside each runtime; SOURCE.txt names the source archive. Verify the signed manifest with the trusted public key before installing a native runtime.",
+  "assets": {
+    "windows-amd64": {
+      "url": "https://dl.819101.xyz/media-runtime/ffmpeg-8.1.2-windows-amd64-lgpl/Visto-Media-Runtime_ffmpeg-8.1.2-windows-amd64-lgpl_windows-amd64.zip",
+      "sha256": "0cf99e222af32f638a3dc55d12590b1c2c03e44c1fa56ba7904e37374190c113",
+      "archive": "zip"
+    },
+    "linux-amd64": {
+      "url": "https://dl.819101.xyz/media-runtime/ffmpeg-8.1.2-linux-amd64-lgpl.2/Visto-Media-Runtime_ffmpeg-8.1.2-linux-amd64-lgpl.2_linux-amd64.tar.xz",
+      "sha256": "9487b1d0db5aee44ed8869503826f9065b99b03a7e57b742fc08c08dbaa38172",
+      "archive": "tar.xz"
+    },
+    "linux-arm64": {
+      "url": "https://dl.819101.xyz/media-runtime/ffmpeg-8.1.2-linux-arm64-lgpl.2/Visto-Media-Runtime_ffmpeg-8.1.2-linux-arm64-lgpl.2_linux-arm64.tar.xz",
+      "sha256": "52f2198edcfca958dcd715a8a9986dc20f360e99d338b11e6ef12be4b38c52e5",
+      "archive": "tar.xz"
+    }
+  }
+}
