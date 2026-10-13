@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Visto 使用指南：安装、项目、媒体、版本、审阅、分享与维护。"><title>Visto 文档 · 成员、邀请与权限</title><link rel="icon" type="image/svg+xml" href="assets/visto-icon.svg"><link rel="alternate" hreflang="en" href="en/members.html"><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto 文档</a><div class="tools"><a class="plain github" href="downloads.html#project"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.3 11.3 0 0 0-3.6 22c.6.1.8-.2.8-.5v-2.1c-3.3.7-4-1.4-4-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.6 0-1.2.4-2.2 1.2-3-.1-.3-.5-1.5.1-3 0 0 1-.3 3.1 1.2a10.7 10.7 0 0 1 5.7 0c2.2-1.5 3.1-1.2 3.1-1.2.6 1.5.2 2.7.1 3 .8.8 1.2 1.8 1.2 3 0 4.3-2.7 5.3-5.3 5.6.4.4.8 1.1.8 2.2v3.1c0 .3.2.6.8.5A11.3 11.3 0 0 0 12 .7Z"/></svg>GitHub</a><a class="return-site" href="https://visto.akahxh.top/">返回官网 ↗</a><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><a class="plain language" id="language" href="en/members.html" hreflang="en" lang="en" aria-label="Switch to English">EN</a><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">先理解 Visto</a><a href="quick-start.html">做完你的第一个项目</a><a href="navigation.html">熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">安装 Visto</a><a href="install-macos.html">macOS 安装</a><a href="windows-install.html">Windows 安装</a><a href="linux-install.html">Linux 安装</a><a href="runtime.html">视频预览与组件安装</a><a href="docker.html">Docker 部署说明</a><a href="setup.html">首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">配置文件保存位置</a><a href="project.html">创建与管理项目</a><a href="members.html" class="active" aria-current="page">成员、邀请与权限</a><a href="upload.html">上传、搜索与整理素材</a><a href="archive.html">回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">版本管理与新一轮修订</a><a href="reviews.html">创建一轮审阅</a><a href="comments.html">提交精确反馈与审核结论</a><a href="sharing.html">创建、安全检查与撤销分享</a><a href="guest.html">给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">通知、个人资料与活动</a><a href="network.html">网络与远程访问</a><a href="backup.html">备份：保护数据库与媒体</a><a href="maintenance.html">更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">按现象排查问题</a><a href="faq.html">常见问题</a><a href="checklist.html">交付检查单与求助模板</a><div class="offline"><a href="downloads.html">下载与版本</a><a href="Visto-用户手册.html">离线手册</a><a href="USER_GUIDE.md">Markdown</a><a href="checklist.html">反馈问题</a><a href="downloads.html#project">GitHub ↗</a><a href="https://visto.akahxh.top/">返回官网 ↗</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档首页</a><span>/</span>项目与素材</div><h1>成员、邀请与权限</h1><p>Visto 有工作空间账号与项目成员两层关系。团队邀请让一个人拥有自己的账号；项目成员关系决定他能在哪个项目里工作。</p>
+<figure class="figure"><a href="assets/permissions.svg" aria-label="账号与项目成员授权关系示意"><img src="assets/permissions.svg" alt="账号与项目成员授权关系示意" loading="lazy" decoding="async"></a><figcaption>流程示意 · 账号与项目成员授权关系示意<span class="hint">点击放大查看</span></figcaption></figure>
+<h3 id="members-section-1">常见身份</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>身份</th>
+<th>作用</th>
+<th>权限原则</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Owner</td>
+<td>管理全局基础设施和账号</td>
+<td>有广泛权限，只交给可信维护者</td>
+</tr>
+<tr>
+<td>项目主管</td>
+<td>管理被分配项目的成员和协作</td>
+<td>不等于获得其他项目或主机权限</td>
+</tr>
+<tr>
+<td>项目成员</td>
+<td>参与被加入项目的素材与审阅</td>
+<td>具体上传、移除、分享和结论权限看成员设置</td>
+</tr>
+<tr>
+<td>临时账户</td>
+<td>有限项目访问或临时协作</td>
+<td>检查权限和到期时间；默认权限可较少</td>
+</tr>
+<tr>
+<td>分享访客</td>
+<td>从指定分享入口查看内容</td>
+<td>由分享范围、密码、有效期、评论及下载开关约束</td>
+</tr>
+</tbody>
+</table></div>
+<p>项目成员默认可有较多协作权限，包括上传、审阅、分享或从项目移除媒体；若某人只需观看，应明确收紧权限，不凭角色名称推断“只读”。</p>
+<figure class="figure"><a href="assets/08-members.png" aria-label="真实界面：项目设置中的成员与权限分区"><img src="assets/08-members.png" alt="真实界面：项目设置中的成员与权限分区" loading="lazy" decoding="async"></a><figcaption>演示界面 · 真实界面：项目设置中的成员与权限分区<span class="hint">点击放大查看</span></figcaption></figure>
+<p><strong>看图操作：</strong> 在项目设置里管理成员；工作空间账号与本项目的角色分别确认。</p>
+<h3 id="members-section-2">邀请并加入项目</h3>
+<ol>
+<li>Owner 在 <strong>Owner 设置 → 账号与注册</strong> 创建成员邀请，填写成员邮箱并选择合适的账户类型。</li>
+<li>将本次邀请入口交给对应成员；邀请链接和账号不要多人共用。</li>
+<li>成员打开邀请页，按页面完成自己的资料和密码设置。</li>
+<li>Owner 或具备权限的项目主管进入 <strong>项目设置 → 成员与权限</strong>，将该账号加入项目。</li>
+<li>选择项目角色及具体权限；有时间边界时设有效期。</li>
+<li>用成员自己的账号确认能看见项目、能做被允许的操作。</li>
+</ol>
+<h3 id="members-section-3">开放注册</h3>
+<p>Owner 可以配置注册策略。允许注册并不自动给新用户任何项目权限；项目主管或 Owner 仍需把用户加入具体项目。</p>
+<h3 id="members-section-4">调整或收回访问</h3>
+<p>成员离开项目时，检查项目成员关系、临时账户期限、已创建的分享和后续通知。移除成员不能收回已被对方下载的文件；外部分享也需要单独检查和撤销。</p><nav class="pager"><a href="project.html"><small>上一篇</small>创建与管理项目</a><a href="upload.html"><small>下一篇</small>上传、搜索与整理素材</a></nav><footer class="footer">Visto 文档 · 2026-10-03<br><a href="checklist.html">反馈问题</a><a href="Visto-用户手册.html">离线手册</a><a href="downloads.html">下载与版本</a></footer></main><aside class="toc" aria-label="本页内容"><h2>本页内容</h2><a href="#members-section-1">常见身份</a><a href="#members-section-2">邀请并加入项目</a><a href="#members-section-3">开放注册</a><a href="#members-section-4">调整或收回访问</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索文档</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="search-data.js"></script><script src="assets/docs.js"></script></body></html>

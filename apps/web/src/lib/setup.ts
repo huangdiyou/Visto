@@ -1,8 +1,32 @@
+import type { SetupInput } from "@review-studio/contracts";
+
 export interface SetupDraft {
   workspaceName: string;
   ownerName: string;
   password: string;
   confirmPassword: string;
+}
+
+/**
+ * Builds the first-run payload. The host access answer is always sent
+ * explicitly: the field is optional on the wire so that an older client cannot
+ * be read as a refusal, but this client has a checkbox and must not rely on that
+ * fallback (D2, docs/FREE_TIER_BOUNDARY_DESIGN.md §2.2).
+ */
+export function buildSetupInput(
+  draft: SetupDraft,
+  allowWebHostPaths: boolean,
+  locale: string,
+  timezone: string,
+): SetupInput {
+  return {
+    workspaceName: draft.workspaceName.trim(),
+    ownerName: draft.ownerName.trim(),
+    password: draft.password,
+    locale,
+    timezone,
+    allowWebHostPaths,
+  };
 }
 
 export function validateSetupDraft(draft: SetupDraft): string | null {

@@ -1,5 +1,9 @@
 import type {
+  SystemHostAccess,
   SystemInfo,
+  SystemMediaEncodingReprobeResult,
+  SystemMediaEncodingSettings,
+  SystemMediaEncodingSettingsInput,
   SystemNetworkSettings,
   SystemNetworkSettingsInput,
   SystemUpdateStatus,
@@ -9,6 +13,16 @@ import { requestJSON } from "./client";
 export async function getSystemInfo(signal?: AbortSignal): Promise<SystemInfo> {
   const options = signal ? { signal } : {};
   return requestJSON<SystemInfo>("/api/v1/system/info", options);
+}
+
+// Read-only by design: a switch that grants host-level reach must not be
+// changeable by the session that benefits from it, so there is no updater here
+// and no write route behind it.
+export function getHostAccess(signal?: AbortSignal): Promise<SystemHostAccess> {
+  return requestJSON<SystemHostAccess>(
+    "/api/v1/system/host-access",
+    signal ? { signal } : {},
+  );
 }
 
 export function getNetworkSettings(
@@ -40,4 +54,37 @@ export function updateNetworkSettings(
     method: "PUT",
     body: input,
   });
+}
+
+export function getMediaEncodingSettings(
+  signal?: AbortSignal,
+): Promise<SystemMediaEncodingSettings> {
+  return requestJSON<SystemMediaEncodingSettings>(
+    "/api/v1/system/media-encoding",
+    signal ? { signal } : {},
+  );
+}
+
+// An empty preferredEncoder returns the instance to automatic selection, so the
+// caller passes it deliberately rather than by omitting the field.
+export function updateMediaEncodingSettings(
+  input: SystemMediaEncodingSettingsInput,
+): Promise<SystemMediaEncodingSettings> {
+  return requestJSON<SystemMediaEncodingSettings>(
+    "/api/v1/system/media-encoding",
+    {
+      method: "PUT",
+      body: input,
+    },
+  );
+}
+
+// A sweep tries every candidate encoder against the installed FFmpeg and can
+// take minutes, so this only starts one; the page reads the outcome from the
+// next getMediaEncodingSettings call.
+export function reprobeMediaEncodingSettings(): Promise<SystemMediaEncodingReprobeResult> {
+  return requestJSON<SystemMediaEncodingReprobeResult>(
+    "/api/v1/system/media-encoding/reprobe",
+    { method: "POST" },
+  );
 }

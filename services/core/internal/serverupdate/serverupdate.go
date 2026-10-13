@@ -1,13 +1,21 @@
-// Package serverupdate verifies the signed public update manifest used by a
-// self-hosted Visto Server. It deliberately has no dependency on Desktop.
+// Package serverupdate reads the public update manifest used by a self-hosted
+// Visto Server. It deliberately has no dependency on Desktop.
+//
+// The free tier channel is unsigned by decision (docs/FREE_TIER_BOUNDARY_DESIGN.md):
+// the manifest is a version announcement only. It carries no artifact
+// descriptors, no download location and no free text, and this package performs
+// no release signature verification. An unsigned channel must not be able to
+// name a download location, otherwise whoever can rewrite the source also
+// chooses what gets installed.
+//
+// Media runtime manifests are a separate trust chain with their own pinned key;
+// VerifyDetachedSignature stays for that caller.
 package serverupdate
 
 import (
 	"context"
 	"crypto/ed25519"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,37 +32,14 @@ import (
 
 const ManifestSchemaVersion = 1
 
+// Manifest is the free tier version announcement: four fields, no artifact
+// descriptors, no download location and no free text. The absence of a download
+// field is deliberate — see the package comment.
 type Manifest struct {
-	SchemaVersion           int        `json:"schemaVersion"`
-	Channel                 string     `json:"channel"`
-	Version                 string     `json:"version"`
-	PublishedAt             time.Time  `json:"publishedAt"`
-	MinimumSupportedVersion string     `json:"minimumSupportedVersion"`
-	ReleaseNotes            []string   `json:"releaseNotes"`
-	Artifacts               []Artifact `json:"artifacts"`
-	SigningKeyID            string     `json:"signingKeyId,omitempty"`
-}
-
-type KeySet struct {
-	SchemaVersion int          `json:"schemaVersion"`
-	Keys          []ReleaseKey `json:"keys"`
-}
-
-type ReleaseKey struct {
-	ID        string `json:"id"`
-	PublicKey string `json:"publicKey"`
-}
-
-type Artifact struct {
-	Kind     string `json:"kind"`
-	Platform string `json:"platform"`
-	URL      string `json:"url"`
-	// Image carries the immutable OCI reference for container artifacts, for
-	// example "ghcr.io/visto/core@sha256:<digest>". Container images are not
-	// addressable over HTTPS, so they cannot reuse URL.
-	Image     string `json:"image,omitempty"`
-	SHA256    string `json:"sha256"`
-	SizeBytes int64  `json:"sizeBytes"`
+	SchemaVersion int       `json:"schemaVersion"`
+	Channel       string    `json:"channel"`
+	Version       string    `json:"version"`
+	PublishedAt   time.Time `json:"publishedAt"`
 }
 
 // Deployment kinds reported to the Owner update page. The page only explains
@@ -110,8 +95,6 @@ func DetectDeploymentKind(explicit string) string {
 
 type CheckConfig struct {
 	Sources       []string
-	PublicKey     string
-	RootPublicKey string
 	HTTPClient    *http.Client
 	AllowInsecure bool
 }
@@ -121,84 +104,11 @@ type Result struct {
 	Manifest Manifest `json:"manifest"`
 }
 
-type VerifyArtifactConfig struct {
-	ManifestBytes  []byte
-	SignatureBytes []byte
-	PublicKey      string
-	ArtifactPath   string
-	Kind           string
-	Platform       string
-}
-
-func VerifyArtifact(config VerifyArtifactConfig) (Artifact, error) {
-	// a native package must be selected by an exact kind/platform
-	// pair. An unknown platform or a kind from another operating system is a
-	// hard failure; selecting another platform's package is never a fallback.
-	if err := delivery.ValidateKindPlatform(config.Kind, config.Platform); err != nil {
-		return Artifact{}, err
-	}
-	publicKey, err := decodePublicKey(config.PublicKey)
-	if err != nil {
-		return Artifact{}, err
-	}
-	signature, err := base64.StdEncoding.DecodeString(strings.TrimSpace(string(config.SignatureBytes)))
-	if err != nil || !ed25519.Verify(publicKey, config.ManifestBytes, signature) {
-		return Artifact{}, errors.New("manifest signature verification failed")
-	}
-	var manifest Manifest
-	if err := json.Unmarshal(config.ManifestBytes, &manifest); err != nil {
-		return Artifact{}, fmt.Errorf("decode manifest: %w", err)
-	}
-	if err := validateManifest(manifest); err != nil {
-		return Artifact{}, err
-	}
-	var selected *Artifact
-	for index := range manifest.Artifacts {
-		artifact := &manifest.Artifacts[index]
-		if artifact.Kind == config.Kind && artifact.Platform == config.Platform {
-			if selected != nil {
-				return Artifact{}, errors.New("manifest contains duplicate matching artifacts")
-			}
-			selected = artifact
-		}
-	}
-	if selected == nil {
-		return Artifact{}, errors.New("manifest does not contain the required artifact")
-	}
-	file, err := os.Open(config.ArtifactPath)
-	if err != nil {
-		return Artifact{}, fmt.Errorf("open artifact: %w", err)
-	}
-	defer file.Close()
-	info, err := file.Stat()
-	if err != nil {
-		return Artifact{}, fmt.Errorf("stat artifact: %w", err)
-	}
-	if info.Size() != selected.SizeBytes {
-		return Artifact{}, errors.New("artifact size does not match signed manifest")
-	}
-	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return Artifact{}, fmt.Errorf("hash artifact: %w", err)
-	}
-	if !strings.EqualFold(hex.EncodeToString(hash.Sum(nil)), selected.SHA256) {
-		return Artifact{}, errors.New("artifact SHA-256 does not match signed manifest")
-	}
-	return *selected, nil
-}
-
+// Check returns the first usable manifest among the configured sources. It
+// checks shape only: the free tier channel is unsigned, so a manifest that
+// parses and validates is reported, and the version guard downstream decides
+// whether it is worth acting on.
 func Check(ctx context.Context, config CheckConfig) (Result, error) {
-	publicKey, err := decodePublicKey(config.PublicKey)
-	if err != nil && strings.TrimSpace(config.RootPublicKey) == "" {
-		return Result{}, delivery.NewError(delivery.CodeVerificationFailed, err.Error())
-	}
-	var rootPublicKey ed25519.PublicKey
-	if strings.TrimSpace(config.RootPublicKey) != "" {
-		rootPublicKey, err = decodePublicKey(config.RootPublicKey)
-		if err != nil {
-			return Result{}, delivery.NewError(delivery.CodeVerificationFailed, fmt.Sprintf("update root public key: %v", err))
-		}
-	}
 	client := updateHTTPClient(config.HTTPClient)
 	if len(config.Sources) == 0 {
 		return Result{}, delivery.NewError(delivery.CodeInvalidArguments, "no update sources configured")
@@ -218,44 +128,6 @@ func Check(ctx context.Context, config CheckConfig) (Result, error) {
 			failures = append(failures, fmt.Sprintf("%s: %v", base, fetchErr))
 			continue
 		}
-		signature, fetchErr := fetch(ctx, client, base+"/latest.json.sig")
-		if fetchErr != nil {
-			failures = append(failures, fmt.Sprintf("%s: %v", base, fetchErr))
-			continue
-		}
-		if rootPublicKey != nil {
-			keySet, keySetErr := fetchKeySet(ctx, client, base, rootPublicKey)
-			if keySetErr != nil {
-				var classified *delivery.Error
-				if !errors.As(keySetErr, &classified) || classified.Code != delivery.CodeNetworkFailure {
-					failureCode = delivery.CodeVerificationFailed
-				}
-				failures = append(failures, fmt.Sprintf("%s: %v", base, keySetErr))
-				continue
-			}
-			var candidate Manifest
-			if decodeErr := json.Unmarshal(manifestBytes, &candidate); decodeErr != nil {
-				failureCode = delivery.CodeVerificationFailed
-				failures = append(failures, fmt.Sprintf("%s: decode manifest: %v", base, decodeErr))
-				continue
-			}
-			publicKey, keySetErr = keySet.key(candidate.SigningKeyID)
-			if keySetErr != nil {
-				var classified *delivery.Error
-				if !errors.As(keySetErr, &classified) || classified.Code != delivery.CodeNetworkFailure {
-					failureCode = delivery.CodeVerificationFailed
-				}
-				failures = append(failures, fmt.Sprintf("%s: %v", base, keySetErr))
-				continue
-			}
-		}
-		decodedSignature, decodeErr := base64.StdEncoding.DecodeString(strings.TrimSpace(string(signature)))
-		if decodeErr != nil || !ed25519.Verify(publicKey, manifestBytes, decodedSignature) {
-			failureCode = delivery.CodeVerificationFailed
-			failures = append(failures, fmt.Sprintf("%s: manifest signature verification failed", base))
-			continue
-		}
-
 		var manifest Manifest
 		if decodeErr := json.Unmarshal(manifestBytes, &manifest); decodeErr != nil {
 			failureCode = delivery.CodeVerificationFailed
@@ -267,46 +139,13 @@ func Check(ctx context.Context, config CheckConfig) (Result, error) {
 			failures = append(failures, fmt.Sprintf("%s: %v", base, validateErr))
 			continue
 		}
-
 		return Result{Source: base, Manifest: manifest}, nil
 	}
 
-	return Result{}, delivery.NewError(failureCode, fmt.Sprintf("no trusted update manifest was available: %s", strings.Join(failures, "; ")))
-}
-
-func fetchKeySet(ctx context.Context, client *http.Client, base string, rootPublicKey ed25519.PublicKey) (KeySet, error) {
-	body, err := fetch(ctx, client, base+"/keys.json")
-	if err != nil {
-		return KeySet{}, delivery.NewError(delivery.CodeNetworkFailure, fmt.Sprintf("fetch trusted key set: %v", err))
-	}
-	signature, err := fetch(ctx, client, base+"/keys.json.sig")
-	if err != nil {
-		return KeySet{}, delivery.NewError(delivery.CodeNetworkFailure, fmt.Sprintf("fetch trusted key set signature: %v", err))
-	}
-	decoded, err := base64.StdEncoding.DecodeString(strings.TrimSpace(string(signature)))
-	if err != nil || !ed25519.Verify(rootPublicKey, body, decoded) {
-		return KeySet{}, errors.New("trusted key set signature verification failed")
-	}
-	var keySet KeySet
-	if err := json.Unmarshal(body, &keySet); err != nil {
-		return KeySet{}, fmt.Errorf("decode trusted key set: %w", err)
-	}
-	if keySet.SchemaVersion != ManifestSchemaVersion || len(keySet.Keys) == 0 {
-		return KeySet{}, errors.New("trusted key set is invalid")
-	}
-	return keySet, nil
-}
-
-func (keySet KeySet) key(id string) (ed25519.PublicKey, error) {
-	if strings.TrimSpace(id) == "" {
-		return nil, errors.New("manifest does not declare a signing key ID")
-	}
-	for _, key := range keySet.Keys {
-		if key.ID == id {
-			return decodePublicKey(key.PublicKey)
-		}
-	}
-	return nil, fmt.Errorf("manifest signing key %q is not trusted", id)
+	return Result{}, delivery.NewError(
+		failureCode,
+		fmt.Sprintf("no usable update manifest was available: %s", strings.Join(failures, "; ")),
+	)
 }
 
 func updateHTTPClient(source *http.Client) *http.Client {
@@ -359,6 +198,9 @@ func fetch(ctx context.Context, client *http.Client, address string) ([]byte, er
 	return io.ReadAll(io.LimitReader(response.Body, 512*1024))
 }
 
+// validateManifest rejects a manifest the free tier cannot act on. There is no
+// artifact or signature validation left: the channel carries neither, and the
+// version guard is applied where the product decides whether to prompt.
 func validateManifest(manifest Manifest) error {
 	if manifest.SchemaVersion != ManifestSchemaVersion {
 		return fmt.Errorf("unsupported manifest schema %d", manifest.SchemaVersion)
@@ -366,38 +208,18 @@ func validateManifest(manifest Manifest) error {
 	if strings.TrimSpace(manifest.Channel) != "stable" || strings.TrimSpace(manifest.Version) == "" {
 		return errors.New("manifest must describe a stable version")
 	}
-	if manifest.PublishedAt.IsZero() || len(manifest.Artifacts) == 0 {
-		return errors.New("manifest is missing release metadata or artifacts")
-	}
-	for _, artifact := range manifest.Artifacts {
-		if strings.TrimSpace(artifact.Kind) == "" || strings.TrimSpace(artifact.Platform) == "" || artifact.SizeBytes <= 0 {
-			return errors.New("manifest contains an incomplete artifact")
-		}
-		if len(artifact.SHA256) != 64 {
-			return errors.New("manifest contains an invalid SHA-256")
-		}
-		if _, err := hex.DecodeString(artifact.SHA256); err != nil {
-			return errors.New("manifest contains an invalid SHA-256")
-		}
-		image := strings.TrimSpace(artifact.Image)
-		if image != "" {
-			// Container artifacts are addressed by immutable image reference,
-			// not by HTTPS URL. Mutable tags would let a release silently move.
-			if !strings.Contains(image, "@sha256:") {
-				return errors.New("manifest contains a container image without an immutable digest")
-			}
-			continue
-		}
-		artifactURL, err := url.Parse(strings.TrimSpace(artifact.URL))
-		if err != nil || !artifactURL.IsAbs() || artifactURL.Host == "" || artifactURL.Scheme != "https" || artifactURL.User != nil {
-			return errors.New("manifest contains an invalid artifact URL")
-		}
+	if manifest.PublishedAt.IsZero() {
+		return errors.New("manifest is missing its publication time")
 	}
 	return nil
 }
 
-// VerifyDetachedSignature verifies a bounded caller-owned document using the
-// same administrator-pinned Ed25519 release key as Server update packages.
+// VerifyDetachedSignature verifies a bounded caller-owned document against an
+// administrator-pinned Ed25519 public key.
+//
+// This is not used by the free tier Server update channel, which is unsigned.
+// It exists for the media runtime trust chain (internal/mediaruntime), which
+// keeps its own pinned key and is unaffected by the free tier boundary change.
 func VerifyDetachedSignature(body, signature []byte, publicKey string) error {
 	key, err := decodePublicKey(publicKey)
 	if err != nil {

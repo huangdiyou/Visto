@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Visto user guide: installation, projects, media, versions, reviews, sharing, and maintenance."><title>Visto Docs · Docker deployment</title><link rel="icon" type="image/svg+xml" href="../assets/visto-icon.svg"><link rel="alternate" hreflang="zh-CN" href="../docker.html"><link rel="stylesheet" href="../assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">Skip to content</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="../assets/visto-icon.svg" alt="" aria-hidden="true">Visto Docs</a><div class="tools"><a class="plain github" href="downloads.html#project"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.3 11.3 0 0 0-3.6 22c.6.1.8-.2.8-.5v-2.1c-3.3.7-4-1.4-4-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.6 0-1.2.4-2.2 1.2-3-.1-.3-.5-1.5.1-3 0 0 1-.3 3.1 1.2a10.7 10.7 0 0 1 5.7 0c2.2-1.5 3.1-1.2 3.1-1.2.6 1.5.2 2.7.1 3 .8.8 1.2 1.8 1.2 3 0 4.3-2.7 5.3-5.3 5.6.4.4.8 1.1.8 2.2v3.1c0 .3.2.6.8.5A11.3 11.3 0 0 0 12 .7Z"/></svg>GitHub</a><a class="return-site" href="https://visto.akahxh.top/">Website ↗</a><button type="button" id="search" class="plain search-trigger js-only">Search <kbd>⌘ / Ctrl K</kbd></button><a class="plain language" id="language" href="../docker.html" hreflang="zh-CN" lang="zh-CN" aria-label="切换到中文">中文</a><button type="button" id="theme" class="plain js-only" aria-label="Switch theme">Dark</button><button type="button" id="print" class="plain print js-only">Print</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">Menu</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="Menu"><a class="home" href="index.html">Docs home</a><h2>Getting started</h2><a href="start.html">Understand Visto</a><a href="quick-start.html">Complete your first project</a><a href="navigation.html">Find your way around</a><h2>Installation and setup</h2><a href="prepare.html">Install Visto</a><a href="install-macos.html">macOS installation</a><a href="windows-install.html">Windows installation</a><a href="linux-install.html">Linux installation</a><a href="runtime.html">Video previews and components</a><a href="docker.html" class="active" aria-current="page">Docker deployment</a><a href="setup.html">First setup and login</a><h2>Projects and media</h2><a href="storage.html">Configure storage</a><a href="project.html">Create and manage projects</a><a href="members.html">Members and permissions</a><a href="upload.html">Upload and organize media</a><a href="archive.html">Recycle bin, archiving, and deletion</a><h2>Reviews and delivery</h2><a href="versions.html">Versions and revisions</a><a href="reviews.html">Create a review</a><a href="comments.html">Feedback and decisions</a><a href="sharing.html">Share and revoke access</a><a href="guest.html">Review a shared version</a><h2>Settings and maintenance</h2><a href="notifications.html">Account, notifications, and activity</a><a href="network.html">Network and remote access</a><a href="backup.html">Back up data and media</a><a href="maintenance.html">Update, restore, and uninstall</a><h2>Help and reference</h2><a href="troubleshooting.html">Troubleshoot by symptom</a><a href="faq.html">Frequently asked questions</a><a href="checklist.html">Delivery checklist and support</a><div class="offline"><a href="downloads.html">Downloads</a><a href="Visto-User-Guide.html">Offline guide</a><a href="USER_GUIDE.md">Markdown</a><a href="checklist.html">Report an issue</a><a href="downloads.html#project">GitHub ↗</a><a href="https://visto.akahxh.top/">Website ↗</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">Docs home</a><span>/</span>Installation and setup</div><h1>Docker deployment</h1><h3 id="docker-section-1">Install directly from Docker Hub (recommended)</h3>
+<p>Visto Server 1.0.3 is published as <a href="https://hub.docker.com/r/akahxh404/visto-core">Core</a> and <a href="https://hub.docker.com/r/akahxh404/visto-web">Web</a> images for Linux amd64 and arm64. Docker selects the host architecture automatically. Use Linux containers in Windows Docker Desktop. The two images work together through Compose: browsers connect to Web, and the Core port remains private to the container network.</p>
+<ol>
+<li>Download the official <a href="https://visto.akahxh.top/downloads/docker/1.0.3/Visto-Docker_1.0.3.zip">Visto Docker 1.0.3 deployment kit</a> and extract it into a new directory. It contains a pinned <code>compose.yaml</code>, an image manifest, and <code>scripts/docker/</code> backup, restore and update tools. The full application source is not required.</li>
+<li>Start Docker Desktop and wait for its Engine, or start Docker Engine on the host. Open a terminal in the extracted directory and confirm that <code>docker version</code> and <code>docker compose version</code> work. An installed client without a running Engine cannot deploy the application.</li>
+<li>Generate the private initialization token in a directory readable only by the maintainer, then pull and start the images. The commands stop if <code>.env</code> already exists and preserve existing configuration.</li>
+</ol>
+<p>Windows native PowerShell:</p>
+<pre><code class="language-powershell">$ErrorActionPreference = 'Stop'
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try {
+  $bytes = New-Object byte[] 32
+  $rng.GetBytes($bytes)
+  $token = [Convert]::ToBase64String($bytes)
+  $stream = [System.IO.File]::Open((Join-Path $PWD '.env'), [System.IO.FileMode]::CreateNew)
+  try {
+    $content = [System.Text.Encoding]::ASCII.GetBytes(&quot;VISTO_VERSION=1.0.3`nVISTO_HOST_MANAGEMENT_TOKEN=$token`n&quot;)
+    $stream.Write($content, 0, $content.Length)
+  } finally { $stream.Dispose() }
+} finally { $rng.Dispose() }
+docker compose pull
+if ($LASTEXITCODE -ne 0) { throw 'Image download failed; check Docker and network access before retrying' }
+docker compose up -d --no-build --wait
+if ($LASTEXITCODE -ne 0) { throw 'Docker startup failed; resolve the error before retrying' }
+docker compose ps
+</code></pre>
+<p>Bash on macOS, Linux, or Windows WSL:</p>
+<pre><code class="language-bash">(
+set -eu
+umask 077
+set -C
+printf 'VISTO_VERSION=1.0.3\nVISTO_HOST_MANAGEMENT_TOKEN=%s\n' &quot;$(openssl rand -base64 32)&quot; &gt; .env
+docker compose pull
+docker compose up -d --no-build --wait
+docker compose ps
+)
+</code></pre>
+<ol start="4">
+<li>Open <a href="http://127.0.0.1:8080/">http://127.0.0.1:8080/</a>. Read the full token privately from your own <code>.env</code> and follow <a href="setup.html">first setup</a> to create the workspace and account. Preserve this file for future starts; do not regenerate or share the token.</li>
+</ol>
+<p>If another service uses port 8080, add <code>VISTO_HOST_PORT=18080</code> to <code>.env</code> before starting, then open <a href="http://127.0.0.1:18080/">http://127.0.0.1:18080/</a>. Do not stop another application's service. Docker Engine 26+ and Compose v2 are required, with enough disk space for media, previews and backups.</p>
+<p>Both image digests are already fixed in the kit; no manual digest entry is needed. Core includes the video runtime, so it does not need a separate component installation. Initial deployment requires network access to pull the images. If pulling times out, check Docker's network and proxy settings, then retry <code>docker compose pull</code>.</p>
+<h3 id="docker-section-2">Build from the complete source (optional)</h3>
+<p>The following alternative requires the complete source delivery, not the small deployment kit above.</p>
+<p>This route is for people already familiar with Docker Compose, volumes, and server administration. Use the complete source bundle supplied for the release. A standalone macOS package is not a Docker source bundle.</p>
+<h3 id="docker-section-3">Prepare the source and configuration</h3>
+<p>The source must contain <code>Dockerfile</code>, <code>compose.yaml</code>, <code>infra/docker/nginx.conf</code>, the application source, and <code>scripts/docker</code>. Build this alternative from the matching complete source bundle.</p>
+<p>Docker Engine 26+, Compose v2, at least 4 GB of available memory, and free space for persistent volumes are required. In a new deployment directory, run the following in Bash (macOS/Linux or Windows WSL). The version below belongs to the supplied source bundle; use its release version when deploying another bundle. Existing <code>.env</code> files are preserved.</p>
+<pre><code class="language-bash">(
+set -eu
+umask 077
+set -C
+printf 'VISTO_VERSION=1.0.3\nVISTO_HOST_MANAGEMENT_TOKEN=%s\n' &quot;$(openssl rand -base64 32)&quot; &gt; .env
+docker compose up -d --build
+docker compose ps
+)
+</code></pre>
+<p>Open <strong>http://127.0.0.1:8080/</strong> on the host. Read the initialization token privately from the local <code>.env</code> file and complete setup. Do not regenerate that token, overwrite <code>.env</code>, or share it with project members. In a new Bash terminal, load your own trusted deployment configuration before running maintenance tools:</p>
+<pre><code class="language-bash">set -a; . ./.env; set +a
+</code></pre>
+<p>Compose contains separate Core and Web services. The Core port remains internal; browsers connect through Web. Check services and recent logs if the page cannot open. Windows native PowerShell can use the initialization instructions in the source bundle; the Bash examples here are for WSL.</p>
+<h3 id="docker-section-4">Use a supplied video archive</h3>
+<p>Place the architecture-matching component archive in a <code>runtime-input</code> directory next to the source directory. Use Docker Buildx with named build contexts. The archive names and version are supplied with the source bundle.</p>
+<pre><code class="language-bash">(
+set -eu
+set -a; . ./.env; set +a
+case &quot;$(uname -m)&quot; in
+  arm64|aarch64) PLATFORM=linux/arm64 ;;
+  x86_64) PLATFORM=linux/amd64 ;;
+  *) echo 'Unsupported architecture'; exit 1 ;;
+esac
+docker buildx build --load --platform &quot;$PLATFORM&quot; \
+  --build-context runtime-input=../runtime-input \
+  --build-arg VISTO_VERSION=&quot;$VISTO_VERSION&quot; \
+  --target core -t visto-core:local .
+docker buildx build --load --platform &quot;$PLATFORM&quot; \
+  --build-arg VISTO_VERSION=&quot;$VISTO_VERSION&quot; \
+  --target web -t visto-web:local .
+docker compose up -d --no-build
+)
+</code></pre>
+<p>Use these local image names for a fresh deployment only. Do not overwrite an existing deployment's images to bypass protected update procedures. Base images and dependencies still require internet access or a suitable cache.</p>
+<h3 id="docker-section-5">Manage and back up</h3>
+<pre><code class="language-bash">docker compose logs --tail 100 core
+docker compose exec core visto-server doctor
+./scripts/docker/backup-visto-docker.sh --backup-dir ./backups
+docker compose down
+</code></pre>
+<p>Do not add <code>-v</code> to <code>down</code>: that can remove business-data volumes. Back up additional host mounts and remote media separately.</p>
+<p>Before restoring, save the current data and run the bundle's restore tool with <code>--check-only</code>. Keep the archive and its companion metadata together. Then use <code>--confirm-restore</code> only after reviewing what will be replaced. The deployment kit records the published 1.0.3 image references in <code>docker-images.json</code>. For later upgrades, use the protected update tool and the immutable references published for that version; preserve pre-update backups and failure recovery. Do not replace this workflow with an arbitrary <code>latest</code> image or a simple container recreation.</p><nav class="pager"><a href="runtime.html"><small>Previous</small>Video previews and components</a><a href="setup.html"><small>Next</small>First setup and login</a></nav><footer class="footer">Visto Docs · 2026-10-03<br><a href="checklist.html">Report an issue</a><a href="Visto-User-Guide.html">Offline guide</a><a href="downloads.html">Downloads</a></footer></main><aside class="toc" aria-label="On this page"><h2>On this page</h2><a href="#docker-section-1">Install directly from Docker Hub (recommended)</a><a href="#docker-section-2">Build from the complete source (optional)</a><a href="#docker-section-3">Prepare the source and configuration</a><a href="#docker-section-4">Use a supplied video archive</a><a href="#docker-section-5">Manage and back up</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">Search the docs</h2><button type="button" id="search-close" class="plain">Close</button></div><label for="search-input" class="search-note">Search titles, steps, and troubleshooting</label><input id="search-input" class="search-input" type="search" placeholder="Search upload, access code, restore…" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="Search results"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">View image</h2><button type="button" id="image-close" class="plain">Close</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="search-data.js"></script><script src="../assets/docs.js"></script></body></html>

@@ -32,6 +32,7 @@ type Manifest struct {
 	SHA256               string `json:"sha256"`
 	License              string `json:"license"`
 	SourceURL            string `json:"sourceUrl"`
+	SourceBundleSHA256   string `json:"sourceBundleSha256,omitempty"`
 	BuildRecord          string `json:"buildRecord"`
 	MinimumServerVersion string `json:"minimumServerVersion"`
 }
@@ -89,6 +90,9 @@ func VerifyManifest(body, signature []byte, key, platform, serverVersion string)
 	}
 	if m.Size <= 0 || m.Size > MaxArchiveBytes || !validHash(m.SHA256) {
 		return m, bad("invalid runtime size or SHA-256")
+	}
+	if m.SourceBundleSHA256 != "" && !validHash(m.SourceBundleSHA256) {
+		return m, bad("invalid source bundle SHA-256")
 	}
 	if m.License != "LGPL-2.1-or-later" && m.License != "LGPL-3.0-or-later" {
 		return m, bad("managed runtime must use audited LGPL")
@@ -149,6 +153,9 @@ func payloadURL(value string, redirect bool) error {
 	if redirect && u.Host == "release-assets.githubusercontent.com" {
 		return nil
 	}
+	if u.Host == runtimePagesHost || u.Host == runtimePayloadHost {
+		return vistoPagesPayloadPath(u)
+	}
 	if u.Host != "github.com" || u.RawQuery != "" {
 		return bad("runtime payload host is not trusted")
 	}
@@ -158,6 +165,50 @@ func payloadURL(value string, redirect bool) error {
 	}
 	if strings.Contains(strings.ToLower(parts[4]), "latest") {
 		return bad("rolling runtime release is forbidden")
+	}
+	return nil
+}
+
+// runtimePagesHost is the Cloudflare Pages update site. It now carries only the
+// manifest and its signature: a Pages deployment replaces the whole site, so
+// every payload kept there has to be re-uploaded on every release, and Pages
+// caps a single file at 25 MiB, which the platform archives sit close to.
+const runtimePagesHost = "visto-server-updates.pages.dev"
+
+// runtimePayloadHost is the Cloudflare R2 custom domain that serves the runtime
+// archives and source closures. It is the Owner's own domain, it accepts an
+// object with a plain HTTPS PUT, and adding a signature later means uploading
+// one small object instead of rebuilding the whole site. The path shape is the
+// same as Pages, so one rule keeps both honest.
+const runtimePayloadHost = "dl.819101.xyz"
+
+// vistoPagesPayloadPath accepts only the versioned media-runtime layout
+// /media-runtime/<version>/<archive>. Everything the GitHub Release rule rejects
+// stays rejected: no query, no credentials, no rolling version segment, no
+// traversal, and no path that is not exactly one version directory plus a file.
+func vistoPagesPayloadPath(u *url.URL) error {
+	if u.RawQuery != "" {
+		return bad("runtime payload must not carry a query string")
+	}
+	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+	if len(parts) != 3 || parts[0] != "media-runtime" {
+		return bad("Visto Pages runtime payload must use /media-runtime/<version>/<archive>")
+	}
+	version, archive := parts[1], parts[2]
+	if version == "" || archive == "" {
+		return bad("Visto Pages runtime payload is missing its version or archive name")
+	}
+	if strings.ContainsAny(version+archive, "\\") || strings.Contains(version, "..") {
+		return bad("runtime payload must not traverse directories")
+	}
+	if strings.EqualFold(version, "latest") || strings.Contains(strings.ToLower(version), "latest") {
+		return bad("rolling runtime version is forbidden")
+	}
+	if !versionName.MatchString(version) {
+		return bad("runtime payload version segment is malformed")
+	}
+	if !versionName.MatchString(archive) {
+		return bad("runtime payload archive name is malformed")
 	}
 	return nil
 }

@@ -325,3 +325,36 @@ func mediaTestDatabase(
 	}
 	return db, result.Session.Workspace.ID
 }
+
+func TestMissingProbePreservesActionableError(t *testing.T) {
+	ctx := context.Background()
+	db, workspaceID := mediaTestDatabase(t, ctx)
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "example.mp4"), []byte("fixture"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	store := storage.NewService(storage.NewSQLiteRepository(db))
+	root, err := store.RegisterLocalRoot(ctx, storage.RegisterLocalRootInput{WorkspaceID: workspaceID, DisplayName: "fixture", LocalPath: dir, Mode: "referenced", ScanEnabled: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = store.ScanRoot(ctx, workspaceID, root.ID); err != nil {
+		t.Fatal(err)
+	}
+	objects, err := store.ListObjects(ctx, workspaceID, root.ID)
+	if err != nil || len(objects) != 1 {
+		t.Fatalf("objects: %v %v", objects, err)
+	}
+	service := NewService(NewSQLiteRepository(db), store, NewFFProber(filepath.Join(t.TempDir(), "missing-ffprobe")))
+	metadata, err := service.ProbeStorageObject(ctx, workspaceID, objects[0].ID)
+	var coded interface {
+		Code() string
+		Retryable() bool
+	}
+	if !errors.Is(err, ErrProbeUnavailable) || !errors.As(err, &coded) || coded.Code() != "probe.unavailable" || coded.Retryable() {
+		t.Fatalf("not actionable: %v", err)
+	}
+	if metadata.ErrorCode == nil || *metadata.ErrorCode != "probe.unavailable" {
+		t.Fatalf("metadata: %#v", metadata)
+	}
+}

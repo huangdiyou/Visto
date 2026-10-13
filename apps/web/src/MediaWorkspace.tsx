@@ -50,6 +50,12 @@ import {
   updateMediaAssetName,
   uploadAssetVersion,
 } from "./api/storage";
+import { getSystemInfo } from "./api/system";
+import {
+  mediaProgramsAvailable,
+  runtimeIssue,
+  runtimeMissingMessage,
+} from "./lib/media-runtime";
 import { retryJob } from "./api/jobs";
 import { listProjects } from "./api/catalog";
 import type { ReviewCreationSeed } from "./ReviewWorkspace";
@@ -106,6 +112,7 @@ interface UploadNoticeState {
 }
 
 export function MediaWorkspace({
+  isOwner = false,
   project,
   initialAssetId,
   onCreateReview,
@@ -113,6 +120,7 @@ export function MediaWorkspace({
   onQueueUploads,
 }: {
   project: Project;
+  isOwner?: boolean;
   initialAssetId?: string | null;
   onCreateReview: (seed: ReviewCreationSeed) => void;
   uploadRevision: number;
@@ -1083,6 +1091,7 @@ export function MediaWorkspace({
       onRemoveFromProject={(sourceProjectId) =>
         removeMediaFromProject(selectedMediaItem, sourceProjectId)
       }
+      isOwner={isOwner}
       onRetryJob={retryProcessingJob}
     />
   ) : null;
@@ -2258,6 +2267,7 @@ function UploadSecurityPanel({ check }: { check: UploadCheck }) {
 }
 
 function ProcessingDiagnosticPanel({
+  isOwner,
   item,
   busy,
   retryingJobId,
@@ -2269,7 +2279,34 @@ function ProcessingDiagnosticPanel({
   retryingJobId: string | null;
   notice: string | null;
   onRetry: (jobId: string) => void;
+  isOwner: boolean;
 }) {
+  const componentIssue = runtimeIssue(item);
+  const [componentsReady, setComponentsReady] = useState(false);
+  const [checkingComponents, setCheckingComponents] = useState(false);
+  const [componentNotice, setComponentNotice] = useState<string | null>(null);
+  useEffect(() => {
+    setComponentsReady(false);
+    setComponentNotice(null);
+  }, [item.object.id]);
+  async function checkComponents() {
+    setCheckingComponents(true);
+    setComponentNotice(null);
+    setComponentsReady(false);
+    try {
+      const ready = mediaProgramsAvailable(await getSystemInfo());
+      setComponentsReady(ready);
+      setComponentNotice(
+        ready
+          ? "已检测到组件，可以重试任务。"
+          : "仍缺少视频组件，请服务器管理员完成配置并重启此实例。",
+      );
+    } catch {
+      setComponentNotice("无法检查视频组件，请稍后重试。");
+    } finally {
+      setCheckingComponents(false);
+    }
+  }
   const failedRenditionsWithoutJobs =
     item.failedJobs.length === 0 ? item.failedRenditions : [];
   const probeIssue =
@@ -2285,11 +2322,37 @@ function ProcessingDiagnosticPanel({
         </span>
         <div>
           <p className="eyebrow">需要处理</p>
-          <h3>{item.preview ? "部分预览功能不可用" : "预览不可用"}</h3>
+          <h3>
+            {componentIssue
+              ? "等待配置视频组件"
+              : item.preview
+                ? "部分预览功能不可用"
+                : "预览不可用"}
+          </h3>
           <span>{processingDiagnosticSummary(item)}</span>
         </div>
       </header>
 
+      {componentIssue ? (
+        <div className="media-runtime-actions">
+          {isOwner ? (
+            <a className="secondary-button" href="#/owner/encoding">
+              检查视频组件
+            </a>
+          ) : (
+            <p>需要服务器管理员配置视频组件，请联系工作空间 Owner。</p>
+          )}
+          <button
+            type="button"
+            className="secondary-button"
+            disabled={checkingComponents || retryingJobId !== null}
+            onClick={() => void checkComponents()}
+          >
+            {checkingComponents ? "正在检查…" : "配置后重新检查"}
+          </button>
+          {componentNotice ? <p role="status">{componentNotice}</p> : null}
+        </div>
+      ) : null}
       <div className="processing-diagnostic-list">
         {item.failedJobs.map((job) => (
           <article className="processing-diagnostic-row" key={job.id}>
@@ -2310,11 +2373,19 @@ function ProcessingDiagnosticPanel({
               <button
                 className="secondary-button"
                 type="button"
-                disabled={busy || retryingJobId !== null}
+                disabled={
+                  busy ||
+                  retryingJobId !== null ||
+                  (componentIssue && !componentsReady)
+                }
                 onClick={() => onRetry(job.id)}
               >
                 <RefreshCcw size={14} aria-hidden="true" />
-                {retryingJobId === job.id ? "正在重试" : "重试任务"}
+                {retryingJobId === job.id
+                  ? "正在重试"
+                  : componentIssue && !componentsReady
+                    ? "等待组件配置"
+                    : "重试任务"}
               </button>
             </div>
           </article>
@@ -2343,7 +2414,11 @@ function ProcessingDiagnosticPanel({
           <article className="processing-diagnostic-row">
             <div>
               <strong>媒体识别</strong>
-              <span>暂时无法生成预览。</span>
+              <span>
+                {componentIssue
+                  ? "视频组件配置完成后可重试识别。"
+                  : "暂时无法生成预览。"}
+              </span>
               <details className="processing-technical-details">
                 <summary>技术详情</summary>
                 <small>{probeIssue}</small>
@@ -2387,6 +2462,7 @@ function MediaDetailPanel({
   onMoveToProject,
   onRemoveFromProject,
   onRetryJob,
+  isOwner,
 }: {
   item: MediaItem;
   projects: Project[];
@@ -2410,6 +2486,7 @@ function MediaDetailPanel({
   ) => Promise<void>;
   onRemoveFromProject: (sourceProjectId: string) => Promise<void>;
   onRetryJob: (jobId: string) => Promise<Job>;
+  isOwner: boolean;
 }) {
   const title = mediaDisplayName(item);
   const selectedVersion =
@@ -2573,6 +2650,7 @@ function MediaDetailPanel({
           ) : null}
           {hasProcessingDiagnostics ? (
             <ProcessingDiagnosticPanel
+              isOwner={isOwner}
               item={item}
               busy={busy}
               retryingJobId={retryingJobId}
@@ -3277,6 +3355,15 @@ export function buildMediaItem(
       errorMessage: "源文件已移动、删除，或授权目录当前不可访问。",
     };
   }
+  if (!activeJob && runtimeIssue(base)) {
+    return {
+      ...base,
+      state: preview ? "enhancement_failed" : "failed",
+      stateLabel: preview ? "后台增强等待组件" : "等待视频组件",
+      progressLabel: null,
+      errorMessage: runtimeMissingMessage,
+    };
+  }
   if (probe?.status === "failed") {
     return {
       ...base,
@@ -3449,6 +3536,10 @@ function assetTypeMark(type: string): string {
 }
 
 function detailStateMessage(item: MediaItem): string {
+  if (runtimeIssue(item))
+    return item.preview
+      ? "网页预览仍可使用，服务器缺少组件，后台增强暂停。原文件已保留。"
+      : runtimeMissingMessage;
   switch (item.state) {
     case "ready":
     case "preview_ready":
@@ -3477,6 +3568,7 @@ function detailStateMessage(item: MediaItem): string {
 }
 
 function processingDiagnosticSummary(item: MediaItem): string {
+  if (runtimeIssue(item)) return detailStateMessage(item);
   if (item.preview && item.state === "enhancement_failed") {
     return "可以继续审阅和分享，部分预览功能不可用。";
   }

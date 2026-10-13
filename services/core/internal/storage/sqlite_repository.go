@@ -1263,7 +1263,8 @@ func (repository *SQLiteRepository) ProjectArchivePlan(
 			AND project_asset.status = 'active'
 			AND object.status = 'available'
 		ORDER BY object.created_at
-	`, workspaceID, projectID)
+		LIMIT ?
+	`, workspaceID, projectID, maxProjectArchiveObjects+1)
 	if err != nil {
 		return ProjectArchivePlan{}, fmt.Errorf("list project archive objects: %w", err)
 	}
@@ -1279,6 +1280,9 @@ func (repository *SQLiteRepository) ProjectArchivePlan(
 	}
 	if err := rows.Err(); err != nil {
 		return ProjectArchivePlan{}, fmt.Errorf("iterate project archive objects: %w", err)
+	}
+	if err := projectArchivePlanLimitError(len(plan.Objects)); err != nil {
+		return ProjectArchivePlan{}, err
 	}
 	return plan, nil
 }

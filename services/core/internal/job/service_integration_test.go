@@ -281,3 +281,42 @@ func jobTestDatabase(
 	}
 	return db, result.Session.Workspace.ID
 }
+
+func TestDependencyFailureStopsAutomaticRetriesAndCanRecover(t *testing.T) {
+	ctx := context.Background()
+	db, workspaceID := jobTestDatabase(t, ctx)
+	service := NewService(NewSQLiteRepository(db))
+	now := time.Date(2026, 10, 12, 0, 0, 0, 0, time.UTC)
+	service.clock = func() time.Time { return now }
+	if err := service.EnsureNode(ctx, testNode("runtime-node")); err != nil {
+		t.Fatal(err)
+	}
+	item, _, err := service.Create(ctx, CreateInput{WorkspaceID: workspaceID, Type: "media.process_asset_version", SubjectType: "storageObject", SubjectID: "fixture", MaxAttempts: 4})
+	if err != nil {
+		t.Fatal(err)
+	}
+	lease := claimAndStart(t, ctx, service, now, "runtime-node")
+	if err := service.Fail(ctx, lease, executionError(testDependencyError{})); err != nil {
+		t.Fatal(err)
+	}
+	failed, err := service.Get(ctx, workspaceID, item.ID)
+	if err != nil || failed.Status != StatusFailed || failed.AttemptCount != 1 || failed.LastError.Code != "probe.unavailable" {
+		t.Fatalf("missing tool was retried: %#v %v", failed, err)
+	}
+	if _, claimed, err := service.Claim(ctx, "runtime-node", time.Minute); err != nil || claimed {
+		t.Fatalf("failed dependency re-claimed: %v %v", claimed, err)
+	}
+	if _, err := service.Retry(ctx, workspaceID, item.ID); err != nil {
+		t.Fatal(err)
+	}
+	lease = claimAndStart(t, ctx, service, now, "runtime-node")
+	if err := service.Succeed(ctx, lease); err != nil {
+		t.Fatal(err)
+	}
+}
+
+type testDependencyError struct{}
+
+func (testDependencyError) Error() string   { return "ffprobe is unavailable" }
+func (testDependencyError) Code() string    { return "probe.unavailable" }
+func (testDependencyError) Retryable() bool { return false }

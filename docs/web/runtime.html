@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Visto 使用指南：安装、项目、媒体、版本、审阅、分享与维护。"><title>Visto 文档 · 视频预览与组件安装</title><link rel="icon" type="image/svg+xml" href="assets/visto-icon.svg"><link rel="alternate" hreflang="en" href="en/runtime.html"><link rel="stylesheet" href="assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">跳到正文</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="assets/visto-icon.svg" alt="" aria-hidden="true">Visto 文档</a><div class="tools"><a class="plain github" href="downloads.html#project"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.3 11.3 0 0 0-3.6 22c.6.1.8-.2.8-.5v-2.1c-3.3.7-4-1.4-4-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.6 0-1.2.4-2.2 1.2-3-.1-.3-.5-1.5.1-3 0 0 1-.3 3.1 1.2a10.7 10.7 0 0 1 5.7 0c2.2-1.5 3.1-1.2 3.1-1.2.6 1.5.2 2.7.1 3 .8.8 1.2 1.8 1.2 3 0 4.3-2.7 5.3-5.3 5.6.4.4.8 1.1.8 2.2v3.1c0 .3.2.6.8.5A11.3 11.3 0 0 0 12 .7Z"/></svg>GitHub</a><a class="return-site" href="https://visto.akahxh.top/">返回官网 ↗</a><button type="button" id="search" class="plain search-trigger js-only">搜索文档 <kbd>⌘ / Ctrl K</kbd></button><a class="plain language" id="language" href="en/runtime.html" hreflang="en" lang="en" aria-label="Switch to English">EN</a><button type="button" id="theme" class="plain js-only" aria-label="切换主题">深色</button><button type="button" id="print" class="plain print js-only">打印</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">目录</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="目录"><a class="home" href="index.html">文档首页</a><h2>开始使用</h2><a href="start.html">先理解 Visto</a><a href="quick-start.html">做完你的第一个项目</a><a href="navigation.html">熟悉工作台</a><h2>安装与初始化</h2><a href="prepare.html">安装 Visto</a><a href="install-macos.html">macOS 安装</a><a href="windows-install.html">Windows 安装</a><a href="linux-install.html">Linux 安装</a><a href="runtime.html" class="active" aria-current="page">视频预览与组件安装</a><a href="docker.html">Docker 部署说明</a><a href="setup.html">首次设置与登录</a><h2>项目与素材</h2><a href="storage.html">配置文件保存位置</a><a href="project.html">创建与管理项目</a><a href="members.html">成员、邀请与权限</a><a href="upload.html">上传、搜索与整理素材</a><a href="archive.html">回收站、归档与删除</a><h2>审阅与交付</h2><a href="versions.html">版本管理与新一轮修订</a><a href="reviews.html">创建一轮审阅</a><a href="comments.html">提交精确反馈与审核结论</a><a href="sharing.html">创建、安全检查与撤销分享</a><a href="guest.html">给外部审阅者的操作指南</a><h2>设置与维护</h2><a href="notifications.html">通知、个人资料与活动</a><a href="network.html">网络与远程访问</a><a href="backup.html">备份：保护数据库与媒体</a><a href="maintenance.html">更新、恢复、回滚与卸载</a><h2>帮助与参考</h2><a href="troubleshooting.html">按现象排查问题</a><a href="faq.html">常见问题</a><a href="checklist.html">交付检查单与求助模板</a><div class="offline"><a href="downloads.html">下载与版本</a><a href="Visto-用户手册.html">离线手册</a><a href="USER_GUIDE.md">Markdown</a><a href="checklist.html">反馈问题</a><a href="downloads.html#project">GitHub ↗</a><a href="https://visto.akahxh.top/">返回官网 ↗</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">文档首页</a><span>/</span>安装与初始化</div><h1>视频预览与组件安装</h1><p>Visto 使用 FFmpeg 和 ffprobe 生成封面、预览与媒体信息。</p>
+<p><strong>按 macOS 或 Linux 指南使用官网安装脚本时，视频组件会一起安装。Windows 包已经包含这些组件。完成安装后，无需再运行本页的额外命令。</strong></p>
+<p>程序和组件可以分别更新；安装工具负责选择兼容组件、下载和验证。普通用户无需填写组件版本、签名或校验值。</p>
+<p>组件与程序不在同一目录，卸载 Visto 时它不会被一并删除；重装会复用现有组件。需要彻底清理设备时见<a href="maintenance.html">第 24 章的删除视频组件</a>。</p>
+<h3 id="runtime-section-1">旧包缺少视频组件</h3>
+<p>原始 1.0.3 包也可以使用独立安装脚本。在原始解压文件夹打开终端：</p>
+<pre><code class="language-bash">curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh
+# macOS：不要用 sudo，脚本会先以当前用户检查程序，通过后才请求安装权限
+bash install-visto.sh --source-dir .
+# Linux：使用 sudo
+sudo bash install-visto.sh --source-dir .
+</code></pre>
+<p>同版本 Server 已安装时，脚本会补齐视频组件并重启服务，不覆盖项目数据；安装的是不同版本时会停止，请先看<a href="maintenance.html">维护指南</a>。</p>
+<p>这不会把旧包的网页变成新版网页向导；是否有组件状态提示，以实际程序版本为准。</p>
+<h3 id="runtime-section-2">提示 unknown option: --with-media-runtime</h3>
+<p>原始 1.0.3 安装器不支持这个参数。改用上面的独立安装脚本，不要继续给旧脚本添加它。参数报错本身不会开始安装，无需因此卸载或删除数据。</p>
+<h3 id="runtime-section-3">确认视频能正常使用</h3>
+<p>在测试项目上传一段短视频，等待处理完成后打开媒体详情，确认预览可以播放。</p>
+<h3 id="runtime-section-4">页面提示缺少视频组件时</h3>
+<p>“服务器缺少视频处理组件”表示服务器未找到可用的 FFmpeg 或 ffprobe，不能据此判断视频损坏。原文件仍然保留；组件未修复前重复点重试不能解决问题。</p>
+<ul>
+<li>工作空间 Owner：从视频详情点“检查视频组件”，或打开 Owner 设置 → 视频组件与编码。</li>
+<li>普通项目成员：联系服务器管理员或工作空间 Owner；浏览器所在电脑安装 FFmpeg 不会修复远程服务器。</li>
+<li>首次设置允许先创建工作空间，但缺少组件时封面与视频预览暂不可用。</li>
+</ul>
+<p>管理员先在运行 Visto 的服务器上检查已有 FFmpeg/ffprobe。后台可复制与<strong>服务器平台</strong>匹配的本机检查和配置命令；在该实例的安装目录执行，CLI 与服务必须使用相同运行时根。两个程序均存在还不代表编码能力通过，需执行本机 <code>media-runtime inspect</code> 能力检查，或在编码设置中查看实际探测结果。</p>
+<p>已有组件兼容就复用；自定义路径需要同时包含两个程序。缺失或不兼容时，按本章对应平台安装步骤取得审核版；断网时使用同平台的离线包、清单和配套签名。不得绕过签名与摘要检查。Windows 正式包自带组件，缺失时先核对解压完整性与服务启动入口；开发预览包可能不包含组件。Docker 应使用含组件的配套镜像，不能套用原生主机安装命令。</p>
+<p>配置后重启<strong>同一个 Visto 实例</strong>，回到后台点“重新检查”。通过后可点“重试最近受影响任务”；该入口只重新排队最近 200 个失败任务中明确因缺少组件失败的媒体任务，逐项显示成功数与失败数。更早的任务在项目媒体详情中重试。页面也会保留磁盘、格式或编码错误等其他原因的失败，避免误重试无关任务。</p>
+<p>缺少组件的新任务会在第一次失败后停止自动重试，页面显示等待配置；恢复后仍由用户主动重试。已有可播放预览继续可用，后台增强失败不会移除预览。</p>
+<h3 id="runtime-section-5">失败时怎么处理</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>现象</th>
+<th>怎样处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>下载失败</td>
+<td>检查网络后重试，保留具体错误信息</td>
+</tr>
+<tr>
+<td>验证失败</td>
+<td>停止安装，将错误信息提供给维护者</td>
+</tr>
+<tr>
+<td>macOS 阻止程序运行</td>
+<td>按 <a href="install-macos.html">Mac 安装说明</a>允许对应程序，然后重试</td>
+</tr>
+<tr>
+<td>安装完成但没有预览</td>
+<td>检查媒体处理错误与磁盘空间</td>
+</tr>
+<tr>
+<td>只有某个视频无法处理</td>
+<td>先用另一段短视频测试，再检查原文件格式</td>
+</tr>
+</tbody>
+</table></div><nav class="pager"><a href="linux-install.html"><small>上一篇</small>Linux 安装</a><a href="docker.html"><small>下一篇</small>Docker 部署说明</a></nav><footer class="footer">Visto 文档 · 2026-10-03<br><a href="checklist.html">反馈问题</a><a href="Visto-用户手册.html">离线手册</a><a href="downloads.html">下载与版本</a></footer></main><aside class="toc" aria-label="本页内容"><h2>本页内容</h2><a href="#runtime-section-1">旧包缺少视频组件</a><a href="#runtime-section-2">提示 unknown option: --with-media-runtime</a><a href="#runtime-section-3">确认视频能正常使用</a><a href="#runtime-section-4">页面提示缺少视频组件时</a><a href="#runtime-section-5">失败时怎么处理</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">搜索文档</h2><button type="button" id="search-close" class="plain">关闭</button></div><label for="search-input" class="search-note">搜索标题、操作步骤与故障说明</label><input id="search-input" class="search-input" type="search" placeholder="例如：上传新版本、访问码、恢复" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="搜索结果"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">查看配图</h2><button type="button" id="image-close" class="plain">关闭</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="search-data.js"></script><script src="assets/docs.js"></script></body></html>

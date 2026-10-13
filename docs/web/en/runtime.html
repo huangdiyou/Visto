@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Visto user guide: installation, projects, media, versions, reviews, sharing, and maintenance."><title>Visto Docs · Video previews and components</title><link rel="icon" type="image/svg+xml" href="../assets/visto-icon.svg"><link rel="alternate" hreflang="zh-CN" href="../runtime.html"><link rel="stylesheet" href="../assets/docs.css"></head>
+<body class="no-js"><a class="skip" href="#main">Skip to content</a><header class="top"><a class="brand" href="index.html"><img class="logo" src="../assets/visto-icon.svg" alt="" aria-hidden="true">Visto Docs</a><div class="tools"><a class="plain github" href="downloads.html#project"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.3 11.3 0 0 0-3.6 22c.6.1.8-.2.8-.5v-2.1c-3.3.7-4-1.4-4-1.4-.5-1.3-1.3-1.6-1.3-1.6-1.1-.8.1-.8.1-.8 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.6-.3-5.3-1.3-5.3-5.6 0-1.2.4-2.2 1.2-3-.1-.3-.5-1.5.1-3 0 0 1-.3 3.1 1.2a10.7 10.7 0 0 1 5.7 0c2.2-1.5 3.1-1.2 3.1-1.2.6 1.5.2 2.7.1 3 .8.8 1.2 1.8 1.2 3 0 4.3-2.7 5.3-5.3 5.6.4.4.8 1.1.8 2.2v3.1c0 .3.2.6.8.5A11.3 11.3 0 0 0 12 .7Z"/></svg>GitHub</a><a class="return-site" href="https://visto.akahxh.top/">Website ↗</a><button type="button" id="search" class="plain search-trigger js-only">Search <kbd>⌘ / Ctrl K</kbd></button><a class="plain language" id="language" href="../runtime.html" hreflang="zh-CN" lang="zh-CN" aria-label="切换到中文">中文</a><button type="button" id="theme" class="plain js-only" aria-label="Switch theme">Dark</button><button type="button" id="print" class="plain print js-only">Print</button><button type="button" id="menu" class="plain menu js-only" aria-controls="sidebar" aria-expanded="false">Menu</button></div><div class="progress" id="progress" aria-hidden="true"></div></header>
+<div class="layout"><nav class="sidebar" id="sidebar" aria-label="Menu"><a class="home" href="index.html">Docs home</a><h2>Getting started</h2><a href="start.html">Understand Visto</a><a href="quick-start.html">Complete your first project</a><a href="navigation.html">Find your way around</a><h2>Installation and setup</h2><a href="prepare.html">Install Visto</a><a href="install-macos.html">macOS installation</a><a href="windows-install.html">Windows installation</a><a href="linux-install.html">Linux installation</a><a href="runtime.html" class="active" aria-current="page">Video previews and components</a><a href="docker.html">Docker deployment</a><a href="setup.html">First setup and login</a><h2>Projects and media</h2><a href="storage.html">Configure storage</a><a href="project.html">Create and manage projects</a><a href="members.html">Members and permissions</a><a href="upload.html">Upload and organize media</a><a href="archive.html">Recycle bin, archiving, and deletion</a><h2>Reviews and delivery</h2><a href="versions.html">Versions and revisions</a><a href="reviews.html">Create a review</a><a href="comments.html">Feedback and decisions</a><a href="sharing.html">Share and revoke access</a><a href="guest.html">Review a shared version</a><h2>Settings and maintenance</h2><a href="notifications.html">Account, notifications, and activity</a><a href="network.html">Network and remote access</a><a href="backup.html">Back up data and media</a><a href="maintenance.html">Update, restore, and uninstall</a><h2>Help and reference</h2><a href="troubleshooting.html">Troubleshoot by symptom</a><a href="faq.html">Frequently asked questions</a><a href="checklist.html">Delivery checklist and support</a><div class="offline"><a href="downloads.html">Downloads</a><a href="Visto-User-Guide.html">Offline guide</a><a href="USER_GUIDE.md">Markdown</a><a href="checklist.html">Report an issue</a><a href="downloads.html#project">GitHub ↗</a><a href="https://visto.akahxh.top/">Website ↗</a></div></nav><main class="article" id="main" tabindex="-1"><div class="crumb"><a href="index.html">Docs home</a><span>/</span>Installation and setup</div><h1>Video previews and components</h1><p>Visto uses FFmpeg and ffprobe to generate covers, previews, and media information.</p>
+<p><strong>The website installer in the macOS and Linux guides installs video support alongside Server. The Windows package already includes it. No additional component command is needed after a complete installation.</strong></p>
+<p>Server and components can be updated separately. The installer chooses compatible components and downloads and verifies them without asking you to edit versions, signatures, or checksums.</p>
+<p>The component does not sit inside the program directory, so uninstalling Server does not remove it; a reinstall reuses whatever is already there. See <em>Removing the video component</em> in <a href="maintenance.html">maintenance</a> when you need a fully clean host.</p>
+<h3 id="runtime-section-1">An older package is missing video support</h3>
+<p>The original 1.0.3 package also works with the standalone helper. Open a terminal in its original extracted folder:</p>
+<pre><code class="language-bash">curl -fsSL https://visto.akahxh.top/install.sh -o install-visto.sh
+# macOS: run without sudo; the helper checks the programs as your user first
+bash install-visto.sh --source-dir .
+# Linux: use sudo
+sudo bash install-visto.sh --source-dir .
+</code></pre>
+<p>For an existing Server of the same version, the helper prepares video support and restarts the service without replacing project data. It stops when a different version is installed; read <a href="maintenance.html">maintenance</a> first.</p>
+<p>This does not update the older package's web interface. Component status guidance depends on the actual program version.</p>
+<h3 id="runtime-section-2">unknown option: --with-media-runtime</h3>
+<p>The original 1.0.3 installer does not support this option. Use the standalone helper above. An unknown-option error does not start installation and is not a reason to uninstall or delete data.</p>
+<h3 id="runtime-section-3">Check playback</h3>
+<p>Upload a short video to a test project, wait for processing, and play the preview from media details.</p>
+<h3 id="runtime-section-4">When the page reports missing video components</h3>
+<p>The server could not find FFmpeg or ffprobe. This does not mean the video is damaged; original files are retained. Repeated retries cannot fix a missing dependency.</p>
+<ul>
+<li>Workspace Owners can open <strong>Check video components</strong> from the video details, or use <strong>Owner settings → Video components and encoding</strong>.</li>
+<li>Project members should contact the server administrator or workspace Owner. Installing FFmpeg on the browser's computer does not fix a remote server.</li>
+<li>First setup can continue, but video covers and previews require the components.</li>
+</ul>
+<p>On the Visto server, inspect an existing installation first and reuse it if compatible. The settings page offers commands matched to the server platform. Both FFmpeg and ffprobe must be present; run the local capability inspection to confirm encoding support. CLI and service must use the same runtime root. If components are missing or incompatible, follow the platform instructions for a reviewed runtime, or use the matching offline archive and signed manifest. Windows release packages include the runtime; Docker uses its matching image. Keep signature and checksum checks enabled.</p>
+<p>After configuration, restart the same Visto instance and click <strong>Check again</strong>. <strong>Retry affected jobs</strong> selects component-related media failures from the most recent 200 failed jobs and reports each result. Older failures can be retried from project media. Other failures are kept separate. New jobs stop automatic retries after their first missing-component failure; users can retry after repair. Existing playable previews remain available.</p>
+<h3 id="runtime-section-5">Troubleshooting</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Download fails</td>
+<td>Check your connection and retry; keep the error</td>
+</tr>
+<tr>
+<td>Verification fails</td>
+<td>Stop and send the error to the maintainer</td>
+</tr>
+<tr>
+<td>macOS blocks execution</td>
+<td>Follow the <a href="install-macos.html">Mac instructions</a>, then retry</td>
+</tr>
+<tr>
+<td>Installation completes but previews are missing</td>
+<td>Check processing errors and disk space</td>
+</tr>
+<tr>
+<td>Only one video fails</td>
+<td>Test another short video, then check the original format</td>
+</tr>
+</tbody>
+</table></div><nav class="pager"><a href="linux-install.html"><small>Previous</small>Linux installation</a><a href="docker.html"><small>Next</small>Docker deployment</a></nav><footer class="footer">Visto Docs · 2026-10-03<br><a href="checklist.html">Report an issue</a><a href="Visto-User-Guide.html">Offline guide</a><a href="downloads.html">Downloads</a></footer></main><aside class="toc" aria-label="On this page"><h2>On this page</h2><a href="#runtime-section-1">An older package is missing video support</a><a href="#runtime-section-2">unknown option: --with-media-runtime</a><a href="#runtime-section-3">Check playback</a><a href="#runtime-section-4">When the page reports missing video components</a><a href="#runtime-section-5">Troubleshooting</a></aside></div>
+<dialog id="search-dialog" aria-labelledby="search-title"><div class="dialog-head"><h2 id="search-title">Search the docs</h2><button type="button" id="search-close" class="plain">Close</button></div><label for="search-input" class="search-note">Search titles, steps, and troubleshooting</label><input id="search-input" class="search-input" type="search" placeholder="Search upload, access code, restore…" autocomplete="off"><p id="search-note" class="search-note" role="status" aria-live="polite"></p><ul class="results" id="results" aria-label="Search results"></ul></dialog>
+<dialog id="image-dialog" class="lightbox" aria-labelledby="image-caption"><div class="dialog-head"><h2 id="image-caption">View image</h2><button type="button" id="image-close" class="plain">Close</button></div><img id="large-image" alt=""></dialog><div id="toast" class="toast" role="status" hidden></div><script src="search-data.js"></script><script src="../assets/docs.js"></script></body></html>

@@ -258,5 +258,7 @@ func executionError(err error) Error {
 	if errors.Is(err, context.Canceled) {
 		code = "job.cancelled"
 	}
-	return Error{Code: code, Message: sanitizeError(err.Error())}
+	var policy interface{ Retryable() bool }
+	nonRetryable := errors.As(err, &policy) && !policy.Retryable()
+	return Error{Code: code, Message: sanitizeError(err.Error()), NonRetryable: nonRetryable}
 }

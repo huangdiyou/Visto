@@ -43,20 +43,20 @@ type updateRecord struct {
 }
 
 type sessionRecord struct {
-	ID                   string
-	SessionDigest        string
-	VisitorID            string
-	ExpiresAt            time.Time
-	UnverifiedExpiresAt  time.Time
-	Now                  time.Time
+	ID                  string
+	SessionDigest       string
+	VisitorID           string
+	ExpiresAt           time.Time
+	UnverifiedExpiresAt time.Time
+	Now                 time.Time
 }
 
 type sessionAccess struct {
 	PublicShare
-	PasswordHash string
-	Verified     bool
-	SessionID    string
-	ShareLinkID  string
+	PasswordHash     string
+	Verified         bool
+	SessionID        string
+	ShareLinkID      string
 	SessionExpiresAt time.Time
 }
 

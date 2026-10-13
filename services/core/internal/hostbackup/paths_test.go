@@ -68,6 +68,19 @@ func TestNormalizeDirectoryMissingLeafKeepsResolvedAncestor(t *testing.T) {
 	}
 }
 
+func TestNormalizeDirectoryAlwaysReturnsAbsolutePath(t *testing.T) {
+	// On Windows the OS resolver can answer an absolute "C:\..." input with
+	// the drive-relative spelling "C:..."; such a result must never be
+	// recorded as a data directory identity. The invariant is platform
+	// independent: absolute input, absolute output.
+	root := t.TempDir()
+	for _, input := range []string{root, filepath.Join(root, "missing", "leaf")} {
+		if got := NormalizeDirectory(input); !filepath.IsAbs(got.Path) {
+			t.Fatalf("NormalizeDirectory(%q) returned non-absolute %q", input, got.Path)
+		}
+	}
+}
+
 func TestSameDirectoryResolvedPathsAreByteExact(t *testing.T) {
 	// Two fully resolved paths must only match when identical, even on
 	// platforms with case-insensitive filesystems: different case on a

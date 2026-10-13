@@ -3,7 +3,9 @@ package httpapi
 import (
 	"errors"
 	"net/http"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"review-studio.local/core/internal/job"
@@ -130,6 +132,17 @@ func (h *handler) handleRetryJob(
 	if !ok {
 		return
 	}
+	existing, err := h.jobs.Get(request.Context(), session.Workspace.ID, request.PathValue("jobId"))
+	if err != nil {
+		h.handleJobError(response, request, err)
+		return
+	}
+	if strings.HasPrefix(existing.Type, "media.") && mediaRuntimeFailure(existing.LastError) &&
+		(!executableAvailable(h.ffmpegCommand) || !executableAvailable(h.ffprobeCommand)) {
+		writeError(response, http.StatusConflict, requestID(response), "media.runtime_unavailable",
+			"服务器缺少视频处理组件，请服务器管理员完成配置并重启服务后再重试。原文件已保留。")
+		return
+	}
 	item, err := h.jobs.Retry(
 		request.Context(),
 		session.Workspace.ID,
@@ -140,6 +153,19 @@ func (h *handler) handleRetryJob(
 		return
 	}
 	writeJSON(response, http.StatusOK, toJobResponse(item))
+}
+
+var legacyMissingMediaProgram = regexp.MustCompile(`(?i)(ffprobe|ffmpeg) is unavailable`)
+
+func mediaRuntimeFailure(value *job.Error) bool {
+	if value == nil {
+		return false
+	}
+	switch value.Code {
+	case "probe.unavailable", "rendition.processor_unavailable", "media.runtime_unavailable":
+		return true
+	}
+	return legacyMissingMediaProgram.MatchString(value.Message)
 }
 
 func (h *handler) handleJobError(

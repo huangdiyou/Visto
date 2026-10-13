@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/huangdiyou/Visto",
+  "repositoryPublic": false,
+  "release": null,
+  "dockerRelease": {
+    "version": "1.0.3",
+    "namespace": "akahxh404"
+  }
+}

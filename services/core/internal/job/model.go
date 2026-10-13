@@ -22,8 +22,10 @@ type Progress struct {
 }
 
 type Error struct {
-	Code    string
-	Message string
+	// NonRetryable stops automatic retries; explicit retry remains available after repair.
+	NonRetryable bool
+	Code         string
+	Message      string
 }
 
 type Job struct {

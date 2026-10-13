@@ -90,8 +90,11 @@ GOOS=darwin GOARCH="${ARCH}" CGO_ENABLED=0 \
 if [ "$SKIP_WEB" -eq 0 ]; then
   printf 'Building Studio web assets...\n'
   npm run build --workspace @review-studio/web
-  cp -R "apps/web/dist/." "${PACKAGE_ROOT}/web/"
 fi
+
+# --skip-web reuses the already built SPA, but must still stage it in the package.
+[ -f "apps/web/dist/index.html" ] || { printf 'missing prebuilt apps/web/dist/index.html\n' >&2; exit 1; }
+cp -R "apps/web/dist/." "${PACKAGE_ROOT}/web/"
 
 if [ ! -f "${PACKAGE_ROOT}/web/index.html" ]; then
   printf 'web/index.html is required by the package contract and was not produced\n' >&2
@@ -102,20 +105,27 @@ printf 'Staging the host scripts...\n'
 for script in \
   visto-server-env.sh \
   install-visto-server.sh \
+  setup-visto-server.sh \
+  install-media-runtime.sh \
   uninstall-visto-server.sh \
   backup-visto-server.sh \
   restore-visto-server.sh \
   update-visto-server.sh \
+  update-from-package.sh \
   rollback-visto-server.sh; do
   cp "scripts/server-unix/${script}" "${PACKAGE_ROOT}/scripts/${script}"
 done
+
+python3 scripts/docs/build-online-installers.py --output "${OUTPUT_DIR}/installer-entry-${FILE_TOKEN}"
+cp "${OUTPUT_DIR}/installer-entry-${FILE_TOKEN}/install.sh" "${PACKAGE_ROOT}/scripts/install.sh"
+
+printf '%s\n' "$VERSION" > "${PACKAGE_ROOT}/scripts/package-version"
 
 printf 'Copying the required declaration files from repository material...\n'
 # Contract section 2.2. Every one of these is a real repository file: there is
 # no generated or placeholder licence anywhere in this path.
 cp release/server/LICENSE.txt "${PACKAGE_ROOT}/LICENSE.txt"
 cp release/server/NOTICE.txt "${PACKAGE_ROOT}/NOTICE.txt"
-cp release/server/update-root-public-key.txt "${PACKAGE_ROOT}/UPDATE_ROOT_PUBLIC_KEY.txt"
 cp release/server/THIRD_PARTY_NOTICES.md "${PACKAGE_ROOT}/THIRD_PARTY_NOTICES.md"
 cp release/server/THIRD_PARTY_DISTRIBUTION_INVENTORY.md \
   "${PACKAGE_ROOT}/THIRD_PARTY_DISTRIBUTION_INVENTORY.md"
@@ -126,8 +136,8 @@ node scripts/generate-server-sbom.mjs "${PACKAGE_ROOT}/THIRD_PARTY.spdx.json"
 # Contract: bin/ and scripts/ keep the executable bit, everything else is 0644.
 chmod 0755 "${PACKAGE_ROOT}/bin/visto-core" "${PACKAGE_ROOT}/bin/visto-server"
 chmod 0755 "${PACKAGE_ROOT}/scripts/"*.sh
+chmod 0644 "${PACKAGE_ROOT}/scripts/package-version"
 chmod 0644 "${PACKAGE_ROOT}/LICENSE.txt" "${PACKAGE_ROOT}/NOTICE.txt" \
-  "${PACKAGE_ROOT}/UPDATE_ROOT_PUBLIC_KEY.txt" \
   "${PACKAGE_ROOT}/THIRD_PARTY_NOTICES.md" \
   "${PACKAGE_ROOT}/THIRD_PARTY_DISTRIBUTION_INVENTORY.md" \
   "${PACKAGE_ROOT}/THIRD_PARTY.spdx.json"
@@ -146,8 +156,8 @@ printf 'Creating %s...\n' "$(basename "${ARCHIVE}")"
 # whitelist would reject anyway.
 COPYFILE_DISABLE=1 tar -czf "${ARCHIVE}" -C "${PACKAGE_ROOT}" .
 
-LISTING="${OUTPUT_DIR}/.candidate-entries.txt"
-VERBOSE_LISTING="${OUTPUT_DIR}/.candidate-listing.txt"
+LISTING="${OUTPUT_DIR}/.candidate-${FILE_TOKEN}-entries.txt"
+VERBOSE_LISTING="${OUTPUT_DIR}/.candidate-${FILE_TOKEN}-listing.txt"
 tar -tzf "${ARCHIVE}" > "${LISTING}"
 # Member types and the executable bit are enforced by the audit, from this
 # listing, so the contract rule has one implementation rather than two.
